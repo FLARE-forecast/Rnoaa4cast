@@ -155,6 +155,13 @@ download_downscale_site <- function(site_index,
 
             names(noaa_data) <- cf_var_names
 
+            specific_humidity <- noaaGEFSpoint::rh2qair(rh = noaa_data$relative_humidity$value / 100,
+                                                                      T = noaa_data$air_temperature$value,
+                                                                      press = noaa_data$air_pressure$value)
+
+            #Calculate wind speed from east and north components
+            wind_speed <- sqrt(noaa_data$eastward_wind$value^2 + noaa_data$northward_wind$value^2)
+
             forecast_noaa <- tibble::tibble(time = noaa_data$air_temperature$forecast.date,
                                             NOAA.member = noaa_data$air_temperature$ensembles,
                                             air_temperature = noaa_data$air_temperature$value,
@@ -163,9 +170,9 @@ download_downscale_site <- function(site_index,
                                             surface_downwelling_longwave_flux_in_air = noaa_data$surface_downwelling_longwave_flux_in_air$value,
                                             surface_downwelling_shortwave_flux_in_air = noaa_data$surface_downwelling_shortwave_flux_in_air$value,
                                             precipitation_flux = noaa_data$precipitation_flux$value,
-                                            eastward_wind = noaa_data$eastward_wind$value,
-                                            northward_wind = noaa_data$northward_wind$value,
-                                            cloud_area_fraction = noaa_data$cloud_area_fraction$value)
+                                            specific_humidity = specific_humidity,
+                                            cloud_area_fraction = noaa_data$cloud_area_fraction$value,
+                                            wind_speed = wind_speed)
 
             #9.999e+20 is the missing value so convert to NA
             forecast_noaa$surface_downwelling_longwave_flux_in_air[forecast_noaa$surface_downwelling_longwave_flux_in_air == 9.999e+20] <- NA
@@ -176,24 +183,11 @@ download_downscale_site <- function(site_index,
             forecast_noaa$cloud_area_fraction <- forecast_noaa$cloud_area_fraction / 100 #Convert from % to proportion
             forecast_noaa$relative_humidity <- forecast_noaa$relative_humidity / 100 #Convert from % to proportion
 
-            forecast_noaa$specific_humidity <- noaaGEFSpoint::rh2qair(rh = forecast_noaa$relative_humidity,
-                                                       T = forecast_noaa$air_temperature,
-                                                       press = forecast_noaa$air_pressure)
-
-            #Calculate wind speed from east and north components
-            forecast_noaa$wind_speed <- sqrt(forecast_noaa$eastward_wind^2 + forecast_noaa$northward_wind^2)
-
             # Convert NOAA's total precipitation (kg m-2) to precipitation flux (kg m-2 s-1)
             #NOAA precipitation data is an accumulation over 6 hours.
             forecast_noaa$precipitation_flux <- udunits2::ud.convert(forecast_noaa$precipitation_flux,
                                                                      "kg m-2 hr-1",
                                                                      "kg m-2 6 s-1")  #There are 21600 seconds in 6 hours
-
-            #remove the east and north components and reorder to match the order of the units
-            forecast_noaa <- forecast_noaa %>% dplyr::select(-c("eastward_wind","northward_wind"))
-            forecast_noaa <- forecast_noaa %>% dplyr::select(c("time", "NOAA.member", all_of(cf_var_names1)))
-
-
 
 
             for (ens in 1:21) { # i is the ensemble number
