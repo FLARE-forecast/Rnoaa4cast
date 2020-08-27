@@ -190,9 +190,9 @@ download_downscale_site <- function(site_index,
                                                                      "kg m-2 6 s-1")  #There are 21600 seconds in 6 hours
 
             #remove the east and north components and reorder to match the order of the units
-            forecast_noaa <- forecast_noaa %>%
-              dplyr::select(-c("eastward_wind","northward_wind")) %>%
-              dplyr::select(c("time", "NOAA.member", all_of(cf_var_names1)))
+            forecast_noaa <- forecast_noaa %>% dplyr::select(-c("eastward_wind","northward_wind"))
+            forecast_noaa <- forecast_noaa %>% dplyr::select(c("time", "NOAA.member", all_of(cf_var_names1)))
+
 
 
 
