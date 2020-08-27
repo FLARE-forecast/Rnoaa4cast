@@ -183,16 +183,18 @@ download_downscale_site <- function(site_index,
             #Calculate wind speed from east and north components
             forecast_noaa$wind_speed <- sqrt(forecast_noaa$eastward_wind^2 + forecast_noaa$northward_wind^2)
 
-            #remove the east and north components
-            forecast_noaa <- forecast_noaa %>% dplyr::select(-c("eastward_wind","northward_wind"))
-
-            forecast_noaa <- forecast_noaa %>% dplyr::select(all_of(cf_var_names1))
-
             # Convert NOAA's total precipitation (kg m-2) to precipitation flux (kg m-2 s-1)
             #NOAA precipitation data is an accumulation over 6 hours.
             forecast_noaa$precipitation_flux <- udunits2::ud.convert(forecast_noaa$precipitation_flux,
                                                                      "kg m-2 hr-1",
                                                                      "kg m-2 6 s-1")  #There are 21600 seconds in 6 hours
+
+            #remove the east and north components and reorder to match the order of the units
+            forecast_noaa <- forecast_noaa %>%
+              dplyr::select(-c("eastward_wind","northward_wind")) %>%
+              dplyr::select(c("time", "NOAA.member", all_of(cf_var_names1)))
+
+
 
             for (ens in 1:21) { # i is the ensemble number
 
