@@ -21,5 +21,6 @@ Imports:
         udunits2,
         ncdf4,
         lubridate,
-        rNOMADS (>= 2.5.0)
+        rNOMADS (>= 2.5.0),
+        magrittr
         
