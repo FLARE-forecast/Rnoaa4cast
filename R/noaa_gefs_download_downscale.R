@@ -52,7 +52,7 @@ noaa_gefs_download_downscale <- function(site_list,
 
     #Run download_downscale_site() over the site_index
     parallel::mclapply(X = site_index,
-                       FUN = download_downscale_site,
+                       FUN = noaaGEFSpoint::download_downscale_site,
                        lat_list = lat_list,
                        lon_list = lon_list,
                        site_list = site_list,
@@ -69,7 +69,7 @@ noaa_gefs_download_downscale <- function(site_list,
 
     for(site_index in 1:length(site_list)){
 
-      download_downscale_site(site_index,
+      noaaGEFSpoint::download_downscale_site(site_index,
                               lat_list = lat_list,
                               lon_list = lon_list,
                               site_list = site_list,
