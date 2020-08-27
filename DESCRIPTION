@@ -15,12 +15,11 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.0
 Imports:
-	    stringr,
-        tibble,
-        dplyr,
-        udunits2,
-        ncdf4,
-        lubridate,
-        rNOMADS (>= 2.5.0),
-        magrittr
-        
+    stringr,
+    tibble,
+    dplyr,
+    udunits2,
+    ncdf4,
+    lubridate,
+    rNOMADS (>= 2.5.0),
+    magrittr
