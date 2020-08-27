@@ -173,7 +173,7 @@ download_downscale_site <- function(site_index,
             forecast_noaa$precipitation_flux[forecast_noaa$precipitation_flux == 9.999e+20] <- NA
             forecast_noaa$cloud_area_fraction[forecast_noaa$cloud_area_fraction == 9.999e+20] <- NA
 
-            forecast_noaa$specific_humidity <- rh2qair(rh = forecast_noaa$relative_humidity,
+            forecast_noaa$specific_humidity <- noaaGEFSpoint::rh2qair(rh = forecast_noaa$relative_humidity/100,
                                                        T = forecast_noaa$air_temperature,
                                                        press = forecast_noaa$air_pressure)
 

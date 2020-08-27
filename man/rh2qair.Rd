@@ -8,7 +8,7 @@
 rh2qair(rh, T, press = 101325)
 }
 \arguments{
-\item{rh}{relative humidity (proportion, not precent)}
+\item{rh}{relative humidity (proportion, not percent)}
 
 \item{T}{absolute temperature (Kelvin)}
 
