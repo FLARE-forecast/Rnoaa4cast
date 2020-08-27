@@ -38,7 +38,7 @@ temporal_downscale <- function(input_file, output_file, overwrite = TRUE, hr = 1
   lon.in <- ncdf4::ncvar_get(nc, "longitude")
 
   # generate data frame from netcdf variables and retrive units
-  noaa_data <- tibble(time = time)
+  noaa_data <- tibble::tibble(time = time)
   var_units <- rep(NA, length(cf_var_names))
   for(i in 1:length(cf_var_names)){
     curr_data <- ncdf4::ncvar_get(nc, cf_var_names[i])
@@ -137,7 +137,7 @@ downscale_spline_to_hrly <- function(df,VarNames, hr = 1){
 
   interp.df.days <- seq(min(df$days_since_t0), as.numeric(max(df$days_since_t0)), 1/(24/hr))
 
-  noaa_data_interp <- tibble(time = lubridate::as_datetime(t0 + interp.df.days, tz = "UTC"))
+  noaa_data_interp <- tibble::tibble(time = lubridate::as_datetime(t0 + interp.df.days, tz = "UTC"))
 
   for(Var in 1:length(VarNames)){
     curr_data <- spline(x = df$days_since_t0, y = unlist(df[VarNames[Var]]), method = "fmm", xout = interp.df.days)$y
@@ -173,7 +173,7 @@ downscale_ShortWave_to_hrly <- function(df,lat, lon, hr = 1){
 
   interp.df.days <- seq(min(df$days_since_t0), as.numeric(max(df$days_since_t0)), 1/(24/hr))
 
-  noaa_data_interp <- tibble(time = lubridate::as_datetime(t0 + interp.df.days))
+  noaa_data_interp <- tibble::tibble(time = lubridate::as_datetime(t0 + interp.df.days))
 
   data.hrly <- noaa_data_interp %>%
     dplyr::left_join(df, by = "time")
