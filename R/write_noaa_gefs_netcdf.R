@@ -15,7 +15,7 @@ write_noaa_gefs_netcdf <- function(df,ens, lat, lon, cf_units, output_file, over
   end_time <- max(df$time)
 
   data <- df %>%
-    dplyr::filter(df, NOAA.member == ens) %>%
+    dplyr::filter(NOAA.member == ens) %>%
     dplyr::select(-c("NOAA.member", "time"))
 
   diff_time <- as.numeric(difftime(df$time[2], df$time[1]))
