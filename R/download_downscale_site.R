@@ -120,9 +120,9 @@ download_downscale_site <- function(site_index,
 
             #Replace "eastward_wind" and "northward_wind" with "wind_speed"
             cf_var_names1 <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
-                               "surface_downwelling_shortwave_flux_in_air", "precipitation_flux", "wind_speed","specific_humidity", "cloud_area_fraction")
+                               "surface_downwelling_shortwave_flux_in_air", "precipitation_flux","specific_humidity", "cloud_area_fraction","wind_speed")
 
-            cf_var_units1 <- c("K", "Pa", "1", "Wm-2", "Wm-2", "kgm-2s-1", "ms-1", "1", "1")  #Negative numbers indicate negative exponents
+            cf_var_units1 <- c("K", "Pa", "1", "Wm-2", "Wm-2", "kgm-2hr-1", "1", "1", "ms-1")  #Negative numbers indicate negative exponents
 
             noaa_data <- list()
 
@@ -173,7 +173,10 @@ download_downscale_site <- function(site_index,
             forecast_noaa$precipitation_flux[forecast_noaa$precipitation_flux == 9.999e+20] <- NA
             forecast_noaa$cloud_area_fraction[forecast_noaa$cloud_area_fraction == 9.999e+20] <- NA
 
-            forecast_noaa$specific_humidity <- noaaGEFSpoint::rh2qair(rh = forecast_noaa$relative_humidity/100,
+            forecast_noaa$cloud_area_fraction <- forecast_noaa$cloud_area_fraction / 100 #Convert from % to proportion
+            forecast_noaa$relative_humidity <- forecast_noaa$relative_humidity / 100 #Convert from % to proportion
+
+            forecast_noaa$specific_humidity <- noaaGEFSpoint::rh2qair(rh = forecast_noaa$relative_humidity,
                                                        T = forecast_noaa$air_temperature,
                                                        press = forecast_noaa$air_pressure)
 
@@ -182,6 +185,8 @@ download_downscale_site <- function(site_index,
 
             #remove the east and north components
             forecast_noaa <- forecast_noaa %>% dplyr::select(-c("eastward_wind","northward_wind"))
+
+            forecast_noaa <- forecast_noaa %>% dplyr::select(all_of(cf_var_names1))
 
             # Convert NOAA's total precipitation (kg m-2) to precipitation flux (kg m-2 s-1)
             #NOAA precipitation data is an accumulation over 6 hours.
