@@ -28,6 +28,7 @@ noaa_gefs_download_downscale <- function(site_list,
                                          num_cores = 1,
                                          overwrite = FALSE){
 
+  `%>%` <- magrittr::`%>%`
   model_name <- "NOAAGEFS_6hr"
   model_name_ds <-"NOAAGEFS_1hr" #Downscaled NOAA GEFS
 
