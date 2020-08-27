@@ -10,7 +10,7 @@
 ##'
 ##'
 
-temporal_downscale <- function(input_file, output_file, overwrite = TRUE){
+temporal_downscale <- function(input_file, output_file, overwrite = TRUE, hr = 1){
 
   # open netcdf
   nc <- ncdf4::nc_open(input_file)
