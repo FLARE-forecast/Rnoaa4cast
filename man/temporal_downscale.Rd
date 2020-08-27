@@ -4,7 +4,7 @@
 \alias{temporal_downscale}
 \title{Downscale NOAA GEFS frin 6hr to 1hr}
 \usage{
-temporal_downscale(input_file, output_file, overwrite = TRUE)
+temporal_downscale(input_file, output_file, overwrite = TRUE, hr = 1)
 }
 \arguments{
 \item{input_file, }{full path to 6hr file}

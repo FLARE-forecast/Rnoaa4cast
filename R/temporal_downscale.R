@@ -49,7 +49,7 @@ temporal_downscale <- function(input_file, output_file, overwrite = TRUE, hr = 1
 
   # spline-based downscaling
   if(length(which(c("air_temperature", "wind_speed","specific_humidity", "air_pressure") %in% cf_var_names) == 4)){
-    forecast_noaa_ds <- noaaGEFSpoint::downscale_spline_to_hourly(df = noaa_data, VarNames = c("air_temperature", "wind_speed","specific_humidity", "air_pressure"))
+    forecast_noaa_ds <- noaaGEFSpoint::downscale_spline_to_hrly(df = noaa_data, VarNames = c("air_temperature", "wind_speed","specific_humidity", "air_pressure"))
   }else{
     #Add error message
   }
