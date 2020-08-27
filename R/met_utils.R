@@ -22,7 +22,7 @@ qair2rh <- function(qair, temp, press = 1013.25) {
 
 ##' converts relative humidity to specific humidity
 ##' @title RH to SH
-##' @param rh relative humidity (proportion, not \%)
+##' @param rh relative humidity (proportion, not precent)
 ##' @param T absolute temperature (Kelvin)
 ##' @param press air pressure (Pascals)
 ##' @export
