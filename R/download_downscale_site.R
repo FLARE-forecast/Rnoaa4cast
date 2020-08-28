@@ -53,6 +53,7 @@ download_downscale_site <- function(site_index,
 
   if(latest){
     url_index <- length(urls.out$url)
+    previous_day_index <- url_index - 1
   }else if(!forecast_date == "all"){
     url_index <- which(urls.out$date %in% forecast_date)
   }else{
@@ -70,7 +71,20 @@ download_downscale_site <- function(site_index,
       model_hr <- c(0, 6, 12, 18)
       if(latest){
         model.runs <- rNOMADS::GetDODSModelRuns(model.url)
-        model_list <- model.runs$model.run[max(which(model.runs$model.run %in% model_list))]
+        avail_runs <- model.runs$model.run[which(model.runs$model.run %in% model_list)]
+        if(forecast_time != "all"){
+          if(!forecast_time %in% c(0,6,12,18)){
+            stop("forecast time not in avialable list c(0,6,12,18) in UTC")
+          }else{
+            model_list <- model_list[which(model_hr %in% forecast_time)]
+            if(!(model_list %in% avail_runs)){
+              model.url <- urls.out$url[previous_day_index]
+              start_date <- urls.out$date[previous_day_index]
+            }
+          }
+        }else{
+          model_list <- model.runs$model.run[max(which(model.runs$model.run %in% model_list))]
+        }
       }else if(forecast_time != "all"){
         if(!forecast_time %in% c(0,6,12,18) & !latest){
           stop("forecast time not in avialable list c(0,6,12,18) in UTC")
