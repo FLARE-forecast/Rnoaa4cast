@@ -37,7 +37,7 @@ noaa_gefs_download_downscale <- function(site_list,
   if(run_parallel){
 
     #Create cluster
-    print(paste0("Number of cores specified: ", config_file$num_cores))
+    print(paste0("Number of cores specified: ", num_cores))
     if(num_cores > parallel::detectCores()){
       #Docker sets the max number of cores, if the request is for more, set to
       #what docker allows
