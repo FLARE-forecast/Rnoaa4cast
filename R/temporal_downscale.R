@@ -168,7 +168,7 @@ downscale_ShortWave_to_hrly <- function(df,lat, lon, hr = 1){
   df <- df %>%
     dplyr::select("time", "surface_downwelling_shortwave_flux_in_air") %>%
     dplyr::mutate(days_since_t0 = difftime(.$time, t0, units = "days")) %>%
-    dplyr::mutate(lead_var = lead(surface_downwelling_shortwave_flux_in_air, 1))
+    dplyr::mutate(lead_var = dplyr::lead(surface_downwelling_shortwave_flux_in_air, 1))
 
   interp.df.days <- seq(min(df$days_since_t0), as.numeric(max(df$days_since_t0)), 1/(24/hr))
 
@@ -274,7 +274,9 @@ downscale_repeat_6hr_to_hrly <- function(df, varName, hr = 1){
     dplyr::mutate(lead_var = dplyr::lead(df[,varName], 1))
 
   #Create new vector with all hours
-  interp.df.days <- seq(min(df$days_since_t0), as.numeric(max(df$days_since_t0)), 1/(24/hr))
+  interp.df.days <- seq(min(df$days_since_t0),
+                        as.numeric(max(df$days_since_t0)),
+                        1 / (24 / hr))
 
   #Create new data frame
   noaa_data_interp <- tibble::tibble(time = lubridate::as_datetime(t0 + interp.df.days))
