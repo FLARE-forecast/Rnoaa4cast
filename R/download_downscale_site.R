@@ -23,7 +23,6 @@ download_downscale_site <- function(site_index,
                                     site_list,
                                     forecast_time = "all",
                                     forecast_date = "all",
-                                    latest = FALSE,
                                     downscale,
                                     overwrite,
                                     model_name,
@@ -51,7 +50,7 @@ download_downscale_site <- function(site_index,
   #below
   urls.out <- rNOMADS::GetDODSDates(abbrev = "gens_bc")
 
-  if(latest){
+  if(forecast_date == "latest"){
     url_index <- length(urls.out$url)
     previous_day_index <- url_index - 1
   }else if(!forecast_date == "all"){
@@ -62,17 +61,17 @@ download_downscale_site <- function(site_index,
 
   for(i in url_index){
 
-    if(forecast_date == "all" | forecast_date %in% urls.out$date | latest){
+    if(forecast_date == "all" | forecast_date %in% urls.out$date | forecast_date == "latest"){
 
       model.url <- urls.out$url[i]
       start_date <- urls.out$date[i]
 
       model_list <- c("gep_all_00z", "gep_all_06z", "gep_all_12z", "gep_all_18z")
       model_hr <- c(0, 6, 12, 18)
-      if(latest){
+      if(forecast_date == "latest"){
         model.runs <- rNOMADS::GetDODSModelRuns(model.url)
         avail_runs <- model.runs$model.run[which(model.runs$model.run %in% model_list)]
-        if(forecast_time != "all"){
+        if(forecast_time != "all" & forecast_time != "latest"){
           if(!forecast_time %in% c(0,6,12,18)){
             stop("forecast time not in avialable list c(0,6,12,18) in UTC")
           }else{
@@ -82,11 +81,11 @@ download_downscale_site <- function(site_index,
               start_date <- urls.out$date[previous_day_index]
             }
           }
-        }else{
+        }else if(forecast_time == "latest")
           model_list <- model.runs$model.run[max(which(model.runs$model.run %in% model_list))]
         }
       }else if(forecast_time != "all"){
-        if(!forecast_time %in% c(0,6,12,18) & !latest){
+        if(!forecast_time %in% c(0,6,12,18) & forecast_time != "latest"){
           stop("forecast time not in avialable list c(0,6,12,18) in UTC")
         }
         model_list <- model_list[which(model_hr %in% forecast_time)]
