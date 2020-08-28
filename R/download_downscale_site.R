@@ -52,7 +52,7 @@ download_downscale_site <- function(site_index,
   urls.out <- rNOMADS::GetDODSDates(abbrev = "gens_bc")
 
   if(latest){
-    url_index <- length(length(urls.out$url))
+    url_index <- length(urls.out$url)
   }else if(!forecast_date == "all"){
     url_index <- which(urls.out$date %in% forecast_date)
   }else{
@@ -61,7 +61,7 @@ download_downscale_site <- function(site_index,
 
   for(i in url_index){
 
-    if(forecast_date == "all" | forecast_date %in% urls.out$date){
+    if(forecast_date == "all" | forecast_date %in% urls.out$date | latest){
 
       model.url <- urls.out$url[i]
       start_date <- urls.out$date[i]
@@ -69,7 +69,7 @@ download_downscale_site <- function(site_index,
       model_list <- c("gep_all_00z", "gep_all_06z", "gep_all_12z", "gep_all_18z")
       model_hr <- c(0, 6, 12, 18)
       if(latest){
-        model.runs <- GetDODSModelRuns(model.url)
+        model.runs <- rNOMADS::GetDODSModelRuns(model.url)
         model_list <- model.runs$model.run[max(which(model.runs$model.run %in% model_list))]
       }else if(forecast_time != "all"){
         if(!forecast_time %in% c(0,6,12,18) & !latest){
