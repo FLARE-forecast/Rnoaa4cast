@@ -81,7 +81,7 @@ download_downscale_site <- function(site_index,
               start_date <- urls.out$date[previous_day_index]
             }
           }
-        }else if(forecast_time == "latest")
+        }else if(forecast_time == "latest"){
           model_list <- model.runs$model.run[max(which(model.runs$model.run %in% model_list))]
         }
       }else if(forecast_time != "all"){
