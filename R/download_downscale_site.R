@@ -56,7 +56,7 @@ download_downscale_site <- function(site_index,
   }else if(!forecast_date == "all"){
     url_index <- which(urls.out$date %in% forecast_date)
   }else{
-  url_index <- 1:length(length(urls.out$url))
+    url_index <- 1:length(length(urls.out$url))
   }
 
   for(i in url_index){
@@ -135,7 +135,7 @@ download_downscale_site <- function(site_index,
             cf_var_names1 <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
                                "surface_downwelling_shortwave_flux_in_air", "precipitation_flux","specific_humidity", "cloud_area_fraction","wind_speed")
 
-            cf_var_units1 <- c("K", "Pa", "1", "Wm-2", "Wm-2", "kgm-2hr-1", "1", "1", "ms-1")  #Negative numbers indicate negative exponents
+            cf_var_units1 <- c("K", "Pa", "1", "Wm-2", "Wm-2", "kgm-2s-1", "1", "1", "ms-1")  #Negative numbers indicate negative exponents
 
             noaa_data <- list()
 
@@ -169,8 +169,8 @@ download_downscale_site <- function(site_index,
             names(noaa_data) <- cf_var_names
 
             specific_humidity <- noaaGEFSpoint::rh2qair(rh = noaa_data$relative_humidity$value / 100,
-                                                                      T = noaa_data$air_temperature$value,
-                                                                      press = noaa_data$air_pressure$value)
+                                                        T = noaa_data$air_temperature$value,
+                                                        press = noaa_data$air_pressure$value)
 
             #Calculate wind speed from east and north components
             wind_speed <- sqrt(noaa_data$eastward_wind$value^2 + noaa_data$northward_wind$value^2)
@@ -196,11 +196,8 @@ download_downscale_site <- function(site_index,
             forecast_noaa$cloud_area_fraction <- forecast_noaa$cloud_area_fraction / 100 #Convert from % to proportion
             forecast_noaa$relative_humidity <- forecast_noaa$relative_humidity / 100 #Convert from % to proportion
 
-            # Convert NOAA's total precipitation (kg m-2) to precipitation flux (kg m-2 s-1)
-            #NOAA precipitation data is an accumulation over 6 hours.
-            forecast_noaa$precipitation_flux <- udunits2::ud.convert(forecast_noaa$precipitation_flux,
-                                                                     "kg m-2 hr-1",
-                                                                     "kg m-2 6 s-1")  #There are 21600 seconds in 6 hours
+            # By downloading pratesfc we get precipitation in the correct units (kg m-2 s-1)
+            forecast_noaa$precipitation_flux <- forecast_noaa$precipitation_flux
 
 
             for (ens in 1:21) { # i is the ensemble number
@@ -216,7 +213,7 @@ download_downscale_site <- function(site_index,
               output_file <- file.path(model_site_date_hour_dir,fname)
 
               #Write netCDF
-              noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa,ens, lat = lat_list[site_index], lon_list[site_index], cf_units = cf_var_units1, output_file = output_file, overwrite = overwrite)
+              noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa,ens, lat = lat_list[site_index], long = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = overwrite)
 
               if(downscale){
                 #Downscale the forecast from 6hr to 1hr

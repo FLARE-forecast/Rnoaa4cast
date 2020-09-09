@@ -23,7 +23,7 @@ write_noaa_gefs_netcdf <- function(df,ens, lat, lon, cf_units, output_file, over
   cf_var_names <- names(data)
 
   time_dim <- ncdf4::ncdim_def(name="time",
-                               units = paste("hours since", format(start_time, "%Y-%m-%dT%H:%M")),
+                               units = paste("hours since", format(start_time, "%Y-%m-%d %H:%M")),
                                seq(from = 0, length.out = nrow(data), by = diff_time), #GEFS forecast starts 6 hours from start time
                                create_dimvar = TRUE)
   lat_dim <- ncdf4::ncdim_def("latitude", "degree_north", lat, create_dimvar = TRUE)

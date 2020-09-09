@@ -45,6 +45,9 @@ temporal_downscale <- function(input_file, output_file, overwrite = TRUE, hr = 1
     noaa_data <- cbind(noaa_data, curr_data)
     var_units[i] <- ncdf4::ncatt_get(nc, cf_var_names[i], attname = "units")$value
   }
+
+  ncdf4::nc_close(nc)
+
   names(noaa_data) <- c("time",cf_var_names)
 
   # spline-based downscaling
