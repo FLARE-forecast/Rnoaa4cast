@@ -48,7 +48,11 @@ download_downscale_site <- function(site_index,
   #For some reason rNOMADS::GetDODSDates doesn't return "gens" even
   #though it is there, use gens_bc to get the url but replace gens_bc with gens
   #below
-  urls.out <- rNOMADS::GetDODSDates(abbrev = "gens_bc")
+  urls.out <- tryCatch(NOMADS::GetDODSDates(abbrev = "gens_bc"),
+                       error = function(e)
+                         warning(paste(e$message, "NOAA Server not responsive"),
+                                 call. = FALSE),
+                       finally = NULL)
 
   if(forecast_date == "latest"){
     url_index <- length(urls.out$url)
@@ -69,7 +73,12 @@ download_downscale_site <- function(site_index,
       model_list <- c("gep_all_00z", "gep_all_06z", "gep_all_12z", "gep_all_18z")
       model_hr <- c(0, 6, 12, 18)
       if(forecast_date == "latest"){
-        model.runs <- rNOMADS::GetDODSModelRuns(model.url)
+        model.runs <- tryCatch(rNOMADS::GetDODSModelRuns(model.url),
+                               error = function(e)
+                                 warning(paste(e$message, "skipping", model.url),
+                                         call. = FALSE),
+                               finally = NULL)
+
         avail_runs <- model.runs$model.run[which(model.runs$model.run %in% model_list)]
         if(forecast_time != "all" & forecast_time != "latest"){
           if(!forecast_time %in% c(0,6,12,18)){
@@ -112,7 +121,12 @@ download_downscale_site <- function(site_index,
 
           print(paste("Downloading", site_list[site_index], format(start_time, "%Y-%m-%dT%H")))
 
-          model.runs <- rNOMADS::GetDODSModelRuns(model.url)
+          model.runs <- tryCatch(rNOMADS::GetDODSModelRuns(model.url),
+                                 error = function(e)
+                                   warning(paste(e$message, "skipping", curr_model.url),
+                                           call. = FALSE),
+                                 finally = NULL)
+
 
           #check if available at NOAA
           if(model_list[m] %in% model.runs$model.run){
@@ -153,13 +167,17 @@ download_downscale_site <- function(site_index,
                 lat <- which.min(abs(lat.dom - lat_list[site_index])) - 1 #NOMADS indexes start at 0
               }
 
-              noaa_data[[j]] <- rNOMADS::DODSGrab(model.url = curr_model.url,
+              noaa_data[[j]] <- tryCatch(rNOMADS::DODSGrab(model.url = curr_model.url,
                                                   model.run = model.run,
                                                   variables	= noaa_var_names[j],
                                                   time = c(0, 64),
                                                   lon = lon,
                                                   lat = lat,
-                                                  ensembles=c(0, 20))
+                                                  ensembles=c(0, 20)),
+                                         error = function(e)
+                                           warning(paste(e$message, "skipping", curr_model.url, model.run, noaa_var_names[j]),
+                                                   call. = FALSE),
+                                         finally = NULL)
 
               #For some reason it defaults to the computer's time zone, convert to UTC
               noaa_data[[j]]$forecast.date <- lubridate::with_tz(noaa_data[[j]]$forecast.date,
