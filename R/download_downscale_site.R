@@ -48,7 +48,7 @@ download_downscale_site <- function(site_index,
   #For some reason rNOMADS::GetDODSDates doesn't return "gens" even
   #though it is there, use gens_bc to get the url but replace gens_bc with gens
   #below
-  urls.out <- tryCatch(NOMADS::GetDODSDates(abbrev = "gens_bc"),
+  urls.out <- tryCatch(rNOMADS::GetDODSDates(abbrev = "gens_bc"),
                        error = function(e)
                          warning(paste(e$message, "NOAA Server not responsive"),
                                  call. = FALSE),
