@@ -49,10 +49,14 @@ download_downscale_site <- function(site_index,
   #though it is there, use gens_bc to get the url but replace gens_bc with gens
   #below
   urls.out <- tryCatch(rNOMADS::GetDODSDates(abbrev = "gens_bc"),
-                       error = function(e)
+                       error = function(e){
                          warning(paste(e$message, "NOAA Server not responsive"),
-                                 call. = FALSE),
+                                 call. = FALSE)
+                         return(NA)
+                       },
                        finally = NULL)
+
+  if(is.na(urls.out)) stop()
 
   if(forecast_date == "latest"){
     url_index <- length(urls.out$url)
@@ -74,10 +78,14 @@ download_downscale_site <- function(site_index,
       model_hr <- c(0, 6, 12, 18)
       if(forecast_date == "latest"){
         model.runs <- tryCatch(rNOMADS::GetDODSModelRuns(model.url),
-                               error = function(e)
+                               error = function(e){
                                  warning(paste(e$message, "skipping", model.url),
-                                         call. = FALSE),
+                                         call. = FALSE)
+                                 return(NA)
+                               },
                                finally = NULL)
+
+        if(is.na(model.runs)) next
 
         avail_runs <- model.runs$model.run[which(model.runs$model.run %in% model_list)]
         if(forecast_time != "all" & forecast_time != "latest"){
@@ -153,6 +161,8 @@ download_downscale_site <- function(site_index,
 
             noaa_data <- list()
 
+            download_issues <- FALSE
+
             for(j in 1:length(noaa_var_names)){
 
               #For some reason rNOMADS::GetDODSDates doesn't return "gens" even
@@ -174,14 +184,23 @@ download_downscale_site <- function(site_index,
                                                   lon = lon,
                                                   lat = lat,
                                                   ensembles=c(0, 20)),
-                                         error = function(e)
-                                           warning(paste(e$message, "skipping", curr_model.url, model.run, noaa_var_names[j]),
-                                                   call. = FALSE),
+                                         error = function(e){
+                                                  warning(paste(e$message, "skipping", curr_model.url, model.run, noaa_var_names[j]),
+                                                   call. = FALSE)
+                                           return(NA)
+                                         },
                                          finally = NULL)
+
+              if(is.na(noaa_data[[j]])) download_issues <- TRUE
 
               #For some reason it defaults to the computer's time zone, convert to UTC
               noaa_data[[j]]$forecast.date <- lubridate::with_tz(noaa_data[[j]]$forecast.date,
                                                                  tzone = "UTC")
+            }
+
+            if(download_issues == TRUE){
+              warning(paste("Error downloaded one of the variables: ", curr_model.url, model.run))
+              next
             }
 
             names(noaa_data) <- cf_var_names
