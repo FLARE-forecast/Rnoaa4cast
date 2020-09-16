@@ -64,7 +64,7 @@ download_downscale_site <- function(site_index,
   }else if(!forecast_date == "all"){
     url_index <- which(urls.out$date %in% forecast_date)
   }else{
-    url_index <- 1:length(length(urls.out$url))
+    url_index <- 1:length(urls.out$url)
   }
 
   for(i in url_index){
