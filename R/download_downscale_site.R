@@ -56,7 +56,7 @@ download_downscale_site <- function(site_index,
                        },
                        finally = NULL)
 
-  if(is.na(urls.out)) stop()
+  if(is.na(urls.out[1])) stop()
 
   if(forecast_date == "latest"){
     url_index <- length(urls.out$url)
@@ -85,7 +85,7 @@ download_downscale_site <- function(site_index,
                                },
                                finally = NULL)
 
-        if(is.na(model.runs)) next
+        if(is.na(model.runs)[1]) next
 
         avail_runs <- model.runs$model.run[which(model.runs$model.run %in% model_list)]
         if(forecast_time != "all" & forecast_time != "latest"){
@@ -130,11 +130,14 @@ download_downscale_site <- function(site_index,
           print(paste("Downloading", site_list[site_index], format(start_time, "%Y-%m-%dT%H")))
 
           model.runs <- tryCatch(rNOMADS::GetDODSModelRuns(model.url),
-                                 error = function(e)
-                                   warning(paste(e$message, "skipping", curr_model.url),
-                                           call. = FALSE),
+                                 error = function(e){
+                                   warning(paste(e$message, "skipping", model.url),
+                                           call. = FALSE)
+                                   return(NA)
+                                 },
                                  finally = NULL)
 
+          if(is.na(model.runs)[1]) next
 
           #check if available at NOAA
           if(model_list[m] %in% model.runs$model.run){
@@ -191,7 +194,7 @@ download_downscale_site <- function(site_index,
                                          },
                                          finally = NULL)
 
-              if(is.na(noaa_data[[j]])) download_issues <- TRUE
+              if(is.na(noaa_data[[j]][1])) download_issues <- TRUE
 
               #For some reason it defaults to the computer's time zone, convert to UTC
               noaa_data[[j]]$forecast.date <- lubridate::with_tz(noaa_data[[j]]$forecast.date,
@@ -199,7 +202,7 @@ download_downscale_site <- function(site_index,
             }
 
             if(download_issues == TRUE){
-              warning(paste("Error downloaded one of the variables: ", curr_model.url, model.run))
+              warning(paste("Error downloading one of the variables: ", curr_model.url, model.run))
               next
             }
 
