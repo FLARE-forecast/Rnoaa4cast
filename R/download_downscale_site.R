@@ -88,6 +88,10 @@ download_downscale_site <- function(site_index,
         if(is.na(model.runs)[1]) next
 
         avail_runs <- model.runs$model.run[which(model.runs$model.run %in% model_list)]
+        avail_runs_index <- which(model_list %in% avail_runs)
+
+        model_list <- model_list[avail_runs_index]
+        model_hr <- model_hr[avail_runs_index]
         if(forecast_time != "all" & forecast_time != "latest"){
           if(!forecast_time %in% c(0,6,12,18)){
             stop("forecast time not in avialable list c(0,6,12,18) in UTC")
