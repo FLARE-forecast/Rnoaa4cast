@@ -9,14 +9,19 @@
 ##'
 ##'
 
-write_noaa_gefs_netcdf <- function(df,ens, lat, lon, cf_units, output_file, overwrite){
+write_noaa_gefs_netcdf <- function(df,ens = NA, lat, lon, cf_units, output_file, overwrite){
 
   start_time <- min(df$time)
   end_time <- max(df$time)
 
+  if(!is.na(ens)){
   data <- df %>%
     dplyr::filter(NOAA.member == ens) %>%
     dplyr::select(-c("NOAA.member", "time"))
+  }else{
+    data <- df %>%
+      dplyr::select(-c("time"))
+  }
 
   diff_time <- as.numeric(difftime(df$time[2], df$time[1]))
 
@@ -34,12 +39,6 @@ write_noaa_gefs_netcdf <- function(df,ens, lat, lon, cf_units, output_file, over
   nc_var_list <- list()
   for (i in 1:length(cf_var_names)) { #Each ensemble member will have data on each variable stored in their respective file.
     nc_var_list[[i]] <- ncdf4::ncvar_def(cf_var_names[i], cf_units[i], dimensions_list, missval=NaN)
-  }
-
-  if(ens < 10){
-    ens_name <- paste0("0",ens)
-  }else{
-    ens_name <- ens
   }
 
   if (!file.exists(output_file) | overwrite) {
