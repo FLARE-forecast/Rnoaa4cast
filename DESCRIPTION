@@ -1,15 +1,14 @@
 Package: noaaGEFSpoint
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.1.01
+Title: Downloads And Temporally Downscales NOAA GEFS 6-hr Forecasts for a Point Location
+Version: 0.0.1.02
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Quinn",
+           family = "Thomas",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to
-    pick a license
+           email = "rqthomas@vt.edu",
+           comment = c(ORCID = "0000-0003-1282-7825"))
+Description: Uses the rNOMADS package to download NOAA GEFS 6-hr weather forecasts for a set point locations defined by their latitude and longitude.  Temporally downscales the 6-hr to 1-hr (default) using a spline (temperature, relative humidity, wind speed), solar geometry (shortwave radiation), and constant (precipitation, longwave radiation) functions.  Saves files as netcdf using a prescribed directory structure generated within the `output_directory`.
+License: MIT
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
@@ -18,7 +17,6 @@ Imports:
     stringr,
     tibble,
     dplyr,
-    udunits2,
     ncdf4,
     lubridate,
     rNOMADS (>= 2.5.0),
