@@ -1,14 +1,15 @@
-##' @title Downscale NOAA GEFS frin 6hr to 1hr
-##' @return None
-##'
-##' @param input_file, full path to 6hr file
-##' @param output_file, full path to 1hr file that will be generated
-##' @param overwrite, logical stating to overwrite any existing output_file
-##' @export
-##'
-##' @author Quinn Thomas
-##'
-##'
+#' @title Downscale NOAA GEFS frin 6hr to 1hr
+#' @return None
+#'
+#' @param input_file, full path to 6hr file
+#' @param output_file, full path to 1hr file that will be generated
+#' @param overwrite, logical stating to overwrite any existing output_file
+#' @param hr time step in hours of temporal downscaling (default = 1)
+#' @export
+#'
+#' @author Quinn Thomas
+#'
+#'
 
 temporal_downscale <- function(input_file, output_file, overwrite = TRUE, hr = 1){
 
@@ -52,14 +53,14 @@ temporal_downscale <- function(input_file, output_file, overwrite = TRUE, hr = 1
 
   # spline-based downscaling
   if(length(which(c("air_temperature", "wind_speed","specific_humidity", "air_pressure") %in% cf_var_names) == 4)){
-    forecast_noaa_ds <- noaaGEFSpoint::downscale_spline_to_hrly(df = noaa_data, VarNames = c("air_temperature", "wind_speed","specific_humidity", "air_pressure"))
+    forecast_noaa_ds <- downscale_spline_to_hrly(df = noaa_data, VarNames = c("air_temperature", "wind_speed","specific_humidity", "air_pressure"))
   }else{
     #Add error message
   }
 
   # Convert splined SH, temperature, and presssure to RH
   forecast_noaa_ds <- forecast_noaa_ds %>%
-    dplyr::mutate(relative_humidity = noaaGEFSpoint::qair2rh(qair = forecast_noaa_ds$specific_humidity,
+    dplyr::mutate(relative_humidity = qair2rh(qair = forecast_noaa_ds$specific_humidity,
                                        temp = forecast_noaa_ds$air_temperature,
                                        press = forecast_noaa_ds$air_pressure)) %>%
     dplyr::mutate(relative_humidity = relative_humidity,
@@ -67,7 +68,7 @@ temporal_downscale <- function(input_file, output_file, overwrite = TRUE, hr = 1
 
   # convert longwave to hourly (just copy 6 hourly values over past 6-hour time period)
   if("surface_downwelling_longwave_flux_in_air" %in% cf_var_names){
-    LW.flux.hrly <- noaaGEFSpoint::downscale_repeat_6hr_to_hrly(df = noaa_data, varName = "surface_downwelling_longwave_flux_in_air")
+    LW.flux.hrly <- downscale_repeat_6hr_to_hrly(df = noaa_data, varName = "surface_downwelling_longwave_flux_in_air")
     forecast_noaa_ds <- dplyr::inner_join(forecast_noaa_ds, LW.flux.hrly, by = "time")
   }else{
     #Add error message
@@ -75,7 +76,7 @@ temporal_downscale <- function(input_file, output_file, overwrite = TRUE, hr = 1
 
   # convert precipitation to hourly (just copy 6 hourly values over past 6-hour time period)
   if("surface_downwelling_longwave_flux_in_air" %in% cf_var_names){
-    Precip.flux.hrly <- noaaGEFSpoint::downscale_repeat_6hr_to_hrly(df = noaa_data, varName = "precipitation_flux")
+    Precip.flux.hrly <- downscale_repeat_6hr_to_hrly(df = noaa_data, varName = "precipitation_flux")
     forecast_noaa_ds <- dplyr::inner_join(forecast_noaa_ds, Precip.flux.hrly, by = "time")
   }else{
     #Add error message
@@ -83,7 +84,7 @@ temporal_downscale <- function(input_file, output_file, overwrite = TRUE, hr = 1
 
   # convert cloud_area_fraction to hourly (just copy 6 hourly values over past 6-hour time period)
   if("cloud_area_fraction" %in% cf_var_names){
-    cloud_area_fraction.flux.hrly <- noaaGEFSpoint::downscale_repeat_6hr_to_hrly(df = noaa_data, varName = "cloud_area_fraction")
+    cloud_area_fraction.flux.hrly <- downscale_repeat_6hr_to_hrly(df = noaa_data, varName = "cloud_area_fraction")
     forecast_noaa_ds <- dplyr::inner_join(forecast_noaa_ds, cloud_area_fraction.flux.hrly, by = "time")
   }else{
     #Add error message
@@ -91,7 +92,7 @@ temporal_downscale <- function(input_file, output_file, overwrite = TRUE, hr = 1
 
   # use solar geometry to convert shortwave from 6 hr to 1 hr
   if("surface_downwelling_shortwave_flux_in_air" %in% cf_var_names){
-    ShortWave.hrly <- noaaGEFSpoint::downscale_ShortWave_to_hrly(df = noaa_data, lat = lat.in, lon = lon.in)
+    ShortWave.hrly <- downscale_ShortWave_to_hrly(df = noaa_data, lat = lat.in, lon = lon.in)
     forecast_noaa_ds <- dplyr::inner_join(forecast_noaa_ds, ShortWave.hrly, by = "time")
   }else{
     #Add error message
@@ -115,16 +116,13 @@ temporal_downscale <- function(input_file, output_file, overwrite = TRUE, hr = 1
 
 }
 
-##' @title Downscale spline to hourly
-##' @return A dataframe of downscaled state variables
-##'
-##' @param df, dataframe of data to be downscales
-##' @param VarNames, names of vars that are state variables
-##' @export
-##'
-##' @author Laura Puckett
-##'
-##'
+#' @title Downscale spline to hourly
+#' @return A dataframe of downscaled state variables
+#' @param df, dataframe of data to be downscales
+#' @noRd
+#' @author Laura Puckett
+#'
+#'
 
 downscale_spline_to_hrly <- function(df,VarNames, hr = 1){
   # --------------------------------------
@@ -151,18 +149,17 @@ downscale_spline_to_hrly <- function(df,VarNames, hr = 1){
   return(noaa_data_interp)
 }
 
-##' @title Downscale shortwave to hourly
-##' @return A dataframe of downscaled state variables
-##'
-##' @param df, data frame of variables
-##' @param lat, lat of site
-##' @param lon, long of site
-##' @return ShortWave.ds
-##' @export
-##'
-##' @author Laura Puckett
-##'
-##'
+#' @title Downscale shortwave to hourly
+#' @return A dataframe of downscaled state variables
+#'
+#' @param df, data frame of variables
+#' @param lat, lat of site
+#' @param lon, long of site
+#' @return ShortWave.ds
+#' @noRd
+#' @author Laura Puckett
+#'
+#'
 
 downscale_ShortWave_to_hrly <- function(df,lat, lon, hr = 1){
   ## downscale shortwave to hourly
@@ -198,7 +195,7 @@ downscale_ShortWave_to_hrly <- function(df,lat, lon, hr = 1){
   ShortWave.ds <- data.hrly %>%
     dplyr::mutate(hour = lubridate::hour(time)) %>%
     dplyr::mutate(doy = lubridate::yday(time) + hour/(24/hr))%>%
-    dplyr::mutate(rpot = noaaGEFSpoint::downscale_solar_geom(doy, as.vector(lon), as.vector(lat))) %>% # hourly sw flux calculated using solar geometry
+    dplyr::mutate(rpot = downscale_solar_geom(doy, as.vector(lon), as.vector(lat))) %>% # hourly sw flux calculated using solar geometry
     dplyr::group_by(group_6hr) %>%
     dplyr::mutate(avg.rpot = mean(rpot, na.rm = TRUE)) %>% # daily sw mean from solar geometry
     dplyr::ungroup() %>%
@@ -218,11 +215,12 @@ downscale_ShortWave_to_hrly <- function(df,lat, lon, hr = 1){
 #' @param lat Latitude
 #' @param lon Longitude
 #' @param dt Timestep
+#' @noRd
 #' @param hr Hours timestep
 #' @return `numeric(1)` of cosine of solar zenith angle
 #' @export
 cos_solar_zenith_angle <- function(doy, lat, lon, dt, hr) {
-  et <- noaaGEFSpoint::equation_of_time(doy)
+  et <- equation_of_time(doy)
   merid  <- floor(lon / 15) * 15
   merid[merid < 0] <- merid[merid < 0] + 15
   lc     <- (lon - merid) * -4/60  ## longitude correction
@@ -242,8 +240,9 @@ cos_solar_zenith_angle <- function(doy, lat, lon, dt, hr) {
 #'
 #' @author Alexey Shiklomanov
 #' @param doy Day of year
+#' @noRd
 #' @return `numeric(1)` length of the solar day, in hours.
-#' @export
+
 equation_of_time <- function(doy) {
   stopifnot(doy <= 366)
   f      <- pi / 180 * (279.5 + 0.9856 * doy)
@@ -253,15 +252,13 @@ equation_of_time <- function(doy) {
   return(et)
 }
 
-##' @title Downscale repeat to hourly
-##' @return A dataframe of downscaled data
-##'
-##' @param df, dataframe of data to be downscaled (Longwave)
-##' @export
-##'
-##' @author Laura Puckett
-##'
-##'
+#' @title Downscale repeat to hourly
+#' @return A dataframe of downscaled data
+#' @param df, dataframe of data to be downscaled (Longwave)
+#' @noRd
+#' @author Laura Puckett
+#'
+#'
 
 downscale_repeat_6hr_to_hrly <- function(df, varName, hr = 1){
 
@@ -306,25 +303,24 @@ downscale_repeat_6hr_to_hrly <- function(df, varName, hr = 1){
   return(data.hrly)
 }
 
-##' @title Calculate potential shortwave radiation
-##' @return vector of potential shortwave radiation for each doy
-##'
-##' @param doy, day of year in decimal
-##' @param lon, longitude
-##' @param lat, latitude
-##' @return `numeric(1)`
-##' @export
-##'
-##' @author Quinn Thomas
-##'
-##'
+#' @title Calculate potential shortwave radiation
+#' @return vector of potential shortwave radiation for each doy
+#'
+#' @param doy, day of year in decimal
+#' @param lon, longitude
+#' @param lat, latitude
+#' @return `numeric(1)`
+#' @author Quinn Thomas
+#' @noRd
+#'
+#'
 downscale_solar_geom <- function(doy, lon, lat) {
 
   dt <- median(diff(doy)) * 86400 # average number of seconds in time interval
   hr <- (doy - floor(doy)) * 24 # hour of day for each element of doy
 
   ## calculate potential radiation
-  cosz <- noaaGEFSpoint::cos_solar_zenith_angle(doy, lat, lon, dt, hr)
+  cosz <- cos_solar_zenith_angle(doy, lat, lon, dt, hr)
   rpot <- 1366 * cosz
   return(rpot)
 }

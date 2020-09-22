@@ -12,6 +12,8 @@ temporal_downscale(input_file, output_file, overwrite = TRUE, hr = 1)
 \item{output_file, }{full path to 1hr file that will be generated}
 
 \item{overwrite, }{logical stating to overwrite any existing output_file}
+
+\item{hr}{time step in hours of temporal downscaling (default = 1)}
 }
 \value{
 None

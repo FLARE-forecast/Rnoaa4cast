@@ -9,7 +9,7 @@
 ##' @param temp degrees C
 ##' @param press pressure in mb
 ##' @return rh relative humidity, ratio of actual water mixing ratio to saturation mixing ratio
-##' @export
+##' @noRd
 ##' @author David LeBauer
 qair2rh <- function(qair, temp, press = 1013.25) {
   es <- 6.112 * exp((17.67 * temp) / (temp + 243.5))
@@ -25,7 +25,7 @@ qair2rh <- function(qair, temp, press = 1013.25) {
 ##' @param rh relative humidity (proportion, not percent)
 ##' @param T absolute temperature (Kelvin)
 ##' @param press air pressure (Pascals)
-##' @export
+##' @noRd
 ##' @author Mike Dietze, Ankur Desai
 ##' @aliases rh2rv
 rh2qair <- function(rh, T, press = 101325) {

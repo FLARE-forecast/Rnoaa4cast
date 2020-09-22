@@ -11,7 +11,6 @@ noaa_gefs_download_downscale(
   output_directory,
   forecast_time = "latest",
   forecast_date = "latest",
-  latest = FALSE,
   downscale = FALSE,
   run_parallel = FALSE,
   num_cores = 1,

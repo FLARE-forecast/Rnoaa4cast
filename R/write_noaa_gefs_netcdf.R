@@ -1,15 +1,21 @@
-##' @title Write NOAA GEGS netCDF
+##' @title Write NOAA GEFS netCDF
+##' @param df data frame of meterological variables to be written to netcdf.  Columns
+##' must start with time with the following columns in the order of `cf_units`
+##' @param ens ensemble index used for subsetting df
+##' @param lat latitude in degree north
+##' @param lon longitude in degree east
+##' @param cf_units vector of variable names in order they appear in df
+##' @param output_file name, with full path, of the netcdf file that is generated
+##' @param overwrite logical to overwrite existing netcdf file
 ##' @return NA
 ##'
-##' @param df, dataframe of data written to netCDF
-##' @param VarNames, names of vars that are state variables
 ##' @export
 ##'
 ##' @author Quinn Thomas
 ##'
 ##'
 
-write_noaa_gefs_netcdf <- function(df,ens = NA, lat, lon, cf_units, output_file, overwrite){
+write_noaa_gefs_netcdf <- function(df, ens = NA, lat, lon, cf_units, output_file, overwrite){
 
   start_time <- min(df$time)
   end_time <- max(df$time)
@@ -51,7 +57,5 @@ write_noaa_gefs_netcdf <- function(df,ens = NA, lat, lon, cf_units, output_file,
     }
 
     ncdf4::nc_close(nc_flptr)  #Write to the disk/storage
-  } else {
-    #PEcAn.logger::logger.info(paste0("The file ", flname, " already exists.  It was not overwritten."))
   }
 }

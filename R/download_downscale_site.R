@@ -212,7 +212,7 @@ download_downscale_site <- function(site_index,
 
             names(noaa_data) <- cf_var_names
 
-            specific_humidity <- noaaGEFSpoint::rh2qair(rh = noaa_data$relative_humidity$value / 100,
+            specific_humidity <- rh2qair(rh = noaa_data$relative_humidity$value / 100,
                                                         T = noaa_data$air_temperature$value,
                                                         press = noaa_data$air_pressure$value)
 

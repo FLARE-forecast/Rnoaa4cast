@@ -11,7 +11,6 @@ download_downscale_site(
   site_list,
   forecast_time = "all",
   forecast_date = "all",
-  latest = FALSE,
   downscale,
   overwrite,
   model_name,

@@ -2,20 +2,39 @@
 % Please edit documentation in R/write_noaa_gefs_netcdf.R
 \name{write_noaa_gefs_netcdf}
 \alias{write_noaa_gefs_netcdf}
-\title{Write NOAA GEGS netCDF}
+\title{Write NOAA GEFS netCDF}
 \usage{
-write_noaa_gefs_netcdf(df, ens, lat, lon, cf_units, output_file, overwrite)
+write_noaa_gefs_netcdf(
+  df,
+  ens = NA,
+  lat,
+  lon,
+  cf_units,
+  output_file,
+  overwrite
+)
 }
 \arguments{
-\item{df, }{dataframe of data written to netCDF}
+\item{df}{data frame of meterological variables to be written to netcdf.  Columns
+must start with time with the following columns in the order of \code{cf_units}}
 
-\item{VarNames, }{names of vars that are state variables}
+\item{ens}{ensemble index used for subsetting df}
+
+\item{lat}{latitude in degree north}
+
+\item{lon}{longitude in degree east}
+
+\item{cf_units}{vector of variable names in order they appear in df}
+
+\item{output_file}{name, with full path, of the netcdf file that is generated}
+
+\item{overwrite}{logical to overwrite existing netcdf file}
 }
 \value{
 NA
 }
 \description{
-Write NOAA GEGS netCDF
+Write NOAA GEFS netCDF
 }
 \author{
 Quinn Thomas
