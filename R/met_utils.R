@@ -30,7 +30,7 @@ qair2rh <- function(qair, temp, press = 1013.25) {
 ##' @aliases rh2rv
 rh2qair <- function(rh, T, press = 101325) {
   stopifnot(T[!is.na(T)] >= 0)
-  Tc <- udunits2::ud.convert(T, "K", "degC")
+  Tc <- T - 273.15
   es <- 6.112 * exp((17.67 * Tc) / (Tc + 243.5))
   e <- rh * es
   p_mb <- press / 100
