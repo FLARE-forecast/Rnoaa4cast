@@ -25,6 +25,7 @@ noaa_gefs_download_downscale <- function(site_list,
                                          downscale = FALSE,
                                          run_parallel = FALSE,
                                          num_cores = 1,
+                                         method = "point",
                                          overwrite = FALSE){
 
   model_name <- "NOAAGEFS_6hr"
