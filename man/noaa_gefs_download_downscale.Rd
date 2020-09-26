@@ -14,6 +14,7 @@ noaa_gefs_download_downscale(
   downscale = FALSE,
   run_parallel = FALSE,
   num_cores = 1,
+  method = "point",
   overwrite = FALSE
 )
 }

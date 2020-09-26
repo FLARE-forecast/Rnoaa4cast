@@ -38,7 +38,7 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
       destfile <- paste0(working_directory,"/", file_name,".neon.grib")
 
       if(file.exists(destfile)){
-        size <- file.info(destfile)
+        size <- file.info(destfile)$size
       }else{
         size <- NA
       }
@@ -102,8 +102,8 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
         }else{
           new_download <- TRUE
           file <- list.files(model_date_hour_dir)
-          present_ensemble <- str_sub(file, start = 4, end = 5)
-          present_times <- as.numeric(str_sub(file, start = 25, end = 27))
+          present_ensemble <- stringr::str_sub(file, start = 4, end = 5)
+          present_times <- as.numeric(stringr::str_sub(file, start = 25, end = 27))
           if(length(unique(present_ensemble)) == 31){
             if(cycle == "00"){
               if(max(present_times) == 840 & length(which(present_times == 384)) == 31){
