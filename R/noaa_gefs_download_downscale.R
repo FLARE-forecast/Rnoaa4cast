@@ -29,12 +29,16 @@ noaa_gefs_download_downscale <- function(site_list,
 
   model_name <- "NOAAGEFS_6hr"
   model_name_ds <-"NOAAGEFS_1hr" #Downscaled NOAA GEFS
+  model_name_raw <- "NOAAGEFS_raw"
 
   print(paste0("Number of sites: ", length(site_list)))
   print(paste0("Overwrite existing files: ", overwrite))
   print(paste0("Running in parallel: ", run_parallel))
 
-  if(run_parallel){
+  if(method == "point"){
+
+    print("downloading NOAA using single point method.  Note: only the first 16 days\n
+          of a 36-day forecast are able to be downloading using this method")
 
     #Create cluster
     print(paste0("Number of cores specified: ", num_cores))
@@ -66,19 +70,26 @@ noaa_gefs_download_downscale <- function(site_list,
 
   }else{
 
-    for(site_index in 1:length(site_list)){
+    noaaGEFSpoint::noaa_grid_download(lat_list = lat_list,
+                       lon_list = lon_list,
+                       forecast_time = forecast_time,
+                       forecast_date = forecast_date,
+                       model_name_raw = model_name_raw,
+                       num_cores = num_cores,
+                       output_directory = output_directory)
 
-      noaaGEFSpoint::download_downscale_site(site_index,
-                              lat_list = lat_list,
-                              lon_list = lon_list,
-                              site_list = site_list,
-                              forecast_time = forecast_time,
-                              forecast_date = forecast_date,
-                              downscale = downscale,
-                              overwrite = overwrite,
-                              model_name = model_name,
-                              model_name_ds = model_name_ds,
-                              output_directory = output_directory)
-    }
+    noaaGEFSpoint::process_gridded_noaa_download(lat_list = lat_list,
+                                              lon_list = lon_list,
+                                              site_list = site_list,
+                                              downscale = downscale,
+                                              overwrite = overwrite,
+                                              model_name = model_name,
+                                              model_name_ds = model_name_ds,
+                                              model_name_raw = model_name_raw,
+                                              num_cores = num_cores,
+                                              output_directory = output_directory)
+
+
+
   }
 }

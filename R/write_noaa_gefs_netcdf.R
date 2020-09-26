@@ -17,14 +17,22 @@
 
 write_noaa_gefs_netcdf <- function(df, ens = NA, lat, lon, cf_units, output_file, overwrite){
 
-  start_time <- min(df$time)
-  end_time <- max(df$time)
-
   if(!is.na(ens)){
-  data <- df %>%
-    dplyr::filter(NOAA.member == ens) %>%
-    dplyr::select(-c("NOAA.member", "time"))
+    data <- df %>%
+      dplyr::filter(NOAA.member == ens)
+
+    max_index <- max(which(!is.na(data$air_temperature)))
+    start_time <- min(data$time)
+    end_time <- data$time[max_index]
+
+    data <- data %>% dplyr::select(-c("time", "NOAA.member"))
   }else{
+    data <- df
+
+    max_index <- max(which(!is.na(data$air_temperature)))
+    start_time <- min(data$time)
+    end_time <- data$time[max_index]
+
     data <- df %>%
       dplyr::select(-c("time"))
   }

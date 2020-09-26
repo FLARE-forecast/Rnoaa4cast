@@ -33,11 +33,8 @@ download_downscale_site <- function(site_index,
 
 
   #Create dimensions of the noaa forecast
-  lon.dom <- seq(0, 359, by = 1) #domain of longitudes in model (1 degree resolution)
-  lat.dom <- seq(-90, 90, by = 1) #domain of latitudes in model (1 degree resolution)
-
-  lon.dom.bc <- seq(0, 359, by = 0.5) #domain of longitudes in model (1 degree resolution)
-  lat.dom.bc <- seq(-90, 90, by = 0.5) #domain of latitudes in model (1 degree resolution)
+  lon.dom <- seq(0, 359, by = 0.5) #domain of longitudes in model (1 degree resolution)
+  lat.dom <- seq(-90, 90, by = 0.5) #domain of latitudes in model (1 degree resolution)
 
   #Convert negetive longitudes to degrees east
   if(lon_list[site_index] < 0){
@@ -46,9 +43,6 @@ download_downscale_site <- function(site_index,
     lon_east <- lon_list[site_index]
   }
 
-  #For some reason rNOMADS::GetDODSDates doesn't return "gens" even
-  #though it is there, use gens_bc to get the url but replace gens_bc with gens
-  #below
   urls.out <- tryCatch(rNOMADS::GetDODSDates(abbrev = "gens_bc"),
                        error = function(e){
                          warning(paste(e$message, "NOAA Server not responsive"),
@@ -56,6 +50,11 @@ download_downscale_site <- function(site_index,
                          return(NA)
                        },
                        finally = NULL)
+
+  urls.out$model <- "gefs"
+  urls.out$date <- urls.out$date[which(lubridate::as_date(urls.out$date) >= lubridate::as_date("2020-09-24"))]
+  urls.out$url <- paste0("https://nomads.ncep.noaa.gov:443/dods/gefs/gefs",urls.out$date)
+
 
   if(is.na(urls.out[1])) stop()
 
@@ -75,7 +74,7 @@ download_downscale_site <- function(site_index,
     model.url <- urls.out$url[i]
     start_date <- urls.out$date[i]
 
-    model_list <- c("gep_all_00z", "gep_all_06z", "gep_all_12z", "gep_all_18z")
+    model_list <- c("gefs_pgrb2ap5_all_00z", "gefs_pgrb2ap5_all_06z", "gefs_pgrb2ap5_all_12z", "gefs_pgrb2ap5_all_18z")
     model_hr <- c(0, 6, 12, 18)
 
     model.runs <- tryCatch(rNOMADS::GetDODSModelRuns(model.url),
@@ -103,7 +102,7 @@ download_downscale_site <- function(site_index,
 
     for(m in 1:length(model_list)){
 
-      run_hour <- stringr::str_sub(model_list[m], start = 9, end = 10)
+      run_hour <- stringr::str_sub(model_list[m], start = 19, end = 20)
       start_time <- lubridate::as_datetime(start_date) + lubridate::hours(as.numeric(run_hour))
       end_time <- start_time + lubridate::days(16)
 
@@ -116,7 +115,7 @@ download_downscale_site <- function(site_index,
                           format(end_time, "%Y-%m-%dT%H"), sep="_")
 
       #Check if already downloaded
-      if(length(list.files(model_site_date_hour_dir)) != 21){
+      if(length(list.files(model_site_date_hour_dir)) != 31){
 
         print(paste("Downloading", site_list[site_index], format(start_time, "%Y-%m-%dT%H")))
 
@@ -128,12 +127,8 @@ download_downscale_site <- function(site_index,
           model.run <- model.runs$model.run[which(model.runs$model.run == model_list[m])]
 
           noaa_var_names <- c("tmp2m", "pressfc", "rh2m", "dlwrfsfc",
-                              "dswrfsfc", "pratesfc",
+                              "dswrfsfc", "apcpsfc",
                               "ugrd10m", "vgrd10m", "tcdcclm")
-
-          noaa_var_names_model <- c("gens", "gens", "gens", "gens",
-                                    "gens", "gens",
-                                    "gens", "gens", "gens")
 
           #These are the cf standard names
           cf_var_names <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
@@ -153,15 +148,10 @@ download_downscale_site <- function(site_index,
 
             #For some reason rNOMADS::GetDODSDates doesn't return "gens" even
             #though it is there
-            curr_model.url <- stringr::str_replace(model.url, "gens_bc", noaa_var_names_model[j])
+            curr_model.url <- model.url
 
-            if(noaa_var_names_model[j] == "gens_bc"){
-              lon <- which.min(abs(lon.dom.bc - lon_east)) - 1 #NOMADS indexes start at 0
-              lat <- which.min(abs(lat.dom.bc - lat_list[site_index])) - 1 #NOMADS indexes start at 0
-            }else{
-              lon <- which.min(abs(lon.dom - lon_east)) - 1 #NOMADS indexes start at 0
-              lat <- which.min(abs(lat.dom - lat_list[site_index])) - 1 #NOMADS indexes start at 0
-            }
+            lon <- which.min(abs(lon.dom - lon_east)) - 1 #NOMADS indexes start at 0
+            lat <- which.min(abs(lat.dom - lat_list[site_index])) - 1 #NOMADS indexes start at 0
 
             noaa_data[[j]] <- tryCatch(rNOMADS::DODSGrab(model.url = curr_model.url,
                                                          model.run = model.run,
@@ -169,7 +159,7 @@ download_downscale_site <- function(site_index,
                                                          time = c(0, 64),
                                                          lon = lon,
                                                          lat = lat,
-                                                         ensembles=c(0, 20)),
+                                                         ensembles=c(0, 30)),
                                        error = function(e){
                                          warning(paste(e$message, "skipping", curr_model.url, model.run, noaa_var_names[j]),
                                                  call. = FALSE)
@@ -219,11 +209,11 @@ download_downscale_site <- function(site_index,
           forecast_noaa$cloud_area_fraction <- forecast_noaa$cloud_area_fraction / 100 #Convert from % to proportion
           forecast_noaa$relative_humidity <- forecast_noaa$relative_humidity / 100 #Convert from % to proportion
 
-          # By downloading pratesfc we get precipitation in the correct units (kg m-2 s-1)
-          forecast_noaa$precipitation_flux <- forecast_noaa$precipitation_flux
+          # Convert the 6 hr precip rate to per second.
+          forecast_noaa$precipitation_flux <- forecast_noaa$precipitation_flux / (60 * 60 * 6)
 
 
-          for (ens in 1:21) { # i is the ensemble number
+          for (ens in 1:31) { # i is the ensemble number
 
             #Turn the ensemble number into a string
             if(ens< 10){
