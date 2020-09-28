@@ -63,10 +63,36 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
 
   curr_time <- lubridate::with_tz(Sys.time(), tzone = "UTC")
   curr_date <- lubridate::as_date(curr_time)
-  potential_dates <- seq(curr_date - lubridate::days(6), curr_date, by = "1 day")
+  #potential_dates <- seq(curr_date - lubridate::days(6), curr_date, by = "1 day")
+
+  noaa_page <- readLines('https://nomads.ncep.noaa.gov/pub/data/nccf/com/gens/prod/')
+
+  potential_dates <- NULL
+  for(i in 1:length(noaa_page)){
+    if(stringr::str_detect(thepage[i], ">gefs.")){
+      end <- stringr::str_locate(thepage[i], ">gefs.")[2]
+      dates <- stringr::str_sub(thepage[i], start = end+1, end = end+8)
+      potential_dates <- c(potential_dates, dates)
+    }
+  }
+
+  last_cycle_page <- readLines(paste0('https://nomads.ncep.noaa.gov/pub/data/nccf/com/gens/prod/gefs.', dplyr::last(potential_dates)))
+
+  potential_cycle <- NULL
+  for(i in 1:length(last_cycle_page)){
+    if(stringr::str_detect(last_cycle_page[i], 'href=\"')){
+      end <- stringr::str_locate(last_cycle_page[i], 'href=\"')[2]
+      cycles <- stringr::str_sub(last_cycle_page[i], start = end+1, end = end+2)
+      if(cycles %in% c("00","06", "12", "18")){
+        potential_cycle <- c(potential_cycle, cycles)
+      }
+    }
+  }
+
+  potential_dates <- lubridate::as_date(potential_dates)
 
   #Remove dates before the new GEFS system
-  potential_dates <- potential_dates[which(potential_dates > lubridate::as_date("2020-09-23"))]
+  #potential_dates <- potential_dates[which(potential_dates > lubridate::as_date("2020-09-23"))]
 
   location <- paste0("&subregion=&leftlon=",
                      floor(min(lon_list)),
@@ -83,78 +109,76 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
   for(i in 1:length(potential_dates)){
 
     forecast_date <- lubridate::as_date(potential_dates[i])
-    forecast_hours <- c(0,6,12,18)
+    if(i == length(potential_dates)){
+      forecast_hours <- as.numeric(potential_cycle)
+    }else{
+      forecast_hours <- c(0,6,12,18)
+    }
 
     for(j in 1:length(forecast_hours)){
       cycle <- forecast_hours[j]
-      if(forecast_date ==  lubridate::as_date(curr_time) & cycle > lubridate::hour(curr_time)){
 
-        next
+      if(cycle < 10) cycle <- paste0("0",cycle)
 
+      model_date_hour_dir <- file.path(model_dir,forecast_date,cycle)
+      if(!dir.exists(model_date_hour_dir)){
+        dir.create(model_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
+        new_download <- TRUE
       }else{
-
-        if(cycle < 10) cycle <- paste0("0",cycle)
-
-        model_date_hour_dir <- file.path(model_dir,forecast_date,cycle)
-        if(!dir.exists(model_date_hour_dir)){
-          dir.create(model_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
-          new_download <- TRUE
-        }else{
-          new_download <- TRUE
-          file <- list.files(model_date_hour_dir)
-          present_ensemble <- stringr::str_sub(file, start = 4, end = 5)
-          present_times <- as.numeric(stringr::str_sub(file, start = 25, end = 27))
-          if(length(unique(present_ensemble)) == 31){
-            if(cycle == "00"){
-              if(max(present_times) == 840 & length(which(present_times == 384)) == 31){
+        new_download <- TRUE
+        file <- list.files(model_date_hour_dir)
+        present_ensemble <- stringr::str_sub(file, start = 4, end = 5)
+        present_times <- as.numeric(stringr::str_sub(file, start = 25, end = 27))
+        if(length(unique(present_ensemble)) == 31){
+          if(cycle == "00"){
+            if(max(present_times) == 840 & length(which(present_times == 384)) == 31){
+              new_download <- FALSE
+            }
+            else{
+              if( length(which(present_times == 384)) == 31){
                 new_download <- FALSE
-              }
-              else{
-                if( length(which(present_times == 384)) == 31){
-                  new_download <- FALSE
-                }
               }
             }
           }
         }
+      }
 
-        new_download <- TRUE
+      new_download <- TRUE
 
-        if(new_download){
+      if(new_download){
 
-          print(paste("Downloading", forecast_date, cycle))
+        print(paste("Downloading", forecast_date, cycle))
 
-          if(cycle == "00"){
-            hours <- c(seq(0, 240, 3),seq(246, 840 , 6))
-          }else{
-            hours <- c(seq(0, 240, 3),seq(246, 384 , 6))
-          }
-          hours_char <- hours
-          hours_char[which(hours < 100)] <- paste0("0",hours[which(hours < 100)])
-          hours_char[which(hours < 10)] <- paste0("0",hours_char[which(hours < 10)])
-          curr_year <- lubridate::year(forecast_date)
-          curr_month <- lubridate::month(forecast_date)
-          if(curr_month < 10) curr_month <- paste0("0",curr_month)
-          curr_day <- lubridate::day(forecast_date)
-          if(curr_day < 10) curr_day <- paste0("0",curr_day)
-          curr_date <- paste0(curr_year,curr_month,curr_day)
-          directory <- paste0("&dir=%2Fgefs.",curr_date,"%2F",cycle,"%2Fatmos%2Fpgrb2ap5")
-
-          ens_index <- 1:31
-
-          parallel::mclapply(X = ens_index,
-                             FUN = download_neon_grid,
-                             location,
-                             directory,
-                             hours_char,
-                             cycle,
-                             base_filename1,
-                             vars,
-                             working_directory = model_date_hour_dir,
-                             mc.cores = num_cores)
+        if(cycle == "00"){
+          hours <- c(seq(0, 240, 3),seq(246, 840 , 6))
         }else{
-          print(paste("Existing", forecast_date, cycle))
+          hours <- c(seq(0, 240, 3),seq(246, 384 , 6))
         }
+        hours_char <- hours
+        hours_char[which(hours < 100)] <- paste0("0",hours[which(hours < 100)])
+        hours_char[which(hours < 10)] <- paste0("0",hours_char[which(hours < 10)])
+        curr_year <- lubridate::year(forecast_date)
+        curr_month <- lubridate::month(forecast_date)
+        if(curr_month < 10) curr_month <- paste0("0",curr_month)
+        curr_day <- lubridate::day(forecast_date)
+        if(curr_day < 10) curr_day <- paste0("0",curr_day)
+        curr_date <- paste0(curr_year,curr_month,curr_day)
+        directory <- paste0("&dir=%2Fgefs.",curr_date,"%2F",cycle,"%2Fatmos%2Fpgrb2ap5")
+
+        ens_index <- 1:31
+
+        parallel::mclapply(X = ens_index,
+                           FUN = download_neon_grid,
+                           location,
+                           directory,
+                           hours_char,
+                           cycle,
+                           base_filename1,
+                           vars,
+                           working_directory = model_date_hour_dir,
+                           mc.cores = num_cores)
+      }else{
+        print(paste("Existing", forecast_date, cycle))
       }
     }
   }
