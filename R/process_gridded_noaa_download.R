@@ -60,7 +60,7 @@ process_gridded_noaa_download <- function(lat_list,
       file_name <- paste0(base_filename2, curr_hours[hr])
 
       if(file.exists(paste0(working_directory,"/", file_name,".neon.grib"))){
-        grib <- rgdal::readGDAL(paste0(working_directory,"/", file_name,".neon.grib"))
+        grib <- rgdal::readGDAL(paste0(working_directory,"/", file_name,".neon.grib"), silent = TRUE)
         lat_lon <- sp::coordinates(grib)
         for(s in 1:length(site_list)){
 
@@ -185,7 +185,7 @@ process_gridded_noaa_download <- function(lat_list,
             }
             noaa_data[[v]] <- list(value = value,
                                    ensembles = ensembles,
-                                   forecast.date = as_datetime(forecast.date))
+                                   forecast.date = lubridate::as_datetime(forecast.date))
 
           }
 

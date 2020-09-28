@@ -34,13 +34,13 @@ write_noaa_gefs_netcdf <- function(df, ens = NA, lat, lon, cf_units, output_file
       dplyr::select(-c("time"))
   }
 
-  diff_time <- as.numeric(difftime(df$time[2], df$time[1]))
+  diff_time <- as.numeric(difftime(df$time, df$time[1])) / (60 * 60)
 
   cf_var_names <- names(data)
 
   time_dim <- ncdf4::ncdim_def(name="time",
                                units = paste("hours since", format(start_time, "%Y-%m-%d %H:%M")),
-                               seq(from = 0, length.out = nrow(data), by = diff_time), #GEFS forecast starts 6 hours from start time
+                               diff_time, #GEFS forecast starts 6 hours from start time
                                create_dimvar = TRUE)
   lat_dim <- ncdf4::ncdim_def("latitude", "degree_north", lat, create_dimvar = TRUE)
   lon_dim <- ncdf4::ncdim_def("longitude", "degree_east", lon, create_dimvar = TRUE)
