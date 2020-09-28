@@ -131,7 +131,6 @@ process_gridded_noaa_download <- function(lat_list,
         if(num_files != 31){no_missing_files <- FALSE}
       }
 
-      print(no_missing_files)
 
       if(no_missing_files){
 
