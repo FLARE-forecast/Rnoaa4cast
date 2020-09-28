@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, num_cores, output_directory) {
+noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, mean_file_size, num_cores, output_directory) {
 
 
   download_neon_grid <- function(ens_index, location, directory, hours_char, cycle, base_filename1, vars, working_directory){
@@ -43,7 +43,7 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
         size <- NA
       }
 
-      if(!file.exists(destfile) | is.na(size) | size == 0){
+      if(!file.exists(destfile) | is.na(size) | size == 0 | size <= 0.50 * mean_file_size){
 
         out <- tryCatch(download.file(paste0(base_filename1, file_name, vars, location, directory),
                                       destfile = destfile, quiet = TRUE),
@@ -123,25 +123,30 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
       model_date_hour_dir <- file.path(model_dir,forecast_date,cycle)
       if(!dir.exists(model_date_hour_dir)){
         dir.create(model_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
-        new_download <- TRUE
+        mean_file_size <- 0
       }else{
-        new_download <- TRUE
-        file <- list.files(model_date_hour_dir)
-        present_ensemble <- stringr::str_sub(file, start = 4, end = 5)
-        present_times <- as.numeric(stringr::str_sub(file, start = 25, end = 27))
-        if(length(unique(present_ensemble)) == 31){
-          if(cycle == "00"){
-            if(max(present_times) == 840 & length(which(present_times == 384)) == 31){
-              new_download <- FALSE
-            }
-            else{
-              if( length(which(present_times == 384)) == 31){
-                new_download <- FALSE
-              }
-            }
-          }
-        }
+        f <- list.files(model_date_hour_dir, full.names = TRUE)
+        mean_file_size <- mean(file.info(f)$size)
       }
+      #  new_download <- TRUE
+      #}else{
+      #  new_download <- TRUE
+      #  file <- list.files(model_date_hour_dir)
+      #  present_ensemble <- stringr::str_sub(file, start = 4, end = 5)
+      #  present_times <- as.numeric(stringr::str_sub(file, start = 25, end = 27))
+      #  if(length(unique(present_ensemble)) == 31){
+      #    if(cycle == "00"){
+      #      if(max(present_times) == 840 & length(which(present_times == 384)) == 31){
+      #        new_download <- FALSE
+      #      }
+      #      else{
+      #        if( length(which(present_times == 384)) == 31){
+      #          new_download <- FALSE
+      #        }
+      #      }
+      #    }
+      #  }
+      #}
 
       new_download <- TRUE
 
@@ -175,6 +180,7 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
                            cycle,
                            base_filename1,
                            vars,
+                           mean_file_size,
                            working_directory = model_date_hour_dir,
                            mc.cores = num_cores)
       }else{
