@@ -69,9 +69,9 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
 
   potential_dates <- NULL
   for(i in 1:length(noaa_page)){
-    if(stringr::str_detect(thepage[i], ">gefs.")){
-      end <- stringr::str_locate(thepage[i], ">gefs.")[2]
-      dates <- stringr::str_sub(thepage[i], start = end+1, end = end+8)
+    if(stringr::str_detect(noaa_page[i], ">gefs.")){
+      end <- stringr::str_locate(noaa_page[i], ">gefs.")[2]
+      dates <- stringr::str_sub(noaa_page[i], start = end+1, end = end+8)
       potential_dates <- c(potential_dates, dates)
     }
   }
