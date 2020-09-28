@@ -18,9 +18,7 @@
 write_noaa_gefs_netcdf <- function(df, ens = NA, lat, lon, cf_units, output_file, overwrite){
 
   if(!is.na(ens)){
-    data <- df %>%
-      dplyr::filter(NOAA.member == ens)
-
+    data <- df
     max_index <- max(which(!is.na(data$air_temperature)))
     start_time <- min(data$time)
     end_time <- data$time[max_index]
@@ -28,7 +26,6 @@ write_noaa_gefs_netcdf <- function(df, ens = NA, lat, lon, cf_units, output_file
     data <- data %>% dplyr::select(-c("time", "NOAA.member"))
   }else{
     data <- df
-
     max_index <- max(which(!is.na(data$air_temperature)))
     start_time <- min(data$time)
     end_time <- data$time[max_index]

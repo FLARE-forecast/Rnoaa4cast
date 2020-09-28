@@ -28,9 +28,9 @@ process_gridded_noaa_download <- function(lat_list,
                                           num_cores,
                                           output_directory){
 
-  extract_sites <- function(ens_index, hours_char, hours, cycle, site_list, working_directory){
+  extract_sites <- function(ens_index, hours_char, hours, cycle, site_list, lat_list, lon_list, working_directory){
 
-    site_length <- nrow(site_list)
+    site_length <- length(site_list)
     tmp2m <- array(NA, dim = c(site_length, length(hours_char)))
     rh2m <- array(NA, dim = c(site_length, length(hours_char)))
     ugrd10m <- array(NA, dim = c(site_length,length(hours_char)))
@@ -52,8 +52,8 @@ process_gridded_noaa_download <- function(lat_list,
       base_filename2 <- paste0("gep",ens_name,".t",cycle,"z.pgrb2a.0p50.f")
     }
 
-    lat_list <- round(site_list$latitude/.5)*.5
-    lon_list <- round(site_list$longitude/.5)*.5
+    lats <- round(lat_list/.5)*.5
+    lons <- round(lon_list/.5)*.5
     curr_hours <- hours_char
 
     for(hr in 1:length(curr_hours)){
@@ -62,9 +62,9 @@ process_gridded_noaa_download <- function(lat_list,
       if(file.exists(paste0(working_directory,"/", file_name,".neon.grib"))){
         grib <- rgdal::readGDAL(paste0(working_directory,"/", file_name,".neon.grib"))
         lat_lon <- sp::coordinates(grib)
-        for(s in 1:nrow(site_list)){
+        for(s in 1:length(site_list)){
 
-          index <- which(lat_lon[,2] == lat_list[s] & lat_lon[,1] == lon_list[s])
+          index <- which(lat_lon[,2] == lats[s] & lat_lon[,1] == lons[s])
 
           pressfc[s, hr]  <- grib$band1[index]
           tmp2m[s, hr] <- grib$band2[index]
@@ -144,11 +144,13 @@ process_gridded_noaa_download <- function(lat_list,
                                      hours = hours,
                                      cycle,
                                      site_list,
+                                     lat_list,
+                                     lon_list,
                                      working_directory = file.path(model_name_raw_dir,forecast_date,cycle),
                                      mc.cores = num_cores)
 
 
-        forecast_times <- lubridate::as_datetime(forecast_date) + hours(as.numeric(cycle)) + hours(as.numeric(hours_char))
+        forecast_times <- lubridate::as_datetime(forecast_date) + lubridate::hours(as.numeric(cycle)) + lubridate::hours(as.numeric(hours_char))
 
         for(site_index in 1:length(site_list)){
 
@@ -239,9 +241,11 @@ process_gridded_noaa_download <- function(lat_list,
               ens_name <- ens - 1
             }
 
-            end_date <- forecast_noaa %>%
+            forecast_noaa_ens <- forecast_noaa %>%
               dplyr::filter(NOAA.member == ens) %>%
-              dplyr::filter(!is.na(air_temperature)) %>%
+              dplyr::filter(!is.na(air_temperature))
+
+            end_date <- forecast_noaa_ens %>%
               dplyr::summarise(max_time = max(time))
 
             identifier <- paste(model_name, site_list[site_index], format(forecast_date, "%Y-%m-%dT%H"),
@@ -251,7 +255,7 @@ process_gridded_noaa_download <- function(lat_list,
             output_file <- file.path(model_site_date_hour_dir,fname)
 
             #Write netCDF
-            noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa,ens, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = overwrite)
+            noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa_ens,ens, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = overwrite)
 
             if(downscale){
               #Downscale the forecast from 6hr to 1hr
@@ -262,7 +266,7 @@ process_gridded_noaa_download <- function(lat_list,
               }
 
               identifier_ds <- paste(model_name_ds, site_list[site_index], format(forecast_date, "%Y-%m-%dT%H"),
-                                     format(max(forecast_noaa$time), "%Y-%m-%dT%H"), sep="_")
+                                     format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
               fname_ds <- file.path(modelds_site_date_hour_dir, paste0(identifier_ds,"_ens",ens_name,".nc"))
 
               #Run downscaling

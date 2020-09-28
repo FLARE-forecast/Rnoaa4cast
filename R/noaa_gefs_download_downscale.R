@@ -89,8 +89,5 @@ noaa_gefs_download_downscale <- function(site_list,
                                               model_name_raw = model_name_raw,
                                               num_cores = num_cores,
                                               output_directory = output_directory)
-
-
-
   }
 }
