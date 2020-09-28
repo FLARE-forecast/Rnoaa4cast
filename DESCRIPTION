@@ -20,4 +20,5 @@ Imports:
     ncdf4,
     lubridate,
     rNOMADS (>= 2.5.0),
-    magrittr
+    magrittr,
+    rgdal

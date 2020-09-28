@@ -51,6 +51,8 @@ download_downscale_site <- function(site_index,
                        },
                        finally = NULL)
 
+  #urls.out <- list()
+
   urls.out$model <- "gefs"
   urls.out$date <- urls.out$date[which(lubridate::as_date(urls.out$date) >= lubridate::as_date("2020-09-24"))]
   urls.out$url <- paste0("https://nomads.ncep.noaa.gov:443/dods/gefs/gefs",urls.out$date)
@@ -167,7 +169,13 @@ download_downscale_site <- function(site_index,
                                        },
                                        finally = NULL)
 
-            if(is.na(noaa_data[[j]][1])) download_issues <- TRUE
+            if(is.na(noaa_data[[j]][1])){
+              download_issues <- TRUE
+            }else if(length(unique(noaa_data[[j]]$value)) == 1){
+              #ONLY HAS 9.999e+20 which is the missing value
+              download_issues <- TRUE
+            }
+
 
             #For some reason it defaults to the computer's time zone, convert to UTC
             noaa_data[[j]]$forecast.date <- lubridate::with_tz(noaa_data[[j]]$forecast.date,
@@ -216,17 +224,27 @@ download_downscale_site <- function(site_index,
           for (ens in 1:31) { # i is the ensemble number
 
             #Turn the ensemble number into a string
-            if(ens< 10){
-              ens_name <- paste0("0",ens)
+            if((ens-1)< 10){
+              ens_name <- paste0("0",ens-1)
             }else{
-              ens_name <- ens
+              ens_name <- ens-1
             }
+
+            forecast_noaa_ens <- forecast_noaa %>%
+              dplyr::filter(NOAA.member == ens) %>%
+              dplyr::filter(!is.na(air_temperature))
+
+            end_date <- forecast_noaa_ens %>%
+              dplyr::summarise(max_time = max(time))
+
+            identifier <- paste(model_name, site_list[site_index], format(dplyr::first(forecast_noaa_ens$time), "%Y-%m-%dT%H"),
+                                format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
 
             fname <- paste0(identifier,"_ens",ens_name,".nc")
             output_file <- file.path(model_site_date_hour_dir,fname)
 
             #Write netCDF
-            noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa,ens, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = overwrite)
+            noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa_ens,ens, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = overwrite)
 
             if(downscale){
               #Downscale the forecast from 6hr to 1hr
@@ -236,8 +254,9 @@ download_downscale_site <- function(site_index,
                 dir.create(modelds_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
               }
 
-              identifier_ds <- paste(model_name_ds, site_list[site_index], format(start_time, "%Y-%m-%dT%H"),
-                                     format(end_time, "%Y-%m-%dT%H"), sep="_")
+              identifier_ds <- paste(model_name_ds, site_list[site_index], format(dplyr::first(forecast_noaa_ens$time), "%Y-%m-%dT%H"),
+                                     format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
+
               fname_ds <- file.path(modelds_site_date_hour_dir, paste0(identifier_ds,"_ens",ens_name,".nc"))
 
               #Run downscaling
