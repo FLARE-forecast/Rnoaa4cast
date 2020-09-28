@@ -136,141 +136,145 @@ process_gridded_noaa_download <- function(lat_list,
 
       if(dir.exists(file.path(model_name_raw_dir,forecast_date,cycle))){
 
-        ens_index <- 1:31
-        #Run download_downscale_site() over the site_index
-        output <- parallel::mclapply(X = ens_index,
-                                     FUN = extract_sites,
-                                     hours_char = hours_char,
-                                     hours = hours,
-                                     cycle,
-                                     site_list,
-                                     lat_list,
-                                     lon_list,
-                                     working_directory = file.path(model_name_raw_dir,forecast_date,cycle),
-                                     mc.cores = num_cores)
+
+        if(length(list.files((file.path(model_name_raw_dir,forecast_date,cycle))) > 0)){
+
+          ens_index <- 1:31
+          #Run download_downscale_site() over the site_index
+          output <- parallel::mclapply(X = ens_index,
+                                       FUN = extract_sites,
+                                       hours_char = hours_char,
+                                       hours = hours,
+                                       cycle,
+                                       site_list,
+                                       lat_list,
+                                       lon_list,
+                                       working_directory = file.path(model_name_raw_dir,forecast_date,cycle),
+                                       mc.cores = num_cores)
 
 
-        forecast_times <- lubridate::as_datetime(forecast_date) + lubridate::hours(as.numeric(cycle)) + lubridate::hours(as.numeric(hours_char))
+          forecast_times <- lubridate::as_datetime(forecast_date) + lubridate::hours(as.numeric(cycle)) + lubridate::hours(as.numeric(hours_char))
 
-        for(site_index in 1:length(site_list)){
+          for(site_index in 1:length(site_list)){
 
-          #Convert negetive longitudes to degrees east
-          if(lon_list[site_index] < 0){
-            lon_east <- 360 + lon_list[site_index]
-          }else{
-            lon_east <- lon_list[site_index]
-          }
-
-          model_site_date_hour_dir <- file.path(model_dir, site_list[site_index], forecast_date,cycle)
-
-          if(!dir.exists(model_site_date_hour_dir)){
-            dir.create(model_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
-          }
-
-          noaa_data <- list()
-
-          for(v in 1:length(noaa_var_names)){
-
-            value <- NULL
-            ensembles <- NULL
-            forecast.date <- NULL
-
-            noaa_data[v] <- NULL
-
-            for(ens in 1:31){
-              curr_ens <- output[[ens]]
-              value <- c(value, curr_ens[[noaa_var_names[v]]][site_index, ])
-              ensembles <- c(ensembles, rep(ens, length(curr_ens[[noaa_var_names[v]]][site_index, ])))
-              forecast.date <- c(forecast.date, forecast_times)
-            }
-            noaa_data[[v]] <- list(value = value,
-                                   ensembles = ensembles,
-                                   forecast.date = lubridate::as_datetime(forecast.date))
-
-          }
-
-          #These are the cf standard names
-          cf_var_names <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
-                            "surface_downwelling_shortwave_flux_in_air", "precipitation_flux", "eastward_wind", "northward_wind","cloud_area_fraction")
-
-          #Replace "eastward_wind" and "northward_wind" with "wind_speed"
-          cf_var_names1 <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
-                             "surface_downwelling_shortwave_flux_in_air", "precipitation_flux","specific_humidity", "cloud_area_fraction","wind_speed")
-
-          cf_var_units1 <- c("K", "Pa", "1", "Wm-2", "Wm-2", "kgm-2s-1", "1", "1", "ms-1")  #Negative numbers indicate negative exponents
-
-          names(noaa_data) <- cf_var_names
-
-          specific_humidity <- rep(NA, length(noaa_data$relative_humidity$value))
-
-          noaa_data$relative_humidity$value <- noaa_data$relative_humidity$value / 100
-
-          noaa_data$air_temperature$value <- noaa_data$air_temperature$value + 273.15
-
-          specific_humidity[which(!is.na(noaa_data$relative_humidity$value))] <- rh2qair(rh = noaa_data$relative_humidity$value[which(!is.na(noaa_data$relative_humidity$value))],
-                                                                                         T = noaa_data$air_temperature$value[which(!is.na(noaa_data$relative_humidity$value))],
-                                                                                         press = noaa_data$air_pressure$value[which(!is.na(noaa_data$relative_humidity$value))])
-
-
-          #Calculate wind speed from east and north components
-          wind_speed <- sqrt(noaa_data$eastward_wind$value^2 + noaa_data$northward_wind$value^2)
-
-          forecast_noaa <- tibble::tibble(time = noaa_data$air_temperature$forecast.date,
-                                          NOAA.member = noaa_data$air_temperature$ensembles,
-                                          air_temperature = noaa_data$air_temperature$value,
-                                          air_pressure= noaa_data$air_pressure$value,
-                                          relative_humidity = noaa_data$relative_humidity$value,
-                                          surface_downwelling_longwave_flux_in_air = noaa_data$surface_downwelling_longwave_flux_in_air$value,
-                                          surface_downwelling_shortwave_flux_in_air = noaa_data$surface_downwelling_shortwave_flux_in_air$value,
-                                          precipitation_flux = noaa_data$precipitation_flux$value,
-                                          specific_humidity = specific_humidity,
-                                          cloud_area_fraction = noaa_data$cloud_area_fraction$value,
-                                          wind_speed = wind_speed)
-
-          forecast_noaa$cloud_area_fraction <- forecast_noaa$cloud_area_fraction / 100 #Convert from % to proportion
-
-          # Convert the 3 hr precip rate to per second.
-          forecast_noaa$precipitation_flux <- forecast_noaa$precipitation_flux / (60 * 60 * 3)
-
-          for (ens in 1:31) { # i is the ensemble number
-
-            #Turn the ensemble number into a string
-            if(ens-1< 10){
-              ens_name <- paste0("0",ens-1)
+            #Convert negetive longitudes to degrees east
+            if(lon_list[site_index] < 0){
+              lon_east <- 360 + lon_list[site_index]
             }else{
-              ens_name <- ens - 1
+              lon_east <- lon_list[site_index]
             }
 
-            forecast_noaa_ens <- forecast_noaa %>%
-              dplyr::filter(NOAA.member == ens) %>%
-              dplyr::filter(!is.na(air_temperature))
+            model_site_date_hour_dir <- file.path(model_dir, site_list[site_index], forecast_date,cycle)
 
-            end_date <- forecast_noaa_ens %>%
-              dplyr::summarise(max_time = max(time))
+            if(!dir.exists(model_site_date_hour_dir)){
+              dir.create(model_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
+            }
 
-            identifier <- paste(model_name, site_list[site_index], format(forecast_date, "%Y-%m-%dT%H"),
-                                format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
+            noaa_data <- list()
 
-            fname <- paste0(identifier,"_ens",ens_name,".nc")
-            output_file <- file.path(model_site_date_hour_dir,fname)
+            for(v in 1:length(noaa_var_names)){
 
-            #Write netCDF
-            noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa_ens,ens, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = overwrite)
+              value <- NULL
+              ensembles <- NULL
+              forecast.date <- NULL
 
-            if(downscale){
-              #Downscale the forecast from 6hr to 1hr
-              modelds_site_date_hour_dir <- file.path(output_directory,model_name_ds,site_list[site_index], forecast_date,cycle)
+              noaa_data[v] <- NULL
 
-              if(!dir.exists(modelds_site_date_hour_dir)){
-                dir.create(modelds_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
+              for(ens in 1:31){
+                curr_ens <- output[[ens]]
+                value <- c(value, curr_ens[[noaa_var_names[v]]][site_index, ])
+                ensembles <- c(ensembles, rep(ens, length(curr_ens[[noaa_var_names[v]]][site_index, ])))
+                forecast.date <- c(forecast.date, forecast_times)
+              }
+              noaa_data[[v]] <- list(value = value,
+                                     ensembles = ensembles,
+                                     forecast.date = lubridate::as_datetime(forecast.date))
+
+            }
+
+            #These are the cf standard names
+            cf_var_names <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
+                              "surface_downwelling_shortwave_flux_in_air", "precipitation_flux", "eastward_wind", "northward_wind","cloud_area_fraction")
+
+            #Replace "eastward_wind" and "northward_wind" with "wind_speed"
+            cf_var_names1 <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
+                               "surface_downwelling_shortwave_flux_in_air", "precipitation_flux","specific_humidity", "cloud_area_fraction","wind_speed")
+
+            cf_var_units1 <- c("K", "Pa", "1", "Wm-2", "Wm-2", "kgm-2s-1", "1", "1", "ms-1")  #Negative numbers indicate negative exponents
+
+            names(noaa_data) <- cf_var_names
+
+            specific_humidity <- rep(NA, length(noaa_data$relative_humidity$value))
+
+            noaa_data$relative_humidity$value <- noaa_data$relative_humidity$value / 100
+
+            noaa_data$air_temperature$value <- noaa_data$air_temperature$value + 273.15
+
+            specific_humidity[which(!is.na(noaa_data$relative_humidity$value))] <- rh2qair(rh = noaa_data$relative_humidity$value[which(!is.na(noaa_data$relative_humidity$value))],
+                                                                                           T = noaa_data$air_temperature$value[which(!is.na(noaa_data$relative_humidity$value))],
+                                                                                           press = noaa_data$air_pressure$value[which(!is.na(noaa_data$relative_humidity$value))])
+
+
+            #Calculate wind speed from east and north components
+            wind_speed <- sqrt(noaa_data$eastward_wind$value^2 + noaa_data$northward_wind$value^2)
+
+            forecast_noaa <- tibble::tibble(time = noaa_data$air_temperature$forecast.date,
+                                            NOAA.member = noaa_data$air_temperature$ensembles,
+                                            air_temperature = noaa_data$air_temperature$value,
+                                            air_pressure= noaa_data$air_pressure$value,
+                                            relative_humidity = noaa_data$relative_humidity$value,
+                                            surface_downwelling_longwave_flux_in_air = noaa_data$surface_downwelling_longwave_flux_in_air$value,
+                                            surface_downwelling_shortwave_flux_in_air = noaa_data$surface_downwelling_shortwave_flux_in_air$value,
+                                            precipitation_flux = noaa_data$precipitation_flux$value,
+                                            specific_humidity = specific_humidity,
+                                            cloud_area_fraction = noaa_data$cloud_area_fraction$value,
+                                            wind_speed = wind_speed)
+
+            forecast_noaa$cloud_area_fraction <- forecast_noaa$cloud_area_fraction / 100 #Convert from % to proportion
+
+            # Convert the 3 hr precip rate to per second.
+            forecast_noaa$precipitation_flux <- forecast_noaa$precipitation_flux / (60 * 60 * 3)
+
+            for (ens in 1:31) { # i is the ensemble number
+
+              #Turn the ensemble number into a string
+              if(ens-1< 10){
+                ens_name <- paste0("0",ens-1)
+              }else{
+                ens_name <- ens - 1
               }
 
-              identifier_ds <- paste(model_name_ds, site_list[site_index], format(forecast_date, "%Y-%m-%dT%H"),
-                                     format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
-              fname_ds <- file.path(modelds_site_date_hour_dir, paste0(identifier_ds,"_ens",ens_name,".nc"))
+              forecast_noaa_ens <- forecast_noaa %>%
+                dplyr::filter(NOAA.member == ens) %>%
+                dplyr::filter(!is.na(air_temperature))
 
-              #Run downscaling
-              noaaGEFSpoint::temporal_downscale(input_file = output_file, output_file = fname_ds, overwrite = overwrite, hr = 1)
+              end_date <- forecast_noaa_ens %>%
+                dplyr::summarise(max_time = max(time))
+
+              identifier <- paste(model_name, site_list[site_index], format(forecast_date, "%Y-%m-%dT%H"),
+                                  format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
+
+              fname <- paste0(identifier,"_ens",ens_name,".nc")
+              output_file <- file.path(model_site_date_hour_dir,fname)
+
+              #Write netCDF
+              noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa_ens,ens, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = overwrite)
+
+              if(downscale){
+                #Downscale the forecast from 6hr to 1hr
+                modelds_site_date_hour_dir <- file.path(output_directory,model_name_ds,site_list[site_index], forecast_date,cycle)
+
+                if(!dir.exists(modelds_site_date_hour_dir)){
+                  dir.create(modelds_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
+                }
+
+                identifier_ds <- paste(model_name_ds, site_list[site_index], format(forecast_date, "%Y-%m-%dT%H"),
+                                       format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
+                fname_ds <- file.path(modelds_site_date_hour_dir, paste0(identifier_ds,"_ens",ens_name,".nc"))
+
+                #Run downscaling
+                noaaGEFSpoint::temporal_downscale(input_file = output_file, output_file = fname_ds, overwrite = overwrite, hr = 1)
+              }
             }
           }
         }
