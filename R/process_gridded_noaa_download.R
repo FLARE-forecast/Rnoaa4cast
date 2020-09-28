@@ -115,21 +115,28 @@ process_gridded_noaa_download <- function(lat_list,
 
     for(j in 1:length(forecast_hours)){
       cycle <- forecast_hours[j]
-      if(forecast_date ==  lubridate::as_date(curr_time) & cycle > lubridate::hour(curr_time)){
+      if(cycle < 10) cycle <- paste0("0",cycle)
+      if(cycle == "00"){
+        hours <- c(seq(0, 240, 3),seq(246, 840 , 6))
+      }else{
+        hours <- c(seq(0, 240, 3),seq(246, 384 , 6))
+      }
+      hours_char <- hours
+      hours_char[which(hours < 100)] <- paste0("0",hours[which(hours < 100)])
+      hours_char[which(hours < 10)] <- paste0("0",hours_char[which(hours < 10)])
+
+      no_missing_files <- TRUE
+      for(site_index in 1:length(site_list)){
+        num_files <- length(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle)))
+        if(num_files != 31){no_missing_files <- FALSE}
+      }
+
+      print(no_missing_files)
+
+      if(no_missing_files){
 
         next
 
-      }else{
-
-        if(cycle < 10) cycle <- paste0("0",cycle)
-        if(cycle == "00"){
-          hours <- c(seq(0, 240, 3),seq(246, 840 , 6))
-        }else{
-          hours <- c(seq(0, 240, 3),seq(246, 384 , 6))
-        }
-        hours_char <- hours
-        hours_char[which(hours < 100)] <- paste0("0",hours[which(hours < 100)])
-        hours_char[which(hours < 10)] <- paste0("0",hours_char[which(hours < 10)])
       }
 
       print(file.path(model_name_raw_dir,forecast_date,cycle))
