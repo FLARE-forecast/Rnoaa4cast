@@ -125,10 +125,10 @@ process_gridded_noaa_download <- function(lat_list,
       hours_char[which(hours < 100)] <- paste0("0",hours[which(hours < 100)])
       hours_char[which(hours < 10)] <- paste0("0",hours_char[which(hours < 10)])
 
-      process_date <- FALSE
+      process_date <- TRUE
       for(site_index in 1:length(site_list)){
         num_files <- length(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle)))
-        if(num_files != 31){process_date <- TRUE}
+        if(num_files == 31){process_date <- FALSE}
       }
 
       raw_files <- list.files(file.path(model_name_raw_dir,forecast_date,cycle))
