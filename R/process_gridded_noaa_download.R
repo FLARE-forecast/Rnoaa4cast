@@ -144,14 +144,13 @@ process_gridded_noaa_download <- function(lat_list,
         }
       }
 
-
       if(no_missing_files){
         next
       }
 
-      print(file.path(model_name_raw_dir,forecast_date,cycle))
-
       if(dir.exists(file.path(model_name_raw_dir,forecast_date,cycle))){
+
+        print(file.path(model_name_raw_dir,forecast_date,cycle))
 
 
         if(length(list.files((file.path(model_name_raw_dir,forecast_date,cycle))) > 0)){
@@ -185,6 +184,17 @@ process_gridded_noaa_download <- function(lat_list,
 
             if(!dir.exists(model_site_date_hour_dir)){
               dir.create(model_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
+            }else{
+              unlink(list.files(model_site_date_hour_dir, full.names = TRUE))
+            }
+
+            if(downscale){
+              modelds_site_date_hour_dir <- file.path(output_directory,model_name_ds,site_list[site_index], forecast_date,cycle)
+              if(!dir.exists(modelds_site_date_hour_dir)){
+                dir.create(modelds_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
+              }else{
+                unlink(list.files(modelds_site_date_hour_dir, full.names = TRUE))
+              }
             }
 
             noaa_data <- list()
@@ -274,19 +284,18 @@ process_gridded_noaa_download <- function(lat_list,
               fname <- paste0(identifier,"_ens",ens_name,".nc")
               output_file <- file.path(model_site_date_hour_dir,fname)
 
+
+
               #Write netCDF
               noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa_ens,ens, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = TRUE)
 
               if(downscale){
                 #Downscale the forecast from 6hr to 1hr
-                modelds_site_date_hour_dir <- file.path(output_directory,model_name_ds,site_list[site_index], forecast_date,cycle)
 
-                if(!dir.exists(modelds_site_date_hour_dir)){
-                  dir.create(modelds_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
-                }
 
                 identifier_ds <- paste(model_name_ds, site_list[site_index], format(forecast_date, "%Y-%m-%dT%H"),
                                        format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
+
                 fname_ds <- file.path(modelds_site_date_hour_dir, paste0(identifier_ds,"_ens",ens_name,".nc"))
 
                 #Run downscaling
