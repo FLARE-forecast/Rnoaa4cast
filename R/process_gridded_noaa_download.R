@@ -125,10 +125,10 @@ process_gridded_noaa_download <- function(lat_list,
       hours_char[which(hours < 100)] <- paste0("0",hours[which(hours < 100)])
       hours_char[which(hours < 10)] <- paste0("0",hours_char[which(hours < 10)])
 
-      no_missing_files <- TRUE
+      process_date <- FALSE
       for(site_index in 1:length(site_list)){
         num_files <- length(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle)))
-        if(num_files != 31){no_missing_files <- FALSE}
+        if(num_files != 31){process_date <- TRUE}
       }
 
       raw_files <- list.files(file.path(model_name_raw_dir,forecast_date,cycle))
@@ -136,15 +136,15 @@ process_gridded_noaa_download <- function(lat_list,
 
       if(cycle == "00"){
         if(length(which(hours_present == 840)) < 30){
-          no_missing_files <- FALSE
+          process_date <- FALSE
         }
       }else{
         if(length(which(hours_present == 384)) < 31){
-          no_missing_files <- FALSE
+          process_date <- FALSE
         }
       }
 
-      if(no_missing_files){
+      if(!process_date){
         next
       }
 
