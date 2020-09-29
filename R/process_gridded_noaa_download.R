@@ -131,11 +131,22 @@ process_gridded_noaa_download <- function(lat_list,
         if(num_files != 31){no_missing_files <- FALSE}
       }
 
+      raw_files <- list.files(file.path(model_name_raw_dir,forecast_date,cycle))
+      hours_present <- as.numeric(stringr::str_sub(raw_files, start = 25, end = 27))
+
+      if(cycle == "00"){
+        if(length(which(hours_present == 840)) < 30){
+          no_missing_files <- FALSE
+        }
+      }else{
+        if(length(which(hours_present == 384)) < 31){
+          no_missing_files <- FALSE
+        }
+      }
+
 
       if(no_missing_files){
-
         next
-
       }
 
       print(file.path(model_name_raw_dir,forecast_date,cycle))
