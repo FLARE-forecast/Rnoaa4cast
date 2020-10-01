@@ -115,6 +115,7 @@ process_gridded_noaa_download <- function(lat_list,
 
     for(j in 1:length(forecast_hours)){
       cycle <- forecast_hours[j]
+      curr_forecast_time <- forecast_date + lubridate::hours(cycle)
       if(cycle < 10) cycle <- paste0("0",cycle)
       if(cycle == "00"){
         hours <- c(seq(0, 240, 3),seq(246, 840 , 6))
@@ -125,19 +126,18 @@ process_gridded_noaa_download <- function(lat_list,
       hours_char[which(hours < 100)] <- paste0("0",hours[which(hours < 100)])
       hours_char[which(hours < 10)] <- paste0("0",hours_char[which(hours < 10)])
 
-
-
-
       raw_files <- list.files(file.path(model_name_raw_dir,forecast_date,cycle))
       hours_present <- as.numeric(stringr::str_sub(raw_files, start = 25, end = 27))
 
       all_downloaded <- FALSE
       if(cycle == "00"){
-        if(length(which(hours_present == 840)) == 30){
+        #Sometime the 16-35 day forecast is not competed for some of the forecasts.  If over 24 hrs has passed then they won't show up.
+        #Go ahead and create the netcdf files
+        if(length(which(hours_present == 840)) == 30 | (length(which(hours_present == 384)) == 30 & curr_forecast_time + lubridate::hours(24) < curr_time)){
           all_downloaded <- TRUE
         }
       }else{
-        if(length(which(hours_present == 384)) == 31){
+        if(length(which(hours_present == 384)) == 31 | (length(which(hours_present == 384)) == 31 & curr_forecast_time + lubridate::hours(24) < curr_time)){
           all_downloaded <- TRUE
         }
       }
