@@ -16,7 +16,8 @@
 noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, num_cores, output_directory) {
 
 
-  download_neon_grid <- function(ens_index, location, directory, hours_char, cycle, base_filename1, vars, mean_file_size, working_directory){
+  download_neon_grid <- function(ens_index, location, directory, hours_char, cycle, base_filename1, vars,
+                                 max_file_size, max_file_size_f000,working_directory){
     #for(j in 1:31){
     if(ens_index == 1){
       base_filename2 <- paste0("gec00",".t",cycle,"z.pgrb2a.0p50.f")
@@ -39,7 +40,13 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
 
       if(file.exists(destfile)){
         size <- file.info(destfile)$size
-        if(size == 0 | size <= (0.50 * mean_file_size)){
+        if(i == 1){
+          max_size <- max_file_size_f000
+        }else{
+          max_size <- max_file_size
+        }
+
+        if(size == 0 | size <= (0.90 * max_size)){
           incorrect_size <- TRUE
         }else{
           incorrect_size <- FALSE
@@ -125,13 +132,18 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
 
       if(cycle < 10) cycle <- paste0("0",cycle)
 
+
       model_date_hour_dir <- file.path(model_dir,forecast_date,cycle)
       if(!dir.exists(model_date_hour_dir)){
         dir.create(model_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
-        mean_file_size <- 0
+        max_file_size_f000 <- 0
+        max_file_size <- 0
+
       }else{
-        f <- list.files(model_date_hour_dir, full.names = TRUE)
-        mean_file_size <- mean(file.info(f)$size)
+        f1 <- list.files(model_date_hour_dir, pattern = "f000", full.names = TRUE)
+        f2<- list.files(model_date_hour_dir, full.names = TRUE)
+        max_file_size_f000 <- max(file.info(f1)$size)
+        max_file_size <- max(file.info(f2)$size)
       }
       #  new_download <- TRUE
       #}else{
@@ -185,7 +197,8 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
                            cycle,
                            base_filename1,
                            vars,
-                           mean_file_size,
+                           max_file_size,
+                           max_file_size_f000,
                            working_directory = model_date_hour_dir,
                            mc.cores = num_cores)
       }else{
