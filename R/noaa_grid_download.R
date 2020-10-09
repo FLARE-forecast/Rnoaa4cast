@@ -40,7 +40,7 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
       if(file.exists(destfile)){
 
         fsz <- file.info(destfile)$size
-        gribf <- file(filename, "rb")
+        gribf <- file(destfile, "rb")
         fsz4 <- fsz-4
         seek(gribf,where = fsz4,origin = "start")
         last4 <- readBin(gribf,"raw",4)
