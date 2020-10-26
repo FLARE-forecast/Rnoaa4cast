@@ -69,14 +69,16 @@ temporal_downscale <- function(input_file, output_file, overwrite = TRUE, hr = 1
   # convert longwave to hourly (just copy 6 hourly values over past 6-hour time period)
   if("surface_downwelling_longwave_flux_in_air" %in% cf_var_names){
     LW.flux.hrly <- downscale_repeat_6hr_to_hrly(df = noaa_data, varName = "surface_downwelling_longwave_flux_in_air")
+    LW.flux.hrly$surface_downwelling_longwave_flux_in_air[nrow(LW.flux.hrly)] <- NA
     forecast_noaa_ds <- dplyr::inner_join(forecast_noaa_ds, LW.flux.hrly, by = "time")
   }else{
     #Add error message
   }
 
   # convert precipitation to hourly (just copy 6 hourly values over past 6-hour time period)
-  if("surface_downwelling_longwave_flux_in_air" %in% cf_var_names){
+  if("precipitation_flux" %in% cf_var_names){
     Precip.flux.hrly <- downscale_repeat_6hr_to_hrly(df = noaa_data, varName = "precipitation_flux")
+    Precip.flux.hrly$precipitation_flux[nrow(Precip.flux.hrly)] <- NA
     forecast_noaa_ds <- dplyr::inner_join(forecast_noaa_ds, Precip.flux.hrly, by = "time")
   }else{
     #Add error message
@@ -85,6 +87,7 @@ temporal_downscale <- function(input_file, output_file, overwrite = TRUE, hr = 1
   # convert cloud_area_fraction to hourly (just copy 6 hourly values over past 6-hour time period)
   if("cloud_area_fraction" %in% cf_var_names){
     cloud_area_fraction.flux.hrly <- downscale_repeat_6hr_to_hrly(df = noaa_data, varName = "cloud_area_fraction")
+    cloud_area_fraction.flux.hrly$cloud_area_fraction[nrow(cloud_area_fraction.flux.hrly)] <- NA
     forecast_noaa_ds <- dplyr::inner_join(forecast_noaa_ds, cloud_area_fraction.flux.hrly, by = "time")
   }else{
     #Add error message
@@ -93,6 +96,7 @@ temporal_downscale <- function(input_file, output_file, overwrite = TRUE, hr = 1
   # use solar geometry to convert shortwave from 6 hr to 1 hr
   if("surface_downwelling_shortwave_flux_in_air" %in% cf_var_names){
     ShortWave.hrly <- downscale_ShortWave_to_hrly(df = noaa_data, lat = lat.in, lon = lon.in)
+    ShortWave.hrly$surface_downwelling_shortwave_flux_in_air[nrow(ShortWave.hrly)] <- NA
     forecast_noaa_ds <- dplyr::inner_join(forecast_noaa_ds, ShortWave.hrly, by = "time")
   }else{
     #Add error message
@@ -201,6 +205,8 @@ downscale_ShortWave_to_hrly <- function(df,lat, lon, hr = 1){
     dplyr::ungroup() %>%
     dplyr::mutate(surface_downwelling_shortwave_flux_in_air = ifelse(avg.rpot > 0, rpot* (surface_downwelling_shortwave_flux_in_air/avg.rpot),0)) %>%
     dplyr::select(time,surface_downwelling_shortwave_flux_in_air)
+
+  ShortWave.ds$surface_downwelling_shortwave_flux_in_air[nrow(ShortWave.ds)] <- NA
 
   return(ShortWave.ds)
 
