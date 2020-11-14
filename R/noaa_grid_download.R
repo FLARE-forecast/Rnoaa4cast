@@ -50,19 +50,6 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
           download_file <- TRUE
         }
         close(gribf)
-
-        #size <- file.info(destfile)$size
-        #if(i == 1){
-        #  max_size <- max_file_size_f000
-        #}else{
-        #  max_size <- max_file_size
-        #}
-
-        #if(size == 0 | size <= (0.90 * max_size)){
-        #  incorrect_size <- TRUE
-        #}else{
-        #  incorrect_size <- FALSE
-        #}
       }else{
         download_file <- TRUE
       }

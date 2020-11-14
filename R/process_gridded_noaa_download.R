@@ -206,7 +206,19 @@ process_gridded_noaa_download <- function(lat_list,
 
             for(ens in 1:31){
               curr_ens <- output[[ens]]
-              value <- c(value, curr_ens[[noaa_var_names[v]]][site_index, ])
+              value <- tryCatch({
+                c(value, curr_ens[[noaa_var_names[v]]][site_index, ])
+              },
+              error=function(e) {
+                message("curr_ens:")
+                message(curr_ens)
+                message(e)
+                stop()
+              },
+              finally = NULL
+              # Choose a return value in case of error
+              )
+
               ensembles <- c(ensembles, rep(ens, length(curr_ens[[noaa_var_names[v]]][site_index, ])))
               forecast.date <- c(forecast.date, forecast_times)
             }
