@@ -21,10 +21,13 @@ process_gridded_noaa_download <- function(lat_list,
                                           lon_list,
                                           site_list,
                                           downscale,
+                                          debias = FALSE,
                                           overwrite,
                                           model_name,
                                           model_name_ds,
+                                          model_name_ds_debias,
                                           model_name_raw,
+                                          debias_coefficients = NULL,
                                           num_cores,
                                           output_directory){
 
@@ -300,6 +303,12 @@ process_gridded_noaa_download <- function(lat_list,
 
             if(downscale){
               #Downscale the forecast from 6hr to 1hr
+                modelds_site_date_hour_dir <- file.path(output_directory,model_name_ds,site_list[site_index], forecast_date,cycle)
+                if(!dir.exists(modelds_site_date_hour_dir)){
+                  dir.create(modelds_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
+                }else{
+                  unlink(list.files(modelds_site_date_hour_dir, full.names = TRUE))
+                }
 
 
               identifier_ds <- paste(model_name_ds, site_list[site_index], format(forecast_date, "%Y-%m-%dT%H"),
@@ -309,6 +318,29 @@ process_gridded_noaa_download <- function(lat_list,
 
               #Run downscaling
               noaaGEFSpoint::temporal_downscale(input_file = output_file, output_file = fname_ds, overwrite = TRUE, hr = 1)
+
+              if(debais){
+                modelds_debais_site_date_hour_dir <- file.path(output_directory,model_name_ds_debias,site_list[site_index], forecast_date,cycle)
+
+                if(!dir.exists(modelds_debais_site_date_hour_dir)){
+                  dir.create(modelds_debais_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
+                }else{
+                  unlink(list.files(modelds_debais_site_date_hour_dir, full.names = TRUE))
+                }
+
+                identifier_ds_debias <- paste(model_name_ds_debias, site_list[site_index], format(forecast_date, "%Y-%m-%dT%H"),
+                                       format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
+
+                fname_ds <- file.path(modelds_debais_site_date_hour_dir, paste0(identifier_ds_debias,"_ens",ens_name,".nc"))
+
+                spatial_downscale_coeff <- list(AirTemp = c(debias_coefficients[site_index]$temp_intercept, debias_coefficients[site_index]$temp_slope),
+                                                ShortWave = c(debias_coefficients[site_index]$sw_intercept, debias_coefficients[site_index]$sw_slope),
+                                                LongWave = c(debias_ccoefficients[site_index]$lw_intercept, debias_coefficients[site_index]$lw_slope),
+                                                WindSpeed = c(debias_coefficients[site_index]$wind_intercept, debias_coefficients[site_index]$wind_slope))
+
+                noaaGEFSpoint::debias_met_forecast(input_file = output_file, output_file = fname_ds, spatial_downscale_coeff, overwrite = TRUE)
+
+              }
             }
           }
         }

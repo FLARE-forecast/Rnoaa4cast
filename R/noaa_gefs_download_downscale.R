@@ -23,6 +23,8 @@ noaa_gefs_download_downscale <- function(site_list,
                                          forecast_time = "latest",
                                          forecast_date = "latest",
                                          downscale = FALSE,
+                                         debias = FALSE,
+                                         debias_coefficients = NULL,
                                          run_parallel = FALSE,
                                          num_cores = 1,
                                          method = "point",
@@ -30,6 +32,7 @@ noaa_gefs_download_downscale <- function(site_list,
 
   model_name <- "NOAAGEFS_6hr"
   model_name_ds <-"NOAAGEFS_1hr" #Downscaled NOAA GEFS
+  model_name_ds_debias <-"NOAAGEFS_1hr-debais" #Downscaled NOAA GEFS
   model_name_raw <- "NOAAGEFS_raw"
 
   print(paste0("Number of sites: ", length(site_list)))
@@ -83,10 +86,13 @@ noaa_gefs_download_downscale <- function(site_list,
                                               lon_list = lon_list,
                                               site_list = site_list,
                                               downscale = downscale,
+                                              debias = debias,
                                               overwrite = overwrite,
                                               model_name = model_name,
                                               model_name_ds = model_name_ds,
+                                              model_name_ds_debias = model_name_ds_debias,
                                               model_name_raw = model_name_raw,
+                                              debias_coefficients = debias_coefficients,
                                               num_cores = num_cores,
                                               output_directory = output_directory)
   }
