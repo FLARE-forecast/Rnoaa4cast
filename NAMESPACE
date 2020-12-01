@@ -2,6 +2,7 @@
 
 export("%>%")
 export(cos_solar_zenith_angle)
+export(debias_met_forecast)
 export(download_downscale_site)
 export(noaa_gefs_download_downscale)
 export(noaa_grid_download)
