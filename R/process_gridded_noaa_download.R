@@ -320,18 +320,18 @@ process_gridded_noaa_download <- function(lat_list,
               noaaGEFSpoint::temporal_downscale(input_file = output_file, output_file = fname_ds, overwrite = TRUE, hr = 1)
 
               if(debias){
-                modelds_debais_site_date_hour_dir <- file.path(output_directory,model_name_ds_debias,site_list[site_index], forecast_date,cycle)
+                modelds_debias_site_date_hour_dir <- file.path(output_directory,model_name_ds_debias,site_list[site_index], forecast_date,cycle)
 
-                if(!dir.exists(modelds_debais_site_date_hour_dir)){
-                  dir.create(modelds_debais_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
+                if(!dir.exists(modelds_debias_site_date_hour_dir)){
+                  dir.create(modelds_debias_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
                 }else{
-                  unlink(list.files(modelds_debais_site_date_hour_dir, full.names = TRUE))
+                  unlink(list.files(modelds_debias_site_date_hour_dir, full.names = TRUE))
                 }
 
                 identifier_ds_debias <- paste(model_name_ds_debias, site_list[site_index], format(forecast_date, "%Y-%m-%dT%H"),
                                        format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
 
-                fname_ds <- file.path(modelds_debais_site_date_hour_dir, paste0(identifier_ds_debias,"_ens",ens_name,".nc"))
+                fname_ds <- file.path(modelds_debias_site_date_hour_dir, paste0(identifier_ds_debias,"_ens",ens_name,".nc"))
 
                 spatial_downscale_coeff <- list(AirTemp = c(debias_coefficients[site_index]$temp_intercept, debias_coefficients[site_index]$temp_slope),
                                                 ShortWave = c(debias_coefficients[site_index]$sw_intercept, debias_coefficients[site_index]$sw_slope),

@@ -32,7 +32,7 @@ noaa_gefs_download_downscale <- function(site_list,
 
   model_name <- "NOAAGEFS_6hr"
   model_name_ds <-"NOAAGEFS_1hr" #Downscaled NOAA GEFS
-  model_name_ds_debias <-"NOAAGEFS_1hr-debais" #Downscaled NOAA GEFS
+  model_name_ds_debias <-"NOAAGEFS_1hr-debias" #Downscaled NOAA GEFS
   model_name_raw <- "NOAAGEFS_raw"
 
   print(paste0("Number of sites: ", length(site_list)))
