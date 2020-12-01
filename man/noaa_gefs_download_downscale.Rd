@@ -12,6 +12,8 @@ noaa_gefs_download_downscale(
   forecast_time = "latest",
   forecast_date = "latest",
   downscale = FALSE,
+  debias = FALSE,
+  debias_coefficients = NULL,
   run_parallel = FALSE,
   num_cores = 1,
   method = "point",

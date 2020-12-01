@@ -9,10 +9,13 @@ process_gridded_noaa_download(
   lon_list,
   site_list,
   downscale,
+  debias = FALSE,
   overwrite,
   model_name,
   model_name_ds,
+  model_name_ds_debias,
   model_name_raw,
+  debias_coefficients = NULL,
   num_cores,
   output_directory
 )
