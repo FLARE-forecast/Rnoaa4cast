@@ -319,6 +319,8 @@ process_gridded_noaa_download <- function(lat_list,
               noaaGEFSpoint::temporal_downscale(input_file = output_file, output_file = fname_ds, overwrite = TRUE, hr = 1)
 
               if(debias){
+
+                print("here")
                 modelds_debias_site_date_hour_dir <- file.path(output_directory,model_name_ds_debias,site_list[site_index], forecast_date,cycle)
 
                 if(!dir.exists(modelds_debias_site_date_hour_dir)){
