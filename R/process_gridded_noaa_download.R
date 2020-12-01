@@ -320,6 +320,8 @@ process_gridded_noaa_download <- function(lat_list,
 
               fname_ds <- file.path(modelds_site_date_hour_dir, paste0(identifier_ds,"_ens",ens_name,".nc"))
 
+              message(paste0("ensemble: ", modelds_site_date_hour_dir))
+
               #Run downscaling
               noaaGEFSpoint::temporal_downscale(input_file = output_file, output_file = fname_ds, overwrite = TRUE, hr = 1)
 
