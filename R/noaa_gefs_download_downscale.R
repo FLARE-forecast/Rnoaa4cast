@@ -35,9 +35,11 @@ noaa_gefs_download_downscale <- function(site_list,
   model_name_ds_debias <-"NOAAGEFS_1hr-debias" #Downscaled NOAA GEFS
   model_name_raw <- "NOAAGEFS_raw"
 
-  print(paste0("Number of sites: ", length(site_list)))
-  print(paste0("Overwrite existing files: ", overwrite))
-  print(paste0("Running in parallel: ", run_parallel))
+  message(paste0("Number of sites: ", length(site_list)))
+  message(paste0("Overwrite existing files: ", overwrite))
+  message(paste0("Running in parallel: ", run_parallel))
+  message(paste0("downscale: ", downscale))
+  message(paste0("debias: ", debias))
 
   if(method == "point"){
 

@@ -173,6 +173,8 @@ process_gridded_noaa_download <- function(lat_list,
 
         for(site_index in 1:length(site_list)){
 
+          message(paste0("Processing site: ", site_list[site_index]))
+
           #Convert negetive longitudes to degrees east
           if(lon_list[site_index] < 0){
             lon_east <- 360 + lon_list[site_index]
