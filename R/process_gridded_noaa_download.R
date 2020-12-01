@@ -197,6 +197,16 @@ process_gridded_noaa_download <- function(lat_list,
             }
           }
 
+          if(debias){
+            modelds_debias_site_date_hour_dir <- file.path(output_directory,model_name_ds_debias,site_list[site_index], forecast_date,cycle)
+            if(!dir.exists(modelds_debias_site_date_hour_dir)){
+              dir.create(modelds_debias_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
+            }else{
+              unlink(list.files(modelds_debias_site_date_hour_dir, full.names = TRUE))
+            }
+          }
+
+
           noaa_data <- list()
 
           for(v in 1:length(noaa_var_names)){
@@ -301,14 +311,6 @@ process_gridded_noaa_download <- function(lat_list,
             noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa_ens,ens, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = TRUE)
 
             if(downscale){
-              #Downscale the forecast from 6hr to 1hr
-                modelds_site_date_hour_dir <- file.path(output_directory,model_name_ds,site_list[site_index], forecast_date,cycle)
-                if(!dir.exists(modelds_site_date_hour_dir)){
-                  dir.create(modelds_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
-                }else{
-                  unlink(list.files(modelds_site_date_hour_dir, full.names = TRUE))
-                }
-
 
               identifier_ds <- paste(model_name_ds, site_list[site_index], format(forecast_date, "%Y-%m-%dT%H"),
                                      format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
@@ -320,16 +322,9 @@ process_gridded_noaa_download <- function(lat_list,
 
               if(debias){
 
-                modelds_debias_site_date_hour_dir <- file.path(output_directory,model_name_ds_debias,site_list[site_index], forecast_date,cycle)
-
-                if(!dir.exists(modelds_debias_site_date_hour_dir)){
-                  dir.create(modelds_debias_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
-                }else{
-                  unlink(list.files(modelds_debias_site_date_hour_dir, full.names = TRUE))
-                }
 
                 identifier_ds_debias <- paste(model_name_ds_debias, site_list[site_index], format(forecast_date, "%Y-%m-%dT%H"),
-                                       format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
+                                              format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
 
                 fname_ds <- file.path(modelds_debias_site_date_hour_dir, paste0(identifier_ds_debias,"_ens",ens_name,".nc"))
 
