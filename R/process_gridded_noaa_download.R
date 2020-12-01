@@ -153,8 +153,6 @@ process_gridded_noaa_download <- function(lat_list,
 
       if(all_downloaded & missing_files){
 
-        message(file.path(model_name_raw_dir,forecast_date,cycle))
-
         ens_index <- 1:31
         #Run download_downscale_site() over the site_index
         output <- parallel::mclapply(X = ens_index,
@@ -299,9 +297,6 @@ process_gridded_noaa_download <- function(lat_list,
             fname <- paste0(identifier,"_ens",ens_name,".nc")
             output_file <- file.path(model_site_date_hour_dir,fname)
 
-            message(paste0("ensemble: ", output_file))
-
-
             #Write netCDF
             noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa_ens,ens, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = TRUE)
 
@@ -319,8 +314,6 @@ process_gridded_noaa_download <- function(lat_list,
                                      format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
 
               fname_ds <- file.path(modelds_site_date_hour_dir, paste0(identifier_ds,"_ens",ens_name,".nc"))
-
-              message(paste0("ensemble: ", modelds_site_date_hour_dir))
 
               #Run downscaling
               noaaGEFSpoint::temporal_downscale(input_file = output_file, output_file = fname_ds, overwrite = TRUE, hr = 1)

@@ -17,6 +17,8 @@
 
 write_noaa_gefs_netcdf <- function(df, ens = NA, lat, lon, cf_units, output_file, overwrite){
 
+  message(output_file)
+
   if(!is.na(ens)){
     data <- df
     max_index <- max(which(!is.na(data$air_temperature)))
