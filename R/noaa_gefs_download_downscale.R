@@ -47,14 +47,14 @@ noaa_gefs_download_downscale <- function(site_list,
           of a 36-day forecast are able to be downloading using this method")
 
     #Create cluster
-    print(paste0("Number of cores specified: ", num_cores))
+    message(paste0("Number of cores specified: ", num_cores))
     if(num_cores > parallel::detectCores()){
       #Docker sets the max number of cores, if the request is for more, set to
       #what docker allows
       num_cores <- parallel::detectCores()
 
     }
-    print(paste0("Number of cores allocated: ", num_cores))
+    print(message("Number of cores allocated: ", num_cores))
 
 
     site_index <- 1:length(site_list)

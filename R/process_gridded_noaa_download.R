@@ -153,7 +153,7 @@ process_gridded_noaa_download <- function(lat_list,
 
       if(all_downloaded & missing_files){
 
-        print(file.path(model_name_raw_dir,forecast_date,cycle))
+        message(file.path(model_name_raw_dir,forecast_date,cycle))
 
         ens_index <- 1:31
         #Run download_downscale_site() over the site_index
@@ -277,6 +277,8 @@ process_gridded_noaa_download <- function(lat_list,
           forecast_noaa$precipitation_flux <- forecast_noaa$precipitation_flux / (60 * 60 * 3)
 
           for (ens in 1:31) { # i is the ensemble number
+
+            message(paste0("ensemble: ", ens))
 
             #Turn the ensemble number into a string
             if(ens-1< 10){
