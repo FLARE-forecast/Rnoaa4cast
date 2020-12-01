@@ -278,7 +278,6 @@ process_gridded_noaa_download <- function(lat_list,
 
           for (ens in 1:31) { # i is the ensemble number
 
-            message(paste0("ensemble: ", ens))
 
             #Turn the ensemble number into a string
             if(ens-1< 10){
@@ -300,6 +299,7 @@ process_gridded_noaa_download <- function(lat_list,
             fname <- paste0(identifier,"_ens",ens_name,".nc")
             output_file <- file.path(model_site_date_hour_dir,fname)
 
+            message(paste0("ensemble: ", output_file))
 
 
             #Write netCDF
