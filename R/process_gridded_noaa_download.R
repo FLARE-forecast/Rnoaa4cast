@@ -136,11 +136,11 @@ process_gridded_noaa_download <- function(lat_list,
       if(cycle == "00"){
         #Sometime the 16-35 day forecast is not competed for some of the forecasts.  If over 24 hrs has passed then they won't show up.
         #Go ahead and create the netcdf files
-        if(length(which(hours_present == 840)) == 30 | (length(which(hours_present == 384)) == 30 & curr_forecast_time + lubridate::hours(36) < curr_time | overwrite)){
+        if(length(which(hours_present == 840)) == 30 | (length(which(hours_present == 384)) == 30 & curr_forecast_time + lubridate::hours(36) < curr_time)){
           all_downloaded <- TRUE
         }
       }else{
-        if(length(which(hours_present == 384)) == 31 | (length(which(hours_present == 384)) == 31 & curr_forecast_time + lubridate::hours(36) < curr_time | overwrite)){
+        if(length(which(hours_present == 384)) == 31 | (length(which(hours_present == 384)) == 31 & curr_forecast_time + lubridate::hours(36) < curr_time)){
           all_downloaded <- TRUE
         }
       }
@@ -149,6 +149,10 @@ process_gridded_noaa_download <- function(lat_list,
       for(site_index in 1:length(site_list)){
         num_files <- length(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle)))
         if(num_files < 31){missing_files <- TRUE}
+      }
+
+      if(overwrite){
+        missing_files <- TRUE
       }
 
       if(all_downloaded & missing_files){
