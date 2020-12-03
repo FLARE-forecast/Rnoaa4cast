@@ -159,16 +159,25 @@ process_gridded_noaa_download <- function(lat_list,
 
         ens_index <- 1:31
         #Run download_downscale_site() over the site_index
-        output <- parallel::mclapply(X = ens_index,
-                                     FUN = extract_sites,
-                                     hours_char = hours_char,
-                                     hours = hours,
-                                     cycle,
-                                     site_list,
-                                     lat_list,
-                                     lon_list,
-                                     working_directory = file.path(model_name_raw_dir,forecast_date,cycle),
-                                     mc.cores = num_cores)
+        #Run download_downscale_site() over the site_index
+        output <- tryCatch({parallel::mclapply(X = ens_index,
+                                               FUN = extract_sites,
+                                               hours_char = hours_char,
+                                               hours = hours,
+                                               cycle,
+                                               site_list,
+                                               lat_list,
+                                               lon_list,
+                                               working_directory = file.path(model_name_raw_dir,forecast_date,cycle),
+                                               mc.cores = num_cores)},
+                           error=function(e) {
+                             message("error on:")
+                             message(file.path(model_name_raw_dir,forecast_date,cycle))
+                             message(e)
+                             next
+                           }
+        )
+
 
 
         forecast_times <- lubridate::as_datetime(forecast_date) + lubridate::hours(as.numeric(cycle)) + lubridate::hours(as.numeric(hours_char))
