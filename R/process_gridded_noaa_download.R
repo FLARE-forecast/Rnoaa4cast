@@ -69,17 +69,30 @@ process_gridded_noaa_download <- function(lat_list,
 
           index <- which(lat_lon[,2] == lats[s] & lat_lon[,1] == lons[s])
 
-          pressfc[s, hr]  <- grib$band1[index]
-          tmp2m[s, hr] <- grib$band2[index]
-          rh2m[s, hr]  <- grib$band3[index]
-          ugrd10m[s, hr]  <- grib$band4[index]
-          vgrd10m[s, hr]  <- grib$band5[index]
+          if(length(index) > 0){
 
-          if(curr_hours[hr] != "000"){
-            apcpsfc[s, hr]  <- grib$band6[index]
-            tcdcclm[s, hr]  <-  grib$band7[index]
-            dswrfsfc[s, hr]  <- grib$band8[index]
-            dlwrfsfc[s, hr]  <- grib$band9[index]
+            pressfc[s, hr]  <- grib$band1[index]
+            tmp2m[s, hr] <- grib$band2[index]
+            rh2m[s, hr]  <- grib$band3[index]
+            ugrd10m[s, hr]  <- grib$band4[index]
+            vgrd10m[s, hr]  <- grib$band5[index]
+
+            if(curr_hours[hr] != "000"){
+              apcpsfc[s, hr]  <- grib$band6[index]
+              tcdcclm[s, hr]  <-  grib$band7[index]
+              dswrfsfc[s, hr]  <- grib$band8[index]
+              dlwrfsfc[s, hr]  <- grib$band9[index]
+            }
+          }else{
+            pressfc[s, hr]  <- NA
+            tmp2m[s, hr] <- NA
+            rh2m[s, hr]  <- NA
+            ugrd10m[s, hr]  <- NA
+            vgrd10m[s, hr]  <-NA
+            apcpsfc[s, hr]  <- NA
+            tcdcclm[s, hr]  <-  NA
+            dswrfsfc[s, hr]  <- NA
+            dlwrfsfc[s, hr]  <- NA
           }
         }
       }
@@ -160,7 +173,7 @@ process_gridded_noaa_download <- function(lat_list,
         ens_index <- 1:31
         #Run download_downscale_site() over the site_index
         #Run download_downscale_site() over the site_index
-        output <- tryCatch({parallel::mclapply(X = ens_index,
+        output <- parallel::mclapply(X = ens_index,
                                                FUN = extract_sites,
                                                hours_char = hours_char,
                                                hours = hours,
@@ -169,20 +182,14 @@ process_gridded_noaa_download <- function(lat_list,
                                                lat_list,
                                                lon_list,
                                                working_directory = file.path(model_name_raw_dir,forecast_date,cycle),
-                                               mc.cores = num_cores)},
-                           error=function(e) {
-                             message("error on:")
-                             message(file.path(model_name_raw_dir,forecast_date,cycle))
-                             message(e)
-                             next
-                           }
-        )
-
+                                               mc.cores = num_cores)
 
 
         forecast_times <- lubridate::as_datetime(forecast_date) + lubridate::hours(as.numeric(cycle)) + lubridate::hours(as.numeric(hours_char))
 
         for(site_index in 1:length(site_list)){
+
+
 
           message(paste0("Processing site: ", site_list[site_index]))
 
@@ -230,8 +237,15 @@ process_gridded_noaa_download <- function(lat_list,
 
             noaa_data[v] <- NULL
 
+
+
             for(ens in 1:31){
               curr_ens <- output[[ens]]
+
+              if(length(which(!is.na(curr_ens[[noaa_var_names[v]]][site_index, ]))) == 0){
+                message(paste0("skipping site: ",site_list[site_index], "because not in gridded raw data"))
+                next
+              }
               value <- tryCatch({
                 c(value, curr_ens[[noaa_var_names[v]]][site_index, ])
               },
@@ -240,9 +254,7 @@ process_gridded_noaa_download <- function(lat_list,
                 message(curr_ens)
                 message(e)
                 stop()
-              },
-              finally = NULL
-              # Choose a return value in case of error
+              }
               )
 
               ensembles <- c(ensembles, rep(ens, length(curr_ens[[noaa_var_names[v]]][site_index, ])))
