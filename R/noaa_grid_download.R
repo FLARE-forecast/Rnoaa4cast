@@ -70,6 +70,8 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
     }
   }
 
+  forecast_date <- lubridate::as_date(forecast_date)
+
   model_dir <- file.path(output_directory, model_name_raw)
 
   curr_time <- lubridate::with_tz(Sys.time(), tzone = "UTC")
@@ -119,59 +121,65 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
 
   for(i in 1:length(potential_dates)){
 
-    forecast_date <- lubridate::as_date(potential_dates[i])
+    forecasted_date <- lubridate::as_date(potential_dates[i])
     if(i == length(potential_dates)){
       forecast_hours <- as.numeric(potential_cycle)
     }else{
       forecast_hours <- c(0,6,12,18)
     }
 
-    for(j in 1:length(forecast_hours)){
-      cycle <- forecast_hours[j]
+    if(is.na(forecast_date) | forecasted_date == forecast_date){
 
-      if(cycle < 10) cycle <- paste0("0",cycle)
+      for(j in 1:length(forecast_hours)){
 
-      model_date_hour_dir <- file.path(model_dir,forecast_date,cycle)
-      if(!dir.exists(model_date_hour_dir)){
-        dir.create(model_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
-      }
+        if(is.na(forecast_time) | as.numeric(forecast_time) == forecast_hours[j]){
+          cycle <- forecast_hours[j]
 
-      new_download <- TRUE
+          if(cycle < 10) cycle <- paste0("0",cycle)
 
-      if(new_download){
+          model_date_hour_dir <- file.path(model_dir,forecasted_date,cycle)
+          if(!dir.exists(model_date_hour_dir)){
+            dir.create(model_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
+          }
 
-        print(paste("Downloading", forecast_date, cycle))
+          new_download <- TRUE
 
-        if(cycle == "00"){
-          hours <- c(seq(0, 240, 3),seq(246, 840 , 6))
-        }else{
-          hours <- c(seq(0, 240, 3),seq(246, 384 , 6))
+          if(new_download){
+
+            print(paste("Downloading", forecasted_date, cycle))
+
+            if(cycle == "00"){
+              hours <- c(seq(0, 240, 3),seq(246, 840 , 6))
+            }else{
+              hours <- c(seq(0, 240, 3),seq(246, 384 , 6))
+            }
+            hours_char <- hours
+            hours_char[which(hours < 100)] <- paste0("0",hours[which(hours < 100)])
+            hours_char[which(hours < 10)] <- paste0("0",hours_char[which(hours < 10)])
+            curr_year <- lubridate::year(forecasted_date)
+            curr_month <- lubridate::month(forecasted_date)
+            if(curr_month < 10) curr_month <- paste0("0",curr_month)
+            curr_day <- lubridate::day(forecasted_date)
+            if(curr_day < 10) curr_day <- paste0("0",curr_day)
+            curr_date <- paste0(curr_year,curr_month,curr_day)
+            directory <- paste0("&dir=%2Fgefs.",curr_date,"%2F",cycle,"%2Fatmos%2Fpgrb2ap5")
+
+            ens_index <- 1:31
+
+            parallel::mclapply(X = ens_index,
+                               FUN = download_neon_grid,
+                               location,
+                               directory,
+                               hours_char,
+                               cycle,
+                               base_filename1,
+                               vars,
+                               working_directory = model_date_hour_dir,
+                               mc.cores = num_cores)
+          }else{
+            print(paste("Existing", forecasted_date, cycle))
+          }
         }
-        hours_char <- hours
-        hours_char[which(hours < 100)] <- paste0("0",hours[which(hours < 100)])
-        hours_char[which(hours < 10)] <- paste0("0",hours_char[which(hours < 10)])
-        curr_year <- lubridate::year(forecast_date)
-        curr_month <- lubridate::month(forecast_date)
-        if(curr_month < 10) curr_month <- paste0("0",curr_month)
-        curr_day <- lubridate::day(forecast_date)
-        if(curr_day < 10) curr_day <- paste0("0",curr_day)
-        curr_date <- paste0(curr_year,curr_month,curr_day)
-        directory <- paste0("&dir=%2Fgefs.",curr_date,"%2F",cycle,"%2Fatmos%2Fpgrb2ap5")
-
-        ens_index <- 1:31
-
-        parallel::mclapply(X = ens_index,
-                           FUN = download_neon_grid,
-                           location,
-                           directory,
-                           hours_char,
-                           cycle,
-                           base_filename1,
-                           vars,
-                           working_directory = model_date_hour_dir,
-                           mc.cores = num_cores)
-      }else{
-        print(paste("Existing", forecast_date, cycle))
       }
     }
   }
