@@ -119,7 +119,7 @@ process_gridded_noaa_download <- function(lat_list,
 
   curr_time <- lubridate::with_tz(Sys.time(), tzone = "UTC")
   curr_date <- lubridate::as_date(curr_time)
-  potential_dates <- seq(curr_date - lubridate::days(6), curr_date, by = "1 day")
+  potential_dates <- seq(curr_date - lubridate::days(3), curr_date, by = "1 day")
 
   #Remove dates before the new GEFS system
   potential_dates <- potential_dates[which(potential_dates > lubridate::as_date("2020-09-23"))]
@@ -242,10 +242,10 @@ process_gridded_noaa_download <- function(lat_list,
             for(ens in 1:31){
               curr_ens <- output[[ens]]
 
-              if(length(which(!is.na(curr_ens[[noaa_var_names[v]]][site_index, ]))) == 0){
-                message(paste0("skipping site: ",site_list[site_index], "because not in gridded raw data"))
-                next
-              }
+ #             if(length(which(!is.na(curr_ens[[noaa_var_names[v]]][site_index, ]))) == 0){
+#                message(paste0("skipping site: ",site_list[site_index], "because not in gridded raw data"))
+#                next
+#              }
               value <- tryCatch({
                 c(value, curr_ens[[noaa_var_names[v]]][site_index, ])
               },
