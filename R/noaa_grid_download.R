@@ -66,11 +66,11 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
                         finally = NULL)
 
         if(is.na(out)) next
-      }
 
-      grib <- rgdal::readGDAL(destfile, silent = TRUE)
-      if(is.null(grib$band1) | is.null(grib$band2) | is.null(grib$band3) | is.null(grib$band4) | is.null(grib$band5)){
-        unlink(destfile)
+        grib <- rgdal::readGDAL(destfile, silent = TRUE)
+        if(is.null(grib$band1) | is.null(grib$band2) | is.null(grib$band3) | is.null(grib$band4) | is.null(grib$band5)){
+          unlink(destfile)
+        }
       }
     }
   }
