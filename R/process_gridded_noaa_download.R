@@ -60,16 +60,23 @@ process_gridded_noaa_download <- function(lat_list,
     curr_hours <- hours_char
 
     for(hr in 1:length(curr_hours)){
-      file_name <- paste0(base_filename2, curr_hours[hr])
+      file_name <- paste0(working_directory,"/", base_filename2, curr_hours[hr],".neon.grib")
 
-      if(file.exists(paste0(working_directory,"/", file_name,".neon.grib"))){
-        grib <- rgdal::readGDAL(paste0(working_directory,"/", file_name,".neon.grib"), silent = TRUE)
+      if(file.exists(file_name)){
+        grib <- rgdal::readGDAL(file_name, silent = TRUE)
+        download_error <- FALSE
+        if(is.null(grib$band1) | is.null(grib$band2) | is.null(grib$band3) | is.null(grib$band4) | is.null(grib$band5)){
+          download_error <- TRUE
+          unlink(file_name)
+        }
         lat_lon <- sp::coordinates(grib)
         for(s in 1:length(site_list)){
 
+
+
           index <- which(lat_lon[,2] == lats[s] & lat_lon[,1] == lons[s])
 
-          if(length(index) > 0){
+          if(length(index) > 0 & download_error == FALSE){
 
             pressfc[s, hr]  <- grib$band1[index]
             tmp2m[s, hr] <- grib$band2[index]

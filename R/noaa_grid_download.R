@@ -128,11 +128,11 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
       forecast_hours <- c(0,6,12,18)
     }
 
-    if(is.na(forecast_date) | forecasted_date == forecast_date){
+    if(is.na(forecast_date) | forecasted_date %in% forecast_date){
 
       for(j in 1:length(forecast_hours)){
 
-        if(is.na(forecast_time) | as.numeric(forecast_time) == forecast_hours[j]){
+        if(is.na(forecast_time) | forecast_hours[j] %in% as.numeric(forecast_time)){
           cycle <- forecast_hours[j]
 
           if(cycle < 10) cycle <- paste0("0",cycle)
