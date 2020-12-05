@@ -64,11 +64,11 @@ process_gridded_noaa_download <- function(lat_list,
 
       if(file.exists(file_name)){
         grib <- rgdal::readGDAL(file_name, silent = TRUE)
-        download_error <- FALSE
-        if(is.null(grib$band1) | is.null(grib$band2) | is.null(grib$band3) | is.null(grib$band4) | is.null(grib$band5)){
-          download_error <- TRUE
-          unlink(file_name)
-        }
+        #download_error <- FALSE
+        #if(is.null(grib$band1) | is.null(grib$band2) | is.null(grib$band3) | is.null(grib$band4) | is.null(grib$band5)){
+        #  download_error <- TRUE
+        #  unlink(file_name)
+        #}
         lat_lon <- sp::coordinates(grib)
         for(s in 1:length(site_list)){
 
@@ -76,7 +76,7 @@ process_gridded_noaa_download <- function(lat_list,
 
           index <- which(lat_lon[,2] == lats[s] & lat_lon[,1] == lons[s])
 
-          if(length(index) > 0 & download_error == FALSE){
+          if(length(index) > 0){
 
             pressfc[s, hr]  <- grib$band1[index]
             tmp2m[s, hr] <- grib$band2[index]
