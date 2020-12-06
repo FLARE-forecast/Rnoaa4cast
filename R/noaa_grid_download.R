@@ -57,7 +57,7 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
       if(download_file){
         download_tries <- 1
         download_failed <- TRUE
-        while(download_failed & download_tries < 4){
+        while(download_failed & download_tries < 10){
           download_failed <- FALSE
           out <- tryCatch(download.file(paste0(base_filename1, file_name, vars, location, directory),
                                         destfile = destfile, quiet = TRUE),
@@ -68,13 +68,17 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
                           },
                           finally = NULL)
 
-          if(is.na(out)) {download_failed <- TRUE}
-
-          grib <- rgdal::readGDAL(destfile, silent = TRUE)
-          if(is.null(grib$band1) | is.null(grib$band2) | is.null(grib$band3) | is.null(grib$band4) | is.null(grib$band5)
-             | is.null(grib$band6) | is.null(grib$band7) | is.null(grib$band8) | is.null(grib$band9)){
-            unlink(destfile)
+          if(is.na(out)){
             download_failed <- TRUE
+
+          }else{
+
+            grib <- rgdal::readGDAL(destfile, silent = TRUE)
+            if(is.null(grib$band1) | is.null(grib$band2) | is.null(grib$band3) | is.null(grib$band4) | is.null(grib$band5)
+               | is.null(grib$band6) | is.null(grib$band7) | is.null(grib$band8) | is.null(grib$band9)){
+              unlink(destfile)
+              download_failed <- TRUE
+            }
           }
           download_tries <- download_tries + 1
         }
