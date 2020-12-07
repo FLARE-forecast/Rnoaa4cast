@@ -70,6 +70,8 @@ process_gridded_noaa_download <- function(lat_list,
         #  unlink(file_name)
         #}
         lat_lon <- sp::coordinates(grib)
+
+        print(file_name)
         for(s in 1:length(site_list)){
 
 
