@@ -72,7 +72,7 @@ noaa_gefs_download_downscale <- function(site_list,
                        model_name = model_name,
                        model_name_ds = model_name_ds,
                        output_directory = output_directory,
-                       mc.cores = num_cores)
+                       mc.cores = 1)
 
   }else{
 
@@ -81,7 +81,7 @@ noaa_gefs_download_downscale <- function(site_list,
                        forecast_time = forecast_time,
                        forecast_date = forecast_date,
                        model_name_raw = model_name_raw,
-                       num_cores = num_cores,
+                       num_cores = 1,
                        output_directory = output_directory)
 
     noaaGEFSpoint::process_gridded_noaa_download(lat_list = lat_list,
