@@ -58,6 +58,7 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
         download_tries <- 1
         download_failed <- TRUE
         while(download_failed & download_tries < 10){
+          Sys.sleep(1)
           download_failed <- FALSE
           out <- tryCatch(download.file(paste0(base_filename1, file_name, vars, location, directory),
                                         destfile = destfile, quiet = TRUE),
@@ -191,7 +192,7 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
                                base_filename1,
                                vars,
                                working_directory = model_date_hour_dir,
-                               mc.cores = num_cores)
+                               mc.cores = 1)
           }else{
             print(paste("Existing", forecasted_date, cycle))
           }
