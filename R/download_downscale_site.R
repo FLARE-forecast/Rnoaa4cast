@@ -61,10 +61,7 @@ download_downscale_site <- function(site_index,
 
   urls.out$date_formated <- lubridate::as_date(urls.out$date)
 
-  if(forecast_date == "latest"){
-    url_index <- length(urls.out$url)
-    previous_day_index <- url_index - 1
-  }else if(!forecast_date == "all"){
+  if(!is.na(forecast_date)){
     url_index <- which(urls.out$date_formated == lubridate::as_date(forecast_date))
   }else{
     url_index <- 1:length(urls.out$url)
