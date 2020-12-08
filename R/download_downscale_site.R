@@ -54,9 +54,8 @@ download_downscale_site <- function(site_index,
   #urls.out <- list()
 
   urls.out$model <- "gefs"
-  urls.out$date <- urls.out$date[which(lubridate::as_date(urls.out$date) >= lubridate::as_date("2020-09-24"))]
+  urls.out$date <- urls.out$date[4:7]
   urls.out$url <- paste0("https://nomads.ncep.noaa.gov:443/dods/gefs/gefs",urls.out$date)
-
 
   if(is.na(urls.out[1])) stop()
 
@@ -93,11 +92,8 @@ download_downscale_site <- function(site_index,
 
     model_list <- model_list[avail_runs_index]
     model_hr <- model_hr[avail_runs_index]
-    if(forecast_time != "all" & forecast_time != "latest"){
-      hour_index <- which(model_hr %in% forecast_time)
-      model_list <- model_list[hour_index]
-    }else if(forecast_time == "latest"){
-      hour_index <- which.max(model_hr)
+    if(!is.na(forecast_time)){
+      hour_index <- which(model_hr %in% as.numeric(forecast_time))
       model_list <- model_list[hour_index]
     }
 
@@ -108,7 +104,7 @@ download_downscale_site <- function(site_index,
       start_time <- lubridate::as_datetime(start_date) + lubridate::hours(as.numeric(run_hour))
       end_time <- start_time + lubridate::days(16)
 
-      model_site_date_hour_dir <- file.path(model_dir, site_list[site_index], start_date,run_hour)
+      model_site_date_hour_dir <- file.path(model_dir, site_list[site_index], lubridate::as_datetime(start_date) ,run_hour)
       if(!dir.exists(model_site_date_hour_dir)){
         dir.create(model_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
       }
@@ -130,17 +126,17 @@ download_downscale_site <- function(site_index,
 
           noaa_var_names <- c("tmp2m", "pressfc", "rh2m", "dlwrfsfc",
                               "dswrfsfc", "apcpsfc",
-                              "ugrd10m", "vgrd10m", "tcdcclm")
+                              "ugrd10m", "vgrd10m")
 
           #These are the cf standard names
           cf_var_names <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
-                            "surface_downwelling_shortwave_flux_in_air", "precipitation_flux", "eastward_wind", "northward_wind","cloud_area_fraction")
+                            "surface_downwelling_shortwave_flux_in_air", "precipitation_flux", "eastward_wind", "northward_wind")
 
           #Replace "eastward_wind" and "northward_wind" with "wind_speed"
           cf_var_names1 <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
-                             "surface_downwelling_shortwave_flux_in_air", "precipitation_flux","specific_humidity", "cloud_area_fraction","wind_speed")
+                             "surface_downwelling_shortwave_flux_in_air", "precipitation_flux","specific_humidity", "wind_speed")
 
-          cf_var_units1 <- c("K", "Pa", "1", "Wm-2", "Wm-2", "kgm-2s-1", "1", "1", "ms-1")  #Negative numbers indicate negative exponents
+          cf_var_units1 <- c("K", "Pa", "1", "Wm-2", "Wm-2", "kgm-2s-1", "1", "ms-1")  #Negative numbers indicate negative exponents
 
           noaa_data <- list()
 
@@ -205,16 +201,13 @@ download_downscale_site <- function(site_index,
                                           surface_downwelling_shortwave_flux_in_air = noaa_data$surface_downwelling_shortwave_flux_in_air$value,
                                           precipitation_flux = noaa_data$precipitation_flux$value,
                                           specific_humidity = specific_humidity,
-                                          cloud_area_fraction = noaa_data$cloud_area_fraction$value,
                                           wind_speed = wind_speed)
 
           #9.999e+20 is the missing value so convert to NA
           forecast_noaa$surface_downwelling_longwave_flux_in_air[forecast_noaa$surface_downwelling_longwave_flux_in_air == 9.999e+20] <- NA
           forecast_noaa$surface_downwelling_shortwave_flux_in_air[forecast_noaa$surface_downwelling_shortwave_flux_in_air == 9.999e+20] <- NA
           forecast_noaa$precipitation_flux[forecast_noaa$precipitation_flux == 9.999e+20] <- NA
-          forecast_noaa$cloud_area_fraction[forecast_noaa$cloud_area_fraction == 9.999e+20] <- NA
 
-          forecast_noaa$cloud_area_fraction <- forecast_noaa$cloud_area_fraction / 100 #Convert from % to proportion
           forecast_noaa$relative_humidity <- forecast_noaa$relative_humidity / 100 #Convert from % to proportion
 
           # Convert the 6 hr precip rate to per second.
@@ -248,7 +241,7 @@ download_downscale_site <- function(site_index,
 
             if(downscale){
               #Downscale the forecast from 6hr to 1hr
-              modelds_site_date_hour_dir <- file.path(output_directory,model_name_ds,site_list[site_index],start_date,run_hour)
+              modelds_site_date_hour_dir <- file.path(output_directory,model_name_ds,site_list[site_index],lubridate::as_date(start_date),run_hour)
 
               if(!dir.exists(modelds_site_date_hour_dir)){
                 dir.create(modelds_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
