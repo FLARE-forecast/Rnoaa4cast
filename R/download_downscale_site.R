@@ -170,12 +170,11 @@ download_downscale_site <- function(site_index,
             }else if(length(unique(noaa_data[[j]]$value)) == 1){
               #ONLY HAS 9.999e+20 which is the missing value
               download_issues <- TRUE
+            }else{
+              #For some reason it defaults to the computer's time zone, convert to UTC
+              noaa_data[[j]]$forecast.date <- lubridate::with_tz(noaa_data[[j]]$forecast.date,
+                                                                 tzone = "UTC")
             }
-
-
-            #For some reason it defaults to the computer's time zone, convert to UTC
-            noaa_data[[j]]$forecast.date <- lubridate::with_tz(noaa_data[[j]]$forecast.date,
-                                                               tzone = "UTC")
           }
 
           if(download_issues == TRUE){
