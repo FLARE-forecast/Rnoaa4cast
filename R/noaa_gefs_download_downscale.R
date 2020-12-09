@@ -43,7 +43,7 @@ noaa_gefs_download_downscale <- function(site_list,
 
   if(method == "point"){
 
-    messsage("downloading NOAA using single point method.  Note: only the first 16 days of a 35-day forecast are able to be downloading using this method")
+    message("downloading NOAA using single point method.  Note: only the first 16 days of a 35-day forecast are able to be downloading using this method")
 
     #Create cluster
     message(paste0("Number of cores specified: ", num_cores))
