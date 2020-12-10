@@ -29,7 +29,8 @@ process_gridded_noaa_download <- function(lat_list,
                                           model_name_raw,
                                           debias_coefficients = NULL,
                                           num_cores,
-                                          output_directory){
+                                          output_directory,
+                                          reprocess = FALSE){
 
   extract_sites <- function(ens_index, hours_char, hours, cycle, site_list, lat_list, lon_list, working_directory){
 
@@ -129,6 +130,9 @@ process_gridded_noaa_download <- function(lat_list,
   curr_date <- lubridate::as_date(curr_time)
   potential_dates <- seq(curr_date - lubridate::days(3), curr_date, by = "1 day")
 
+  if(reprocess){
+    potential_dates <- lubridate::as_date(list.dirs(model_name_raw_dir, recursive = FALSE, full.names = FALSE))
+  }
   #Remove dates before the new GEFS system
   potential_dates <- potential_dates[which(potential_dates > lubridate::as_date("2020-09-23"))]
 
@@ -142,9 +146,9 @@ process_gridded_noaa_download <- function(lat_list,
       curr_forecast_time <- forecast_date + lubridate::hours(cycle)
       if(cycle < 10) cycle <- paste0("0",cycle)
       if(cycle == "00"){
-        hours <- c(seq(0, 240, 3),seq(246, 840 , 6))
+        hours <- c(seq(0, 240, 6),seq(246, 840 , 6))
       }else{
-        hours <- c(seq(0, 240, 3),seq(246, 384 , 6))
+        hours <- c(seq(0, 240, 6),seq(246, 384 , 6))
       }
       hours_char <- hours
       hours_char[which(hours < 100)] <- paste0("0",hours[which(hours < 100)])
