@@ -75,10 +75,14 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
           }else{
 
             grib <- rgdal::readGDAL(destfile, silent = TRUE)
-            if(is.null(grib$band1) | is.null(grib$band2) | is.null(grib$band3) | is.null(grib$band4) | is.null(grib$band5)
-               | is.null(grib$band6) | is.null(grib$band7) | is.null(grib$band8) | is.null(grib$band9)){
-              unlink(destfile)
-              download_failed <- TRUE
+            if(is.null(grib$band1) | is.null(grib$band2) | is.null(grib$band3) | is.null(grib$band4) | is.null(grib$band5)){
+              if(curr_hours[i] != "000" & (is.null(grib$band6) | is.null(grib$band7) | is.null(grib$band8) | is.null(grib$band9))){
+                unlink(destfile)
+                download_failed <- TRUE
+              }else{
+                unlink(destfile)
+                download_failed <- TRUE
+              }
             }
           }
           download_tries <- download_tries + 1
