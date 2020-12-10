@@ -151,7 +151,7 @@ download_downscale_site <- function(lat_list,
             lon <- which.min(abs(lon.dom - lon_east)) - 1 #NOMADS indexes start at 0
             lat <- which.min(abs(lat.dom - lat_list[site_index])) - 1 #NOMADS indexes start at 0
 
-            noaa_data[[j]] <- tryCatch(rNOMADS::DODSGrab(model.url = curr_model.url,
+            noaa_data[[j]] <- tryCatch(noaaGEFSpoint::DODSGrab(model.url = curr_model.url,
                                                          model.run = model.run,
                                                          variables	= noaa_var_names[j],
                                                          time = c(0, 64),

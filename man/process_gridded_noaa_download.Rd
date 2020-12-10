@@ -17,7 +17,8 @@ process_gridded_noaa_download(
   model_name_raw,
   debias_coefficients = NULL,
   num_cores,
-  output_directory
+  output_directory,
+  reprocess = FALSE
 )
 }
 \arguments{

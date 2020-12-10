@@ -5,12 +5,11 @@
 \title{Download and Downscale NOAA GEFS for a single site}
 \usage{
 download_downscale_site(
-  site_index,
   lat_list,
   lon_list,
   site_list,
-  forecast_time = "all",
-  forecast_date = "all",
+  forecast_time = NA,
+  forecast_date = NA,
   downscale,
   overwrite,
   model_name,
@@ -19,8 +18,6 @@ download_downscale_site(
 )
 }
 \arguments{
-\item{site_index, }{index of site_list, lat_list, lon_list to be downloaded}
-
 \item{lat_list, }{vector of latitudes that correspond to site codes}
 
 \item{lon_list, }{vector of longitudes that correspond to site codes}
@@ -36,6 +33,8 @@ download_downscale_site(
 \item{model_name_ds, }{directory name for the 1-hr forecast, this will be used in directory and file name generation}
 
 \item{output_directory, }{directory where the model output will be save}
+
+\item{site_index, }{index of site_list, lat_list, lon_list to be downloaded}
 }
 \value{
 None
