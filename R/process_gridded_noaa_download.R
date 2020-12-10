@@ -315,7 +315,7 @@ process_gridded_noaa_download <- function(lat_list,
           forecast_noaa$cloud_area_fraction <- forecast_noaa$cloud_area_fraction / 100 #Convert from % to proportion
 
           # Convert the 3 hr precip rate to per second.
-          forecast_noaa$precipitation_flux <- forecast_noaa$precipitation_flux / (60 * 60 * 3)
+          forecast_noaa$precipitation_flux <- forecast_noaa$precipitation_flux / (60 * 60 * 6)
 
           for (ens in 1:31) { # i is the ensemble number
 
