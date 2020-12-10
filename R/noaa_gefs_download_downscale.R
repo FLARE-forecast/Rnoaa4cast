@@ -45,19 +45,7 @@ noaa_gefs_download_downscale <- function(site_list,
 
     message("downloading NOAA using single point method.  Note: only the first 16 days of a 35-day forecast are able to be downloading using this method")
 
-    #Create cluster
-    message(paste0("Number of cores specified: ", num_cores))
-    if(num_cores > parallel::detectCores()){
-      #Docker sets the max number of cores, if the request is for more, set to
-      #what docker allows
-      num_cores <- parallel::detectCores()
-
-    }
-    print(message("Number of cores allocated: ", num_cores))
-
-    for(i in 1:length(site_list)){
       noaaGEFSpoint::download_downscale_site(
-        site_index = i,
         lat_list = lat_list,
         lon_list = lon_list,
         site_list = site_list,
@@ -67,25 +55,7 @@ noaa_gefs_download_downscale <- function(site_list,
         overwrite = overwrite,
         model_name = model_name,
         model_name_ds = model_name_ds,
-        output_directory = output_directory
-      )
-    }
-
-    #site_index <- 1:length(site_list)
-    #Run download_downscale_site() over the site_index
-    #parallel::mclapply(X = site_index,
-    #                   FUN = noaaGEFSpoint::download_downscale_site,
-    #                   lat_list = lat_list,
-    #                   lon_list = lon_list,
-    #                   site_list = site_list,
-    #                   forecast_time = forecast_time,
-    #                   forecast_date = forecast_date,
-    #                   downscale = downscale,
-    #                   overwrite = overwrite,
-    #                   model_name = model_name,
-    #                   model_name_ds = model_name_ds,
-    #                   output_directory = output_directory,
-    #                   mc.cores = 1)
+        output_directory = output_directory)
 
   }else{
 

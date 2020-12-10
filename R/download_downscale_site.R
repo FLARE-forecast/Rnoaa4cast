@@ -17,8 +17,7 @@
 ##'
 
 
-download_downscale_site <- function(site_index,
-                                    lat_list,
+download_downscale_site <- function(lat_list,
                                     lon_list,
                                     site_list,
                                     forecast_time = NA,
@@ -36,12 +35,7 @@ download_downscale_site <- function(site_index,
   lon.dom <- seq(0, 359, by = 0.5) #domain of longitudes in model (1 degree resolution)
   lat.dom <- seq(-90, 90, by = 0.5) #domain of latitudes in model (1 degree resolution)
 
-  #Convert negetive longitudes to degrees east
-  if(lon_list[site_index] < 0){
-    lon_east <- 360 + lon_list[site_index]
-  }else{
-    lon_east <- lon_list[site_index]
-  }
+
 
   urls.out <- tryCatch(rNOMADS::GetDODSDates(abbrev = "gens_bc"),
                        error = function(e){
@@ -100,6 +94,15 @@ download_downscale_site <- function(site_index,
       run_hour <- stringr::str_sub(model_list[m], start = 19, end = 20)
       start_time <- lubridate::as_datetime(start_date) + lubridate::hours(as.numeric(run_hour))
       end_time <- start_time + lubridate::days(16)
+
+      for(site_index in 1:length(site_list)){
+
+        #Convert negetive longitudes to degrees east
+        if(lon_list[site_index] < 0){
+          lon_east <- 360 + lon_list[site_index]
+        }else{
+          lon_east <- lon_list[site_index]
+        }
 
       model_site_date_hour_dir <- file.path(model_dir, site_list[site_index], lubridate::as_datetime(start_date) ,run_hour)
       if(!dir.exists(model_site_date_hour_dir)){
@@ -255,6 +258,7 @@ download_downscale_site <- function(site_index,
         }
       }else{
         print(paste("Existing", site_list[site_index], start_time))
+      }
       }
     }
   }
