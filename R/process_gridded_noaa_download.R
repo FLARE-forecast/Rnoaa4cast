@@ -138,8 +138,12 @@ process_gridded_noaa_download <- function(lat_list,
 
   for(k in 1:length(potential_dates)){
 
+
+
     forecast_date <- lubridate::as_date(potential_dates[k])
     forecast_hours <- c(0,6,12,18)
+
+
 
     for(j in 1:length(forecast_hours)){
       cycle <- forecast_hours[j]
@@ -153,6 +157,8 @@ process_gridded_noaa_download <- function(lat_list,
       hours_char <- hours
       hours_char[which(hours < 100)] <- paste0("0",hours[which(hours < 100)])
       hours_char[which(hours < 10)] <- paste0("0",hours_char[which(hours < 10)])
+
+      message(paste0("Processing forecast time: ", curr_forecast_time))
 
       raw_files <- list.files(file.path(model_name_raw_dir,forecast_date,cycle))
       hours_present <- as.numeric(stringr::str_sub(raw_files, start = 25, end = 27))
