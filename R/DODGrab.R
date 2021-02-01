@@ -1,5 +1,6 @@
 #' Title
 #'
+#' @param model.path
 #' @param model.url
 #' @param model.run
 #' @param variables
@@ -16,7 +17,7 @@
 #' @export
 #'
 #' @examples
-DODSGrab <- function (model.url, model.run, variables, time, lon, lat, levels = NULL,
+DODSGrab <- function (model.path, model.url, model.run, variables, time, lon, lat, levels = NULL,
                       ensembles = NULL, display.url = TRUE, verbose = FALSE, request.sleep = 1){
   prev.digits <- options("digits")
   options(digits = 8)
@@ -25,6 +26,8 @@ DODSGrab <- function (model.url, model.run, variables, time, lon, lat, levels = 
                      lat = NULL, value = NULL, request.url = NULL)
   for (variable in variables) {
     preamble <- paste0(model.url, "/", model.run, ".ascii?",
+                       variable)
+    preamble_path <- paste0(model.path, "/", model.run, ".ascii?",
                        variable)
     time.str <- paste0("[", paste0(time, collapse = ":"),
                        "]")
@@ -48,10 +51,14 @@ DODSGrab <- function (model.url, model.run, variables, time, lon, lat, levels = 
     lon.str <- paste0("[", paste0(lon, collapse = ":"), "]")
     data.url <- paste0(preamble, ensembles.str, time.str,
                        level.str, lat.str, lon.str)
+    data.path <- paste0(preamble_path, ensembles.str, time.str,
+                       level.str, lat.str, lon.str)
+    message(data.path)
     if (display.url) {
       print(data.url)
     }
-    data.txt.raw <- httr::GET(url = data.url)
+    #data.txt.raw <- httr::GET(url = data.url)
+    data.txt.raw <- read_file(data.path)
     if (grepl("[eE][rR][rR][oO][rR]", data.txt.raw)) {
       warning(paste0("There may have been an error retrieving data from the NOMADS server.  HTML text is as follows\n",
                      data.txt.raw))

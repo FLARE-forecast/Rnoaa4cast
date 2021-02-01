@@ -50,6 +50,7 @@ download_downscale_site <- function(lat_list,
   urls.out$model <- "gefs"
   urls.out$date <- urls.out$date[4:7]
   urls.out$url <- paste0("https://nomads.ncep.noaa.gov:443/dods/gefs/gefs",urls.out$date)
+  urls.out$path <- paste0("/opt/flare/shared/qnoaa/",urls.out$date)
 
   if(is.na(urls.out[1])) stop()
 
@@ -63,6 +64,7 @@ download_downscale_site <- function(lat_list,
 
   for(i in url_index){
 
+    model.path <- urls.out$path[i]
     model.url <- urls.out$url[i]
     start_date <- urls.out$date[i]
 
