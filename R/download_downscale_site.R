@@ -37,18 +37,19 @@ download_downscale_site <- function(lat_list,
 
 
 
-  urls.out <- tryCatch(rNOMADS::GetDODSDates(abbrev = "gens_bc"),
-                       error = function(e){
-                         warning(paste(e$message, "NOAA Server not responsive"),
-                                 call. = FALSE)
-                         return(NA)
-                       },
-                       finally = NULL)
+  #urls.out <- tryCatch(rNOMADS::GetDODSDates(abbrev = "gens_bc"),
+  #                     error = function(e){
+  #                       warning(paste(e$message, "NOAA Server not responsive"),
+  #                               call. = FALSE)
+  #                       return(NA)
+  #                     },
+  #                     finally = NULL)
 
-  #urls.out <- list()
+  urls.out <- list()
 
   urls.out$model <- "gefs"
-  urls.out$date <- urls.out$date[4:7]
+  #urls.out$date <- urls.out$date[4:7]
+  urls.out$date <- format(c(Sys.Date() - 3, Sys.Date() - 2, Sys.Date() - 1, Sys.Date()), format = "%Y%m%d") 
   urls.out$url <- paste0("https://nomads.ncep.noaa.gov:443/dods/gefs/gefs",urls.out$date)
   urls.out$path <- paste0("/opt/flare/shared/qnoaa/",urls.out$date)
 
