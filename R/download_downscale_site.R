@@ -155,7 +155,8 @@ download_downscale_site <- function(lat_list,
             lon <- which.min(abs(lon.dom - lon_east)) - 1 #NOMADS indexes start at 0
             lat <- which.min(abs(lat.dom - lat_list[site_index])) - 1 #NOMADS indexes start at 0
 
-            noaa_data[[j]] <- tryCatch(rNOMADS::DODSGrab(model.url = curr_model.url,
+            noaa_data[[j]] <- tryCatch(rNOMADS::DODSGrab(model.path = model.path,
+                                                         model.url = curr_model.url,
                                                          model.run = model.run,
                                                          variables	= noaa_var_names[j],
                                                          time = c(0, 64),
@@ -163,7 +164,8 @@ download_downscale_site <- function(lat_list,
                                                          lat = lat,
                                                          ensembles=c(0, 30)),
                                        error = function(e){
-                                         warning(paste(e$message, "skipping", curr_model.url, model.run, noaa_var_names[j]),
+                                         #warning(paste(e$message, "skipping", curr_model.url, model.run, noaa_var_names[j]),
+                                         warning(paste(e$message, "skipping", model.path, model.run, noaa_var_names[j]),
                                                  call. = FALSE)
                                          return(NA)
                                        },
@@ -182,7 +184,8 @@ download_downscale_site <- function(lat_list,
           }
 
           if(download_issues == TRUE){
-            warning(paste("Error downloading one of the variables: ", curr_model.url, model.run))
+            #warning(paste("Error downloading one of the variables: ", curr_model.url, model.run))
+            warning(paste("Error downloading one of the variables: ", model.path, model.run))
             next
           }
 
