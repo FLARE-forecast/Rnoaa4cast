@@ -72,16 +72,17 @@ download_downscale_site <- function(lat_list,
     model_list <- c("gefs_pgrb2ap5_all_00z", "gefs_pgrb2ap5_all_06z", "gefs_pgrb2ap5_all_12z", "gefs_pgrb2ap5_all_18z")
     model_hr <- c(0, 6, 12, 18)
 
-    model.runs <- tryCatch(rNOMADS::GetDODSModelRuns(model.url),
-                           error = function(e){
-                             warning(paste(e$message, "skipping", model.url),
-                                     call. = FALSE)
-                             return(NA)
-                           },
-                           finally = NULL)
-    if(is.na(model.runs)[1]) next
+#    model.runs <- tryCatch(rNOMADS::GetDODSModelRuns(model.url),
+#                           error = function(e){
+#                             warning(paste(e$message, "skipping", model.url),
+#                                     call. = FALSE)
+#                             return(NA)
+#                           },
+#                           finally = NULL)
+#    if(is.na(model.runs)[1]) next
 
-    avail_runs <- model.runs$model.run[which(model.runs$model.run %in% model_list)]
+#    avail_runs <- model.runs$model.run[which(model.runs$model.run %in% model_list)]
+    avail_runs <- model_list
     avail_runs_index <- which(model_list %in% avail_runs)
 
     model_list <- model_list[avail_runs_index]
