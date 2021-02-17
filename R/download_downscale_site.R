@@ -50,8 +50,8 @@ download_downscale_site <- function(lat_list,
   urls.out$model <- "gefs"
   #urls.out$date <- urls.out$date[4:7]
   urls.out$date <- format(c(Sys.Date() - 3, Sys.Date() - 2, Sys.Date() - 1, Sys.Date()), format = "%Y%m%d") 
-  urls.out$url <- paste0("https://nomads.ncep.noaa.gov:443/dods/gefs/gefs",urls.out$date)
-  urls.out$path <- paste0("/opt/flare/shared/qnoaa/",urls.out$date)
+  #urls.out$url <- paste0("https://nomads.ncep.noaa.gov:443/dods/gefs/gefs",urls.out$date)
+  urls.out$url <- paste0("/opt/flare/shared/qnoaa/",urls.out$date)
 
   if(is.na(urls.out[1])) stop()
 
@@ -65,7 +65,6 @@ download_downscale_site <- function(lat_list,
 
   for(i in url_index){
 
-    model.path <- urls.out$path[i]
     model.url <- urls.out$url[i]
     start_date <- urls.out$date[i]
 
@@ -203,8 +202,7 @@ download_downscale_site <- function(lat_list,
             lon <- which.min(abs(lon.dom - lon_east)) - 1 #NOMADS indexes start at 0
             lat <- which.min(abs(lat.dom - lat_list[site_index])) - 1 #NOMADS indexes start at 0
 
-            noaa_data[[j]] <- tryCatch(rNOMADS::DODSGrab(model.path = model.path,
-                                                         model.url = curr_model.url,
+            noaa_data[[j]] <- tryCatch(rNOMADS::DODSGrab(model.url = curr_model.url,
                                                          model.run = model.run,
                                                          variables	= noaa_var_names[j],
                                                          time = c(0, 64),
@@ -212,8 +210,7 @@ download_downscale_site <- function(lat_list,
                                                          lat = lat,
                                                          ensembles=c(0, 30)),
                                        error = function(e){
-                                         #warning(paste(e$message, "skipping", curr_model.url, model.run, noaa_var_names[j]),
-                                         warning(paste(e$message, "skipping", model.path, model.run, noaa_var_names[j]),
+                                         warning(paste(e$message, "skipping", curr_model.url, model.run, noaa_var_names[j]),
                                                  call. = FALSE)
                                          return(NA)
                                        },
@@ -232,8 +229,7 @@ download_downscale_site <- function(lat_list,
           }
 
           if(download_issues == TRUE){
-            #warning(paste("Error downloading one of the variables: ", curr_model.url, model.run))
-            warning(paste("Error downloading one of the variables: ", model.path, model.run))
+            warning(paste("Error downloading one of the variables: ", curr_model.url, model.run))
             next
           }
 
