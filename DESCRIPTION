@@ -1,6 +1,6 @@
 Package: noaaGEFSpoint
 Title: Downloads And Temporally Downscales NOAA GEFS 6-hr Forecasts for a Point Location
-Version: 0.0.1.02.dev
+Version: 0.0.1.02.1
 Authors@R: 
     person(given = "Quinn",
            family = "Thomas",
