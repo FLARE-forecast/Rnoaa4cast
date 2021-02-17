@@ -262,7 +262,7 @@ download_downscale_site <- function(lat_list,
 
           # Convert the 6 hr precip rate to per second.
           forecast_noaa$precipitation_flux <- forecast_noaa$precipitation_flux / (60 * 60 * 6)
-
+          message(head(forecast_noaa))
 
           for (ens in 1:31) { # i is the ensemble number
 
