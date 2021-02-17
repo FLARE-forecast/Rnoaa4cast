@@ -79,7 +79,7 @@ download_downscale_site <- function(lat_list,
 #                           },
 #                           finally = NULL)
     model.runs <- list()
-    model.runs$model.run <- model.runs$model.run <- c("gec00_00z_pgrb2a", "gec00_00z_pgrb2b", "gec00_06z_pgrb2a",
+    model.runs$model.run <- c("gec00_00z_pgrb2a", "gec00_00z_pgrb2b", "gec00_06z_pgrb2a",
                                                       "gec00_06z_pgrb2b", "gec00_12z_pgrb2a", "gec00_12z_pgrb2b",
                                                       "gec00_18z_pgrb2a", "gec00_18z_pgrb2b", "gefs_pgrb2ap5_all_00z",
                                                       "gefs_pgrb2ap5_all_06z", "gefs_pgrb2ap5_all_12z", "gefs_pgrb2ap5_all_18z",
