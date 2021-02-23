@@ -16,7 +16,8 @@
 ##'
 ##'
 
-noaa_gefs_download_downscale <- function(site_list,
+noaa_gefs_download_downscale <- function(read_from_path,
+                                         site_list,
                                          lat_list,
                                          lon_list,
                                          output_directory,
@@ -46,6 +47,7 @@ noaa_gefs_download_downscale <- function(site_list,
     message("downloading NOAA using single point method.  Note: only the first 16 days of a 35-day forecast are able to be downloading using this method")
 
       noaaGEFSpoint::download_downscale_site(
+        read_from_path = read_from_path,
         lat_list = lat_list,
         lon_list = lon_list,
         site_list = site_list,
