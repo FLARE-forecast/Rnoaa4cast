@@ -52,7 +52,7 @@ download_downscale_site <- function(read_from_path,
   #urls.out$date <- urls.out$date[4:7]
   urls.out$date <- format(c(Sys.Date() - 3, Sys.Date() - 2, Sys.Date() - 1, Sys.Date()), format = "%Y%m%d") 
   #urls.out$url <- paste0("https://nomads.ncep.noaa.gov:443/dods/gefs/gefs",urls.out$date)
-  urls.out$url <- paste0(read_from_path,urls.out$date)
+  urls.out$url <- file.path(read_from_path,urls.out$date)
 
   if(is.na(urls.out[1])) stop()
 
