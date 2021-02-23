@@ -41,6 +41,7 @@ noaa_gefs_download_downscale <- function(read_from_path,
   message(paste0("Running in parallel: ", run_parallel))
   message(paste0("downscale: ", downscale))
   message(paste0("debias: ", debias))
+  message(paste0("Read From Path: ", read_from_path))
 
   if(method == "point"){
 
