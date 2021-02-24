@@ -36,23 +36,25 @@ download_downscale_site <- function(read_from_path,
   lon.dom <- seq(0, 359, by = 0.5) #domain of longitudes in model (1 degree resolution)
   lat.dom <- seq(-90, 90, by = 0.5) #domain of latitudes in model (1 degree resolution)
 
-
-
-  #urls.out <- tryCatch(rNOMADS::GetDODSDates(abbrev = "gens_bc"),
-  #                     error = function(e){
-  #                       warning(paste(e$message, "NOAA Server not responsive"),
-  #                               call. = FALSE)
-  #                       return(NA)
-  #                     },
-  #                     finally = NULL)
-
-  urls.out <- list()
-
+  if (read_from_path == '') {
+    urls.out <- tryCatch(rNOMADS::GetDODSDates(abbrev = "gens_bc"),
+                         error = function(e){
+                           warning(paste(e$message, "NOAA Server not responsive"),
+                                   call. = FALSE)
+                           return(NA)
+                         },
+                         finally = NULL)
+    
+    urls.out$date <- urls.out$date[4:7]
+    urls.out$url <- paste0("https://nomads.ncep.noaa.gov:443/dods/gefs/gefs",urls.out$date)
+    
+    } else {
+    urls.out <- list()
+    urls.out$date <- format(c(Sys.Date() - 3, Sys.Date() - 2, Sys.Date() - 1, Sys.Date()), format = "%Y%m%d") 
+    urls.out$url <- file.path(read_from_path,urls.out$date)    
+    }
+    
   urls.out$model <- "gefs"
-  #urls.out$date <- urls.out$date[4:7]
-  urls.out$date <- format(c(Sys.Date() - 3, Sys.Date() - 2, Sys.Date() - 1, Sys.Date()), format = "%Y%m%d") 
-  #urls.out$url <- paste0("https://nomads.ncep.noaa.gov:443/dods/gefs/gefs",urls.out$date)
-  urls.out$url <- file.path(read_from_path,urls.out$date)
 
   if(is.na(urls.out[1])) stop()
 
@@ -71,16 +73,22 @@ download_downscale_site <- function(read_from_path,
 
     model_list <- c("gefs_pgrb2ap5_all_00z", "gefs_pgrb2ap5_all_06z", "gefs_pgrb2ap5_all_12z", "gefs_pgrb2ap5_all_18z")
     model_hr <- c(0, 6, 12, 18)
-
-#    model.runs <- tryCatch(rNOMADS::GetDODSModelRuns(model.url),
-#                           error = function(e){
-#                             warning(paste(e$message, "skipping", model.url),
-#                                     call. = FALSE)
-#                             return(NA)
-#                           },
-#                           finally = NULL)
-    model.runs <- list()
-    model.runs$model.run <- c("gec00_00z_pgrb2a", "gec00_00z_pgrb2b", "gec00_06z_pgrb2a",
+    
+    
+    if (read_from_path == '') {
+      
+      model.runs <- tryCatch(rNOMADS::GetDODSModelRuns(model.url),
+                             error = function(e){
+                               warning(paste(e$message, "skipping", model.url),
+                                       call. = FALSE)
+                               return(NA)
+                             },
+                             finally = NULL)
+    
+      } else {
+      
+      model.runs <- list()
+      model.runs$model.run <- c("gec00_00z_pgrb2a", "gec00_00z_pgrb2b", "gec00_06z_pgrb2a",
                                                       "gec00_06z_pgrb2b", "gec00_12z_pgrb2a", "gec00_12z_pgrb2b",
                                                       "gec00_18z_pgrb2a", "gec00_18z_pgrb2b", "gefs_pgrb2ap5_all_00z",
                                                       "gefs_pgrb2ap5_all_06z", "gefs_pgrb2ap5_all_12z", "gefs_pgrb2ap5_all_18z",
@@ -127,7 +135,11 @@ download_downscale_site <- function(read_from_path,
                                                       "gep29_00z_pgrb2a", "gep29_00z_pgrb2b", "gep29_06z_pgrb2a",
                                                       "gep29_06z_pgrb2b", "gep29_12z_pgrb2a", "gep29_12z_pgrb2b",
                                                       "gep29_18z_pgrb2a", "gep29_18z_pgrb2b", "gep30_00z_pgrb2a",
-                                                      "gep30_06z_pgrb2a", "gep30_12z_pgrb2a", "gep30_18z_pgrb2a")
+                                                      "gep30_06z_pgrb2a", "gep30_12z_pgrb2a", "gep30_18z_pgrb2a")    
+      }
+
+
+
     if(is.na(model.runs)[1]) next
 
     avail_runs <- model.runs$model.run[which(model.runs$model.run %in% model_list)]
