@@ -45,11 +45,11 @@ rh2qair <- function(rh, T, press = 101325) {
 ##' @param T absolute temperature (Kelvin)
 ##' @noRd
 ##' @author Mike Dietze, Ankur Desai
-##' @aliases rh2rv
 rh2vpd <- function(rh, T) {
   stopifnot(T[!is.na(T)] >= 0)
   Tc <- T - 273.15
-  es <- 0.61078 * exp((17.27 * Tc) / (Tc + 237.3))
-  vpd <- es*(1-rh)
+  es <- 6.112 * exp((17.67 * Tc) / (Tc + 243.5))
+  ea <- rh * es
+  vpd = (es - ea) / 1000
   return(vpd)
 } # rh2vpd

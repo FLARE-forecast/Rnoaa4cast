@@ -126,17 +126,17 @@ download_downscale_site <- function(lat_list,
 
           noaa_var_names <- c("tmp2m", "pressfc", "rh2m", "dlwrfsfc",
                               "dswrfsfc", "apcpsfc",
-                              "ugrd10m", "vgrd10m", "tsoil0_10cm")
+                              "ugrd10m", "vgrd10m", "tsoil0_10cm", "tsoil0_10cm")
 
           #These are the cf standard names
           cf_var_names <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
-                            "surface_downwelling_shortwave_flux_in_air", "precipitation_flux", "eastward_wind", "northward_wind", "soil_temperature")
+                            "surface_downwelling_shortwave_flux_in_air", "precipitation_flux", "eastward_wind", "northward_wind", "soil_temperature", "VPD")
 
           #Replace "eastward_wind" and "northward_wind" with "wind_speed"
           cf_var_names1 <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
-                             "surface_downwelling_shortwave_flux_in_air", "precipitation_flux","specific_humidity", "wind_speed", "soil_temperature")
+                             "surface_downwelling_shortwave_flux_in_air", "precipitation_flux","specific_humidity", "wind_speed", "soil_temperature", "VPD")
 
-          cf_var_units1 <- c("K", "Pa", "1", "Wm-2", "Wm-2", "kgm-2s-1", "1", "ms-1", "K")  #Negative numbers indicate negative exponents
+          cf_var_units1 <- c("K", "Pa", "1", "Wm-2", "Wm-2", "kgm-2s-1", "1", "ms-1", "K", "kPa")  #Negative numbers indicate negative exponents
 
           noaa_data <- list()
 
@@ -188,6 +188,9 @@ download_downscale_site <- function(lat_list,
                                        T = noaa_data$air_temperature$value,
                                        press = noaa_data$air_pressure$value)
 
+          vpd <- rh2vpd(rh = noaa_data$relative_humidity$value / 100,
+                        T = noaa_data$air_temperature$value)
+
           #Calculate wind speed from east and north components
           wind_speed <- sqrt(noaa_data$eastward_wind$value^2 + noaa_data$northward_wind$value^2)
 
@@ -200,7 +203,9 @@ download_downscale_site <- function(lat_list,
                                           surface_downwelling_shortwave_flux_in_air = noaa_data$surface_downwelling_shortwave_flux_in_air$value,
                                           precipitation_flux = noaa_data$precipitation_flux$value,
                                           specific_humidity = specific_humidity,
-                                          wind_speed = wind_speed)
+                                          wind_speed = wind_speed
+                                          soil_temperature = noaa_data$soil_temperature$value,
+                                          vpd = vpd)
 
           #9.999e+20 is the missing value so convert to NA
           forecast_noaa$surface_downwelling_longwave_flux_in_air[forecast_noaa$surface_downwelling_longwave_flux_in_air == 9.999e+20] <- NA
