@@ -38,3 +38,18 @@ rh2qair <- function(rh, T, press = 101325) {
   ## qair <- rh * 2.541e6 * exp(-5415.0 / T) * 18/29
   return(qair)
 } # rh2qair
+
+##' converts relative humidity to vpd
+##' @title RH to VPD
+##' @param rh relative humidity (proportion, not percent)
+##' @param T absolute temperature (Kelvin)
+##' @noRd
+##' @author Mike Dietze, Ankur Desai
+##' @aliases rh2rv
+rh2vpd <- function(rh, T) {
+  stopifnot(T[!is.na(T)] >= 0)
+  Tc <- T - 273.15
+  es <- 0.61078 * exp((17.27 * Tc) / (Tc + 237.3))
+  vpd <- es*(1-rh)
+  return(vpd)
+} # rh2vpd
