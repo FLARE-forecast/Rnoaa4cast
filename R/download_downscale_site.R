@@ -130,7 +130,7 @@ download_downscale_site <- function(lat_list,
 
           #These are the cf standard names
           cf_var_names <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
-                            "surface_downwelling_shortwave_flux_in_air", "precipitation_flux", "eastward_wind", "northward_wind", "soil_temperature", "VPD")
+                            "surface_downwelling_shortwave_flux_in_air", "precipitation_flux", "eastward_wind", "northward_wind", "soil_temperature")
 
           #Replace "eastward_wind" and "northward_wind" with "wind_speed"
           cf_var_names1 <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
