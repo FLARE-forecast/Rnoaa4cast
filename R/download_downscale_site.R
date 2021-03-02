@@ -203,7 +203,7 @@ download_downscale_site <- function(lat_list,
                                           surface_downwelling_shortwave_flux_in_air = noaa_data$surface_downwelling_shortwave_flux_in_air$value,
                                           precipitation_flux = noaa_data$precipitation_flux$value,
                                           specific_humidity = specific_humidity,
-                                          wind_speed = wind_speed
+                                          wind_speed = wind_speed,
                                           soil_temperature = noaa_data$soil_temperature$value,
                                           vpd = vpd)
 
