@@ -1,7 +1,7 @@
 # noaaGEFSpoint
 
 Install from GitHub
-`devtools::install_github("rqthomas/noaaGEFSpoint")`
+`devtools::install_github("YuanGao-NAU/noaaGEFSpoint")`
 
 Set output directory
  
