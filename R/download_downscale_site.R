@@ -126,7 +126,7 @@ download_downscale_site <- function(lat_list,
 
           noaa_var_names <- c("tmp2m", "pressfc", "rh2m", "dlwrfsfc",
                               "dswrfsfc", "apcpsfc",
-                              "ugrd10m", "vgrd10m", "tsoil0_10cm", "tsoil0_10cm")
+                              "ugrd10m", "vgrd10m", "tsoil0_10cm")
 
           #These are the cf standard names
           cf_var_names <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
@@ -134,7 +134,7 @@ download_downscale_site <- function(lat_list,
 
           #Replace "eastward_wind" and "northward_wind" with "wind_speed"
           cf_var_names1 <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
-                             "surface_downwelling_shortwave_flux_in_air", "precipitation_flux","specific_humidity", "wind_speed", "soil_temperature", "VPD")
+                             "surface_downwelling_shortwave_flux_in_air", "precipitation_flux","specific_humidity", "wind_speed", "soil_temperature", "vpd")
 
           cf_var_units1 <- c("K", "Pa", "1", "Wm-2", "Wm-2", "kgm-2s-1", "1", "ms-1", "K", "kPa")  #Negative numbers indicate negative exponents
 
