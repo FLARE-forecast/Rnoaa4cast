@@ -67,7 +67,7 @@ temporal_downscale <- function(input_file, output_file, overwrite = TRUE, hr = 1
            relative_humidity = ifelse(relative_humidity > 1, 0, relative_humidity))
 
   forecast_noaa_ds <- forecast_noaa_ds %>%
-    dplyr::mutate(relative_humidity = rh2vpd(rh = forecast_noaa_ds$relative_humidity,
+    dplyr::mutate(vpd = rh2vpd(rh = forecast_noaa_ds$relative_humidity,
                                        T = forecast_noaa_ds$air_temperature))
 
   # convert longwave to hourly (just copy 6 hourly values over past 6-hour time period)
