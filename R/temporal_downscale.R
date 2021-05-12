@@ -52,19 +52,11 @@ temporal_downscale <- function(input_file, output_file, overwrite = TRUE, hr = 1
   names(noaa_data) <- c("time",cf_var_names)
 
   # spline-based downscaling
-  if(length(which(c("air_temperature", "wind_speed","specific_humidity", "air_pressure") %in% cf_var_names) == 4)){
-    forecast_noaa_ds <- downscale_spline_to_hrly(df = noaa_data, VarNames = c("air_temperature", "wind_speed","specific_humidity", "air_pressure"))
+  if(length(which(c("air_temperature", "wind_speed","specific_humidity", "air_pressure", "relative_humidity") %in% cf_var_names) == 5)){
+    forecast_noaa_ds <- downscale_spline_to_hrly(df = noaa_data, VarNames = c("air_temperature", "wind_speed","specific_humidity", "air_pressure", "relative_humidity"))
   }else{
     #Add error message
   }
-
-  # Convert splined SH, temperature, and presssure to RH
-  forecast_noaa_ds <- forecast_noaa_ds %>%
-    dplyr::mutate(relative_humidity = qair2rh(qair = forecast_noaa_ds$specific_humidity,
-                                       temp = forecast_noaa_ds$air_temperature,
-                                       press = forecast_noaa_ds$air_pressure)) %>%
-    dplyr::mutate(relative_humidity = relative_humidity,
-           relative_humidity = ifelse(relative_humidity > 1, 0, relative_humidity))
 
   # convert longwave to hourly (just copy 6 hourly values over past 6-hour time period)
   if("surface_downwelling_longwave_flux_in_air" %in% cf_var_names){
