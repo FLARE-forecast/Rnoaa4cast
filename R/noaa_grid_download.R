@@ -69,9 +69,8 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
                           },
                           finally = NULL)
 
-          if(is.na(out)){
+          if(is.na(out) | file.info(destfile)$size == 0){
             download_failed <- TRUE
-
           }else{
 
             grib <- rgdal::readGDAL(destfile, silent = TRUE)
