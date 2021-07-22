@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, num_cores, output_directory) {
+noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, output_directory) {
 
 
   download_grid <- function(ens_index, location, directory, hours_char, cycle, base_filename1, vars,working_directory){
@@ -88,6 +88,10 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
         }
       }
     }
+  }
+
+  if(length(which(lon_list > 180)) > 0){
+    stop("longitude values need to be between -180 and 180")
   }
 
   forecast_date <- lubridate::as_date(forecast_date)
@@ -186,7 +190,7 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
 
             ens_index <- 1:31
 
-            parallel::mclapply(X = ens_index,
+            lapply(X = ens_index,
                                FUN = download_grid,
                                location,
                                directory,
@@ -194,8 +198,7 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
                                cycle,
                                base_filename1,
                                vars,
-                               working_directory = model_date_hour_dir,
-                               mc.cores = 1)
+                               working_directory = model_date_hour_dir)
           }else{
             print(paste("Existing", forecasted_date, cycle))
           }

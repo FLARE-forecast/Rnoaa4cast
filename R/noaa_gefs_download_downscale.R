@@ -40,6 +40,7 @@ noaa_gefs_download_downscale <- function(site_list,
   message(paste0("downscale: ", downscale))
   message(paste0("debias: ", debias))
 
+  #The grid download requires longitude to be -180 to 180 so converting here
   lon_list[which(lon_list > 180)] <- lon_list[which(lon_list > 180)] - 360
 
   if(method == "point"){
@@ -65,7 +66,6 @@ noaa_gefs_download_downscale <- function(site_list,
                        forecast_time = forecast_time,
                        forecast_date = forecast_date,
                        model_name_raw = model_name_raw,
-                       num_cores = 1,
                        output_directory = output_directory)
 
     noaaGEFSpoint::noaa_gefs_grid_process_downscale(lat_list = lat_list,
