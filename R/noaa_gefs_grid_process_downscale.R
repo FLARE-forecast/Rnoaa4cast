@@ -64,44 +64,46 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
       file_name <- paste0(working_directory,"/", base_filename2, curr_hours[hr],".neon.grib")
 
       if(file.exists(file_name)){
-        grib <- rgdal::readGDAL(file_name, silent = TRUE)
-        #download_error <- FALSE
-        #if(is.null(grib$band1) | is.null(grib$band2) | is.null(grib$band3) | is.null(grib$band4) | is.null(grib$band5)){
-        #  download_error <- TRUE
-        #  unlink(file_name)
-        #}
-        lat_lon <- sp::coordinates(grib)
+        if(file.info(file_name)$size != 0){
+          grib <- rgdal::readGDAL(file_name, silent = TRUE)
+          #download_error <- FALSE
+          #if(is.null(grib$band1) | is.null(grib$band2) | is.null(grib$band3) | is.null(grib$band4) | is.null(grib$band5)){
+          #  download_error <- TRUE
+          #  unlink(file_name)
+          #}
+          lat_lon <- sp::coordinates(grib)
 
-        for(s in 1:length(site_list)){
+          for(s in 1:length(site_list)){
 
 
 
-          index <- which(lat_lon[,2] == lats[s] & lat_lon[,1] == lons[s])
+            index <- which(lat_lon[,2] == lats[s] & lat_lon[,1] == lons[s])
 
-          if(length(index) > 0){
+            if(length(index) > 0){
 
-            pressfc[s, hr]  <- grib$band1[index]
-            tmp2m[s, hr] <- grib$band2[index]
-            rh2m[s, hr]  <- grib$band3[index]
-            ugrd10m[s, hr]  <- grib$band4[index]
-            vgrd10m[s, hr]  <- grib$band5[index]
+              pressfc[s, hr]  <- grib$band1[index]
+              tmp2m[s, hr] <- grib$band2[index]
+              rh2m[s, hr]  <- grib$band3[index]
+              ugrd10m[s, hr]  <- grib$band4[index]
+              vgrd10m[s, hr]  <- grib$band5[index]
 
-            if(curr_hours[hr] != "000"){
-              apcpsfc[s, hr]  <- grib$band6[index]
-              tcdcclm[s, hr]  <-  grib$band7[index]
-              dswrfsfc[s, hr]  <- grib$band8[index]
-              dlwrfsfc[s, hr]  <- grib$band9[index]
+              if(curr_hours[hr] != "000"){
+                apcpsfc[s, hr]  <- grib$band6[index]
+                tcdcclm[s, hr]  <-  grib$band7[index]
+                dswrfsfc[s, hr]  <- grib$band8[index]
+                dlwrfsfc[s, hr]  <- grib$band9[index]
+              }
+            }else{
+              pressfc[s, hr]  <- NA
+              tmp2m[s, hr] <- NA
+              rh2m[s, hr]  <- NA
+              ugrd10m[s, hr]  <- NA
+              vgrd10m[s, hr]  <-NA
+              apcpsfc[s, hr]  <- NA
+              tcdcclm[s, hr]  <-  NA
+              dswrfsfc[s, hr]  <- NA
+              dlwrfsfc[s, hr]  <- NA
             }
-          }else{
-            pressfc[s, hr]  <- NA
-            tmp2m[s, hr] <- NA
-            rh2m[s, hr]  <- NA
-            ugrd10m[s, hr]  <- NA
-            vgrd10m[s, hr]  <-NA
-            apcpsfc[s, hr]  <- NA
-            tcdcclm[s, hr]  <-  NA
-            dswrfsfc[s, hr]  <- NA
-            dlwrfsfc[s, hr]  <- NA
           }
         }
       }
@@ -192,15 +194,15 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
         #Run download_downscale_site() over the site_index
         #Run download_downscale_site() over the site_index
         output <- parallel::mclapply(X = ens_index,
-                                               FUN = extract_sites,
-                                               hours_char = hours_char,
-                                               hours = hours,
-                                               cycle,
-                                               site_list,
-                                               lat_list,
-                                               lon_list,
-                                               working_directory = file.path(model_name_raw_dir,forecast_date,cycle),
-                                               mc.cores = num_cores)
+                                     FUN = extract_sites,
+                                     hours_char = hours_char,
+                                     hours = hours,
+                                     cycle,
+                                     site_list,
+                                     lat_list,
+                                     lon_list,
+                                     working_directory = file.path(model_name_raw_dir,forecast_date,cycle),
+                                     mc.cores = num_cores)
 
 
         forecast_times <- lubridate::as_datetime(forecast_date) + lubridate::hours(as.numeric(cycle)) + lubridate::hours(as.numeric(hours_char))
@@ -260,10 +262,10 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
             for(ens in 1:31){
               curr_ens <- output[[ens]]
 
- #             if(length(which(!is.na(curr_ens[[noaa_var_names[v]]][site_index, ]))) == 0){
-#                message(paste0("skipping site: ",site_list[site_index], "because not in gridded raw data"))
-#                next
-#              }
+              #             if(length(which(!is.na(curr_ens[[noaa_var_names[v]]][site_index, ]))) == 0){
+              #                message(paste0("skipping site: ",site_list[site_index], "because not in gridded raw data"))
+              #                next
+              #              }
               value <- tryCatch({
                 c(value, curr_ens[[noaa_var_names[v]]][site_index, ])
               },
