@@ -17,7 +17,7 @@
 ##'
 
 
-download_downscale_site <- function(lat_list,
+noaa_gefs_point_download_downscale <- function(lat_list,
                                     lon_list,
                                     site_list,
                                     forecast_time = NA,

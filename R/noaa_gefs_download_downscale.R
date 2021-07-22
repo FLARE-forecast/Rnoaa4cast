@@ -10,7 +10,6 @@
 ##' @param overwrite, logical stating to overwrite any existing output_file
 
 ##' @export
-##' @export
 ##'
 ##' @author Quinn Thomas
 ##'
@@ -41,11 +40,13 @@ noaa_gefs_download_downscale <- function(site_list,
   message(paste0("downscale: ", downscale))
   message(paste0("debias: ", debias))
 
+  lon_list[which(lon_list > 180)] <- lon_list[which(lon_list > 180)] - 360
+
   if(method == "point"){
 
     message("downloading NOAA using single point method.  Note: only the first 16 days of a 35-day forecast are able to be downloading using this method")
 
-      noaaGEFSpoint::download_downscale_site(
+      noaaGEFSpoint::noaa_gefs_point_download_downscale(
         lat_list = lat_list,
         lon_list = lon_list,
         site_list = site_list,
@@ -59,7 +60,7 @@ noaa_gefs_download_downscale <- function(site_list,
 
   }else{
 
-    noaaGEFSpoint::noaa_grid_download(lat_list = lat_list,
+    noaaGEFSpoint::noaa_gefs_grid_download(lat_list = lat_list,
                        lon_list = lon_list,
                        forecast_time = forecast_time,
                        forecast_date = forecast_date,
@@ -67,7 +68,7 @@ noaa_gefs_download_downscale <- function(site_list,
                        num_cores = 1,
                        output_directory = output_directory)
 
-    noaaGEFSpoint::process_gridded_noaa_download(lat_list = lat_list,
+    noaaGEFSpoint::noaa_gefs_grid_process_downscale(lat_list = lat_list,
                                               lon_list = lon_list,
                                               site_list = site_list,
                                               downscale = downscale,

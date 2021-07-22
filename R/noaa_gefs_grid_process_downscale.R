@@ -17,7 +17,7 @@
 #'
 #' @examples
 #'
-process_gridded_noaa_download <- function(lat_list,
+noaa_gefs_grid_process_downscale <- function(lat_list,
                                           lon_list,
                                           site_list,
                                           downscale,

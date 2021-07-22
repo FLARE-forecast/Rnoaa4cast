@@ -13,10 +13,10 @@
 #' @export
 #'
 #' @examples
-noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, num_cores, output_directory) {
+noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, num_cores, output_directory) {
 
 
-  download_neon_grid <- function(ens_index, location, directory, hours_char, cycle, base_filename1, vars,working_directory){
+  download_grid <- function(ens_index, location, directory, hours_char, cycle, base_filename1, vars,working_directory){
     #for(j in 1:31){
     if(ens_index == 1){
       base_filename2 <- paste0("gec00",".t",cycle,"z.pgrb2a.0p50.f")
@@ -58,7 +58,7 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
         download_tries <- 1
         download_failed <- TRUE
         while(download_failed & download_tries < 2){
-          Sys.sleep(1)
+          Sys.sleep(0.5)
           download_failed <- FALSE
           out <- tryCatch(download.file(paste0(base_filename1, file_name, vars, location, directory),
                                         destfile = destfile, quiet = TRUE),
@@ -188,7 +188,7 @@ noaa_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date 
             ens_index <- 1:31
 
             parallel::mclapply(X = ens_index,
-                               FUN = download_neon_grid,
+                               FUN = download_grid,
                                location,
                                directory,
                                hours_char,
