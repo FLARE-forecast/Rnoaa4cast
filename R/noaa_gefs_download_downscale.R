@@ -65,7 +65,7 @@ noaa_gefs_download_downscale <- function(site_list,
                        lon_list = lon_list,
                        forecast_time = forecast_time,
                        forecast_date = forecast_date,
-                       model_name_raw = model_name_raw,
+                      model_name_raw = model_name_raw,
                        output_directory = output_directory)
 
     noaaGEFSpoint::noaa_gefs_grid_process_downscale(lat_list = lat_list,
@@ -80,6 +80,7 @@ noaa_gefs_download_downscale <- function(site_list,
                                               model_name_raw = model_name_raw,
                                               debias_coefficients = debias_coefficients,
                                               num_cores = num_cores,
-                                              output_directory = output_directory)
+                                              output_directory = output_directory,
+                                              write_intermediate_ncdf = TRUE)
   }
 }

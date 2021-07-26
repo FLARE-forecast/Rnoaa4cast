@@ -18,19 +18,20 @@
 #' @examples
 #'
 noaa_gefs_grid_process_downscale <- function(lat_list,
-                                          lon_list,
-                                          site_list,
-                                          downscale,
-                                          debias = FALSE,
-                                          overwrite,
-                                          model_name,
-                                          model_name_ds,
-                                          model_name_ds_debias,
-                                          model_name_raw,
-                                          debias_coefficients = NULL,
-                                          num_cores,
-                                          output_directory,
-                                          reprocess = FALSE){
+                                             lon_list,
+                                             site_list,
+                                             downscale,
+                                             debias = FALSE,
+                                             overwrite,
+                                             model_name,
+                                             model_name_ds,
+                                             model_name_ds_debias,
+                                             model_name_raw,
+                                             debias_coefficients = NULL,
+                                             num_cores,
+                                             output_directory,
+                                             reprocess = FALSE,
+                                             write_intermediate_ncdf = TRUE){
 
   extract_sites <- function(ens_index, hours_char, hours, cycle, site_list, lat_list, lon_list, working_directory){
 
@@ -167,13 +168,12 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
 
       all_downloaded <- FALSE
 
-      write_intermediate_ncdf <- TRUE
       if(cycle == "00"){
         #Sometime the 16-35 day forecast is not competed for some of the forecasts.  If over 24 hrs has passed then they won't show up.
         #Go ahead and create the netcdf files
         if(length(which(hours_present == 840)) == 30 |
            (length(which(hours_present == 384)) == 31 & curr_forecast_time + lubridate::hours(36) < curr_time) |
-           (write_intermediate_ncdf == TRUE & length(which(hours_present == 384)) == 31)){
+           (length(which(hours_present == 384)) == 31 & write_intermediate_ncdf == TRUE)){
           all_downloaded <- TRUE
         }
       }else{
@@ -187,18 +187,29 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
         num_files <- length(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle)))
         if(num_files < 31){
           missing_files <- TRUE
-          }
+        }
       }
 
       if(overwrite){
         missing_files <- TRUE
       }
 
-      if((write_intermediate_ncdf == TRUE & cycle == "00")){
-        missing_files <- TRUE
+      if(write_intermediate_ncdf == TRUE & cycle == "00"){
+        existing_ncfiles <- list.files(file.path(model_dir, site_list[1], forecast_date,cycle))
+        if(length(existing_ncfiles) == 31){
+          split_filenames <- stringr::str_split(existing_ncfiles,pattern = "_")
+          df <- as.data.frame(matrix(unlist(split_filenames), nrow = length(existing_ncfiles), byrow = TRUE))
+          count_unique <- tibble(x = factor(df[, ncol(df) - 1])) %>% group_by(x) %>% summarize(count = n())
+          if((nrow(count_unique) == 2 & count_unique[nrow(count_unique),2] != 30) | nrow(count_unique) != 2){
+            missing_files <- TRUE
+          }
+        }
       }
 
       if(all_downloaded & missing_files){
+
+        #Remove existing files and overwrite
+        unlink(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle)))
 
         ens_index <- 1:31
         #Run download_downscale_site() over the site_index
