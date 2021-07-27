@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, output_directory) {
+noaa_cfs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, output_directory) {
 
 
   download_grid <- function(forecasted_date, cycle, location, directory, vars,working_directory){
@@ -89,7 +89,6 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
             while(download_failed & download_tries < 2){
               Sys.sleep(0.5)
               download_failed <- FALSE
-              print(paste0(base_filename1, file_name, vars, location, directory))
               out <- tryCatch(download.file(paste0(base_filename1, file_name, vars, location, directory),
                                             destfile = destfile, quiet = TRUE),
                               error = function(e){
@@ -143,9 +142,11 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
 
   curr_time <- lubridate::with_tz(Sys.time(), tzone = "UTC")
   curr_date <- lubridate::as_date(curr_time)
+
   potential_dates <- seq(curr_date - lubridate::days(6), curr_date, by = "1 day")
 
   potential_dates <- lubridate::as_date(potential_dates)
+
 
   #Remove dates before the new GEFS system
   #potential_dates <- potential_dates[which(potential_dates > lubridate::as_date("2020-09-23"))]

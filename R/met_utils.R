@@ -6,14 +6,16 @@
 ##' \url{http://www.eol.ucar.edu/projects/ceop/dm/documents/refdata_report/eqns.html}
 ##' @title qair2rh
 ##' @param qair specific humidity, dimensionless (e.g. kg/kg) ratio of water mass / total air mass
-##' @param temp degrees C
-##' @param press pressure in mb
-##' @return rh relative humidity, ratio of actual water mixing ratio to saturation mixing ratio
+##' @param temp degrees K
+##' @param press pressure in Pa
+##' @return rh relative humidity, ratio of actual water mixing ratio to saturation mixing ratio (0-1)
 ##' @noRd
-##' @author David LeBauer
-qair2rh <- function(qair, temp, press = 1013.25) {
-  es <- 6.112 * exp((17.67 * temp) / (temp + 243.5))
-  e <- qair * press / (0.378 * qair + 0.622)
+##' @author David LeBauer Quinn Thomas
+qair2rh <- function(qair, T, press = 101325) {
+  press_hPa <- press / 100
+  Tc <- T - 273.15
+  es <- 6.112 * exp((17.67 * Tc) / (Tc + 243.5))
+  e <- qair * press_hPa / (0.378 * qair + 0.622) #Pa
   rh <- e / es
   rh[rh > 1] <- 1
   rh[rh < 0] <- 0
