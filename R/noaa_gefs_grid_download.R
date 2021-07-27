@@ -90,6 +90,7 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
     }
   }
 
+
   if(length(which(lon_list > 180)) > 0){
     stop("longitude values need to be between -180 and 180")
   }
