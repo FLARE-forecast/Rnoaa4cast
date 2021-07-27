@@ -87,7 +87,7 @@ noaa_cfs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_d
             download_tries <- 1
             download_failed <- TRUE
             while(download_failed & download_tries < 2){
-              Sys.sleep(0.5)
+              Sys.sleep(1.0)
               download_failed <- FALSE
               out <- tryCatch(download.file(paste0(base_filename1, file_name, vars, location, directory),
                                             destfile = destfile, quiet = TRUE),
@@ -146,6 +146,8 @@ noaa_cfs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_d
   potential_dates <- seq(curr_date - lubridate::days(6), curr_date, by = "1 day")
 
   potential_dates <- lubridate::as_date(potential_dates)
+
+  potential_cycle <- c("00","06", "12", "18")
 
 
   #Remove dates before the new GEFS system

@@ -132,8 +132,6 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
   if(reprocess){
     potential_dates <- lubridate::as_date(list.dirs(model_name_raw_dir, recursive = FALSE, full.names = FALSE))
   }
-  #Remove dates before the new GEFS system
-  potential_dates <- potential_dates[which(potential_dates > lubridate::as_date("2020-09-23"))]
 
   for(k in 1:length(potential_dates)){
 
@@ -147,11 +145,11 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
       message(paste0("Processing forecast time: ", curr_forecast_time))
 
       raw_files <- list.files(file.path(model_name_raw_dir,forecast_date,cycle))
-      hours_present <- length(raw_files)
+      files_present <- length(raw_files)
 
       all_downloaded <- FALSE
 
-      if(hours_present == 781){
+      if(files_present == 781 | (files_present > 0 & (curr_forecast_time + lubridate::hours(as.numeric(forecast_hours[j])) + lubridate::hours(24)) < curr_time)){
         all_downloaded <- TRUE
       }
 
