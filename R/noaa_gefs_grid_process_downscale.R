@@ -168,6 +168,8 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
 
       all_downloaded <- FALSE
 
+      write_intermediate_ncdf <- TRUE
+
       if(cycle == "00"){
         #Sometime the 16-35 day forecast is not competed for some of the forecasts.  If over 24 hrs has passed then they won't show up.
         #Go ahead and create the netcdf files
@@ -188,6 +190,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
         if(num_files < 31){
           missing_files <- TRUE
         }
+
       }
 
       if(overwrite){

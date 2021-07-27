@@ -15,7 +15,8 @@
 ##'
 ##'
 
-noaa_gefs_download_downscale <- function(site_list,
+noaa_gefs_download_downscale <- function(read_from_path,
+                                         site_list,
                                          lat_list,
                                          lon_list,
                                          output_directory,
@@ -39,6 +40,7 @@ noaa_gefs_download_downscale <- function(site_list,
   message(paste0("Running in parallel: ", run_parallel))
   message(paste0("downscale: ", downscale))
   message(paste0("debias: ", debias))
+  message(paste0("Read From Path: ", read_from_path))
 
   #The grid download requires longitude to be -180 to 180 so converting here
   lon_list[which(lon_list > 180)] <- lon_list[which(lon_list > 180)] - 360
@@ -48,6 +50,7 @@ noaa_gefs_download_downscale <- function(site_list,
     message("downloading NOAA using single point method.  Note: only the first 16 days of a 35-day forecast are able to be downloading using this method")
 
       noaaGEFSpoint::noaa_gefs_point_download_downscale(
+        read_from_path = read_from_path,
         lat_list = lat_list,
         lon_list = lon_list,
         site_list = site_list,

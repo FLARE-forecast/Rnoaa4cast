@@ -17,7 +17,9 @@
 ##'
 
 
-noaa_gefs_point_download_downscale <- function(lat_list,
+
+ noaa_gefs_point_download_downscale <- function(read_from_path,
+                                    lat_list,
                                     lon_list,
                                     site_list,
                                     forecast_time = NA,
@@ -35,21 +37,25 @@ noaa_gefs_point_download_downscale <- function(lat_list,
   lon.dom <- seq(0, 359, by = 0.5) #domain of longitudes in model (1 degree resolution)
   lat.dom <- seq(-90, 90, by = 0.5) #domain of latitudes in model (1 degree resolution)
 
-
-
-  urls.out <- tryCatch(rNOMADS::GetDODSDates(abbrev = "gens_bc"),
-                       error = function(e){
-                         warning(paste(e$message, "NOAA Server not responsive"),
-                                 call. = FALSE)
-                         return(NA)
-                       },
-                       finally = NULL)
-
-  #urls.out <- list()
-
+  if (trimws(read_from_path) == '' || is.null(read_from_path)) {
+    urls.out <- tryCatch(rNOMADS::GetDODSDates(abbrev = "gens_bc"),
+                         error = function(e){
+                           warning(paste(e$message, "NOAA Server not responsive"),
+                                   call. = FALSE)
+                           return(NA)
+                         },
+                         finally = NULL)
+    
+    urls.out$date <- urls.out$date[4:7]
+    urls.out$url <- paste0("https://nomads.ncep.noaa.gov:443/dods/gefs/gefs",urls.out$date)
+    
+    } else {
+    urls.out <- list()
+    urls.out$date <- format(c(Sys.Date() - 3, Sys.Date() - 2, Sys.Date() - 1, Sys.Date()), format = "%Y%m%d") 
+    urls.out$url <- file.path(read_from_path,urls.out$date)    
+    }
+    
   urls.out$model <- "gefs"
-  urls.out$date <- urls.out$date[4:7]
-  urls.out$url <- paste0("https://nomads.ncep.noaa.gov:443/dods/gefs/gefs",urls.out$date)
 
   if(is.na(urls.out[1])) stop()
 
@@ -68,14 +74,70 @@ noaa_gefs_point_download_downscale <- function(lat_list,
 
     model_list <- c("gefs_pgrb2ap5_all_00z", "gefs_pgrb2ap5_all_06z", "gefs_pgrb2ap5_all_12z", "gefs_pgrb2ap5_all_18z")
     model_hr <- c(0, 6, 12, 18)
+ 
+    if (trimws(read_from_path) == '' || is.null(read_from_path)) {
+      
+      model.runs <- tryCatch(rNOMADS::GetDODSModelRuns(model.url),
+                             error = function(e){
+                               warning(paste(e$message, "skipping", model.url),
+                                       call. = FALSE)
+                               return(NA)
+                             },
+                             finally = NULL)
+    
+      } else {
+      
+      model.runs <- list()
+      model.runs$model.run <- c("gec00_00z_pgrb2a", "gec00_00z_pgrb2b", "gec00_06z_pgrb2a",
+                                "gec00_06z_pgrb2b", "gec00_12z_pgrb2a", "gec00_12z_pgrb2b",
+                                "gec00_18z_pgrb2a", "gec00_18z_pgrb2b", "gefs_pgrb2ap5_all_00z",
+                                "gefs_pgrb2ap5_all_06z", "gefs_pgrb2ap5_all_12z", "gefs_pgrb2ap5_all_18z",
+                                "gep01_00z_pgrb2a", "gep01_06z_pgrb2a", "gep01_12z_pgrb2a",
+                                "gep01_18z_pgrb2a", "gep02_00z_pgrb2a", "gep02_06z_pgrb2a",
+                                "gep02_12z_pgrb2a", "gep02_18z_pgrb2a", "gep03_00z_pgrb2a",
+                                "gep03_06z_pgrb2a", "gep03_12z_pgrb2a", "gep03_18z_pgrb2a",
+                                "gep04_00z_pgrb2a", "gep04_06z_pgrb2a", "gep04_12z_pgrb2a",
+                                "gep04_18z_pgrb2a", "gep05_00z_pgrb2a", "gep05_06z_pgrb2a",
+                                "gep05_12z_pgrb2a", "gep05_18z_pgrb2a", "gep06_00z_pgrb2a",
+                                "gep06_00z_pgrb2b", "gep06_06z_pgrb2a", "gep06_06z_pgrb2b",
+                                "gep06_12z_pgrb2a", "gep06_12z_pgrb2b", "gep06_18z_pgrb2a",
+                                "gep06_18z_pgrb2b", "gep07_00z_pgrb2a", "gep07_00z_pgrb2b",
+                                "gep07_06z_pgrb2a", "gep07_06z_pgrb2b", "gep07_12z_pgrb2a",
+                                "gep07_12z_pgrb2b", "gep07_18z_pgrb2a", "gep07_18z_pgrb2b",
+                                "gep08_00z_pgrb2a", "gep08_06z_pgrb2a", "gep08_12z_pgrb2a",
+                                "gep08_18z_pgrb2a", "gep09_00z_pgrb2a", "gep09_06z_pgrb2a",
+                                "gep09_12z_pgrb2a", "gep09_18z_pgrb2a", "gep10_00z_pgrb2a",
+                                "gep10_06z_pgrb2a", "gep10_12z_pgrb2a", "gep10_18z_pgrb2a",
+                                "gep11_00z_pgrb2a", "gep11_06z_pgrb2a", "gep11_12z_pgrb2a",
+                                "gep11_18z_pgrb2a", "gep12_00z_pgrb2a", "gep12_06z_pgrb2a",
+                                "gep12_12z_pgrb2a", "gep12_18z_pgrb2a", "gep13_00z_pgrb2a",
+                                "gep13_06z_pgrb2a", "gep13_12z_pgrb2a", "gep13_18z_pgrb2a",
+                                "gep14_00z_pgrb2a", "gep14_06z_pgrb2a", "gep14_12z_pgrb2a",
+                                "gep14_18z_pgrb2a", "gep15_00z_pgrb2a", "gep15_06z_pgrb2a",
+                                "gep15_12z_pgrb2a", "gep15_18z_pgrb2a", "gep16_00z_pgrb2a",
+                                "gep16_06z_pgrb2a", "gep16_12z_pgrb2a", "gep16_18z_pgrb2a",
+                                "gep17_00z_pgrb2a", "gep17_06z_pgrb2a", "gep17_12z_pgrb2a",
+                                "gep17_18z_pgrb2a", "gep18_00z_pgrb2a", "gep18_06z_pgrb2a",
+                                "gep18_12z_pgrb2a", "gep18_18z_pgrb2a", "gep19_00z_pgrb2a",
+                                "gep19_06z_pgrb2a", "gep19_12z_pgrb2a", "gep19_18z_pgrb2a",
+                                "gep20_00z_pgrb2a", "gep20_06z_pgrb2a", "gep20_12z_pgrb2a",
+                                "gep20_18z_pgrb2a", "gep21_00z_pgrb2a", "gep21_06z_pgrb2a",
+                                "gep21_12z_pgrb2a", "gep21_18z_pgrb2a", "gep22_00z_pgrb2a",
+                                "gep22_06z_pgrb2a", "gep22_12z_pgrb2a", "gep22_18z_pgrb2a",
+                                "gep23_00z_pgrb2a", "gep23_06z_pgrb2a", "gep23_12z_pgrb2a",
+                                "gep23_18z_pgrb2a", "gep24_00z_pgrb2a", "gep24_06z_pgrb2a",
+                                "gep24_12z_pgrb2a", "gep24_18z_pgrb2a", "gep25_00z_pgrb2a",
+                                "gep25_06z_pgrb2a", "gep25_12z_pgrb2a", "gep25_18z_pgrb2a",
+                                "gep26_00z_pgrb2a", "gep26_06z_pgrb2a", "gep26_12z_pgrb2a",
+                                "gep26_18z_pgrb2a", "gep27_00z_pgrb2a", "gep27_06z_pgrb2a",
+                                "gep27_12z_pgrb2a", "gep27_18z_pgrb2a", "gep28_00z_pgrb2a",
+                                "gep28_06z_pgrb2a", "gep28_12z_pgrb2a", "gep28_18z_pgrb2a",
+                                "gep29_00z_pgrb2a", "gep29_00z_pgrb2b", "gep29_06z_pgrb2a",
+                                "gep29_06z_pgrb2b", "gep29_12z_pgrb2a", "gep29_12z_pgrb2b",
+                                "gep29_18z_pgrb2a", "gep29_18z_pgrb2b", "gep30_00z_pgrb2a",
+                                "gep30_06z_pgrb2a", "gep30_12z_pgrb2a", "gep30_18z_pgrb2a")    
+      }
 
-    model.runs <- tryCatch(rNOMADS::GetDODSModelRuns(model.url),
-                           error = function(e){
-                             warning(paste(e$message, "skipping", model.url),
-                                     call. = FALSE)
-                             return(NA)
-                           },
-                           finally = NULL)
     if(is.na(model.runs)[1]) next
 
     avail_runs <- model.runs$model.run[which(model.runs$model.run %in% model_list)]
@@ -151,7 +213,8 @@ noaa_gefs_point_download_downscale <- function(lat_list,
             lon <- which.min(abs(lon.dom - lon_east)) - 1 #NOMADS indexes start at 0
             lat <- which.min(abs(lat.dom - lat_list[site_index])) - 1 #NOMADS indexes start at 0
 
-            noaa_data[[j]] <- tryCatch(rNOMADS::DODSGrab(model.url = curr_model.url,
+            noaa_data[[j]] <- tryCatch(rNOMADS::DODSGrab(read_from_path = read_from_path,
+                                                         model.url = curr_model.url,
                                                          model.run = model.run,
                                                          variables	= noaa_var_names[j],
                                                          time = c(0, 64),
@@ -211,6 +274,7 @@ noaa_gefs_point_download_downscale <- function(lat_list,
 
           # Convert the 6 hr precip rate to per second.
           forecast_noaa$precipitation_flux <- forecast_noaa$precipitation_flux / (60 * 60 * 6)
+
 
 
           for (ens in 1:31) { # i is the ensemble number
