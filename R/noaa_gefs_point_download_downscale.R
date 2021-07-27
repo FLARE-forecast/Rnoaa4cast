@@ -17,7 +17,7 @@
 ##'
 
 
-download_downscale_site <- function(read_from_path,
+ noaa_gefs_point_download_downscale <- function(read_from_path,
                                     lat_list,
                                     lon_list,
                                     site_list,
