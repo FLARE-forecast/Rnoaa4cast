@@ -17,6 +17,7 @@
 ##'
 
 
+
  noaa_gefs_point_download_downscale <- function(read_from_path,
                                     lat_list,
                                     lon_list,
@@ -73,8 +74,7 @@
 
     model_list <- c("gefs_pgrb2ap5_all_00z", "gefs_pgrb2ap5_all_06z", "gefs_pgrb2ap5_all_12z", "gefs_pgrb2ap5_all_18z")
     model_hr <- c(0, 6, 12, 18)
-    
-    
+ 
     if (trimws(read_from_path) == '' || is.null(read_from_path)) {
       
       model.runs <- tryCatch(rNOMADS::GetDODSModelRuns(model.url),
@@ -137,8 +137,6 @@
                                 "gep29_18z_pgrb2a", "gep29_18z_pgrb2b", "gep30_00z_pgrb2a",
                                 "gep30_06z_pgrb2a", "gep30_12z_pgrb2a", "gep30_18z_pgrb2a")    
       }
-
-
 
     if(is.na(model.runs)[1]) next
 
@@ -276,6 +274,8 @@
 
           # Convert the 6 hr precip rate to per second.
           forecast_noaa$precipitation_flux <- forecast_noaa$precipitation_flux / (60 * 60 * 6)
+
+
 
           for (ens in 1:31) { # i is the ensemble number
 

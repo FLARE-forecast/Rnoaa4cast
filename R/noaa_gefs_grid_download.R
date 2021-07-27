@@ -13,10 +13,10 @@
 #' @export
 #'
 #' @examples
- noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, output_directory) {
+noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, output_directory) {
 
 
-   download_grid <- function(ens_index, location, directory, hours_char, cycle, base_filename1, vars,working_directory){
+  download_grid <- function(ens_index, location, directory, hours_char, cycle, base_filename1, vars,working_directory){
     #for(j in 1:31){
     if(ens_index == 1){
       base_filename2 <- paste0("gec00",".t",cycle,"z.pgrb2a.0p50.f")
@@ -89,7 +89,8 @@
       }
     }
   }
-   
+
+
   if(length(which(lon_list > 180)) > 0){
     stop("longitude values need to be between -180 and 180")
   }

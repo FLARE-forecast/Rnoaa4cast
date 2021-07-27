@@ -33,77 +33,72 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
                                              reprocess = FALSE,
                                              write_intermediate_ncdf = TRUE){
 
-  extract_sites <- function(ens_index, hours_char, hours, cycle, site_list, lat_list, lon_list, working_directory){
+  extract_sites <- function(site_list, lat_list, lon_list, working_directory){
+
+    files_split <- stringr::str_split(list.files(working_directory),pattern = "[.]", simplify = TRUE)
+
+    forecasts <- tibble(file_name = list.files(working_directory, full.names = TRUE),
+                        year = stringr::str_sub(files_split[,1], 5, 8),
+                        month = stringr::str_sub(files_split[,1], 9, 10),
+                        day = stringr::str_sub(files_split[,1], 11, 12),
+                        hour = stringr::str_sub(files_split[,1], 13, 14),
+                        forecast_timestep = files_split[,1]) %>%
+      mutate(time = lubridate::make_datetime(year = as.numeric(year), month = as.numeric(month), day = as.numeric(day), hour = as.numeric(hour),tz = "UTC")) %>%
+      arrange(time) %>%
+      mutate(hours_in_future = as.numeric((time - min(time))/60))
+
 
     site_length <- length(site_list)
-    tmp2m <- array(NA, dim = c(site_length, length(hours_char)))
-    rh2m <- array(NA, dim = c(site_length, length(hours_char)))
-    ugrd10m <- array(NA, dim = c(site_length,length(hours_char)))
-    vgrd10m <- array(NA, dim = c(site_length, length(hours_char)))
-    pressfc <- array(NA, dim = c(site_length, length(hours_char)))
-    apcpsfc <- array(NA, dim = c(site_length, length(hours_char)))
-    tcdcclm <- array(NA, dim = c(site_length, length(hours_char)))
-    dlwrfsfc <- array(NA, dim = c(site_length, length(hours_char)))
-    dswrfsfc <- array(NA, dim = c(site_length, length(hours_char)))
+    tmp2m <- array(NA, dim = c(site_length, nrow(forecasts)))
+    spfc2m <- array(NA, dim = c(site_length, nrow(forecasts)))
+    ugrd10m <- array(NA, dim = c(site_length,nrow(forecasts)))
+    vgrd10m <- array(NA, dim = c(site_length, nrow(forecasts)))
+    pressfc <- array(NA, dim = c(site_length, nrow(forecasts)))
+    prate <- array(NA, dim = c(site_length, nrow(forecasts)))
+    dlwrfsfc <- array(NA, dim = c(site_length, nrow(forecasts)))
+    dswrfsfc <- array(NA, dim = c(site_length, nrow(forecasts)))
 
-    if(ens_index == 1){
-      base_filename2 <- paste0("gec00",".t",cycle,"z.pgrb2a.0p50.f")
-    }else{
-      if(ens_index-1 < 10){
-        ens_name <- paste0("0",ens_index-1)
-      }else{
-        ens_name <- as.character(ens_index-1)
-      }
-      base_filename2 <- paste0("gep",ens_name,".t",cycle,"z.pgrb2a.0p50.f")
-    }
 
-    lats <- round(lat_list/.5)*.5
-    lons <- round(lon_list/.5)*.5
-    curr_hours <- hours_char
+    for(d in 1:nrow(forecasts)){
 
-    for(hr in 1:length(curr_hours)){
-      file_name <- paste0(working_directory,"/", base_filename2, curr_hours[hr],".neon.grib")
 
-      if(file.exists(file_name)){
-        if(file.info(file_name)$size != 0){
-          grib <- rgdal::readGDAL(file_name, silent = TRUE)
-          #download_error <- FALSE
-          #if(is.null(grib$band1) | is.null(grib$band2) | is.null(grib$band3) | is.null(grib$band4) | is.null(grib$band5)){
-          #  download_error <- TRUE
-          #  unlink(file_name)
-          #}
+    lats <- round(lat_list)
+    lons <- round(lon_list)
+
+      if(file.exists(forecasts$file_name[d])){
+        if(file.info(forecasts$file_name[d])$size != 0){
+          grib <- rgdal::readGDAL(forecasts$file_name[d], silent = TRUE)
+
           lat_lon <- sp::coordinates(grib)
 
           for(s in 1:length(site_list)){
 
-
-
-            index <- which(lat_lon[,2] == lats[s] & lat_lon[,1] == lons[s])
+            min_lat <- which.min(lat_lon[,2] - lat_list[s])
+            min_lon <- which.min(lat_lon[,1] - lon_list[s])
+            grid_lat <- lat_lon[min_lat[1],2]
+            grid_lon <- lat_lon[min_lon[1],1]
+            index <- which(lat_lon[,2] == grid_lat & lat_lon[,1] == grid_lon)
 
             if(length(index) > 0){
 
-              pressfc[s, hr]  <- grib$band1[index]
-              tmp2m[s, hr] <- grib$band2[index]
-              rh2m[s, hr]  <- grib$band3[index]
-              ugrd10m[s, hr]  <- grib$band4[index]
-              vgrd10m[s, hr]  <- grib$band5[index]
+              pressfc[s, d]  <- grib$band9[index]
+              tmp2m[s, d] <- grib$band7[index]
+              spfc2m[s, d]  <- grib$band8[index]
+              ugrd10m[s, d]  <- grib$band5[index]
+              vgrd10m[s, d]  <- grib$band6[index]
+              prate[s, d]  <- grib$band4[index]
+              dswrfsfc[s, d]  <- grib$band3[index]
+              dlwrfsfc[s, d]  <- grib$band2[index]
 
-              if(curr_hours[hr] != "000"){
-                apcpsfc[s, hr]  <- grib$band6[index]
-                tcdcclm[s, hr]  <-  grib$band7[index]
-                dswrfsfc[s, hr]  <- grib$band8[index]
-                dlwrfsfc[s, hr]  <- grib$band9[index]
-              }
             }else{
-              pressfc[s, hr]  <- NA
-              tmp2m[s, hr] <- NA
-              rh2m[s, hr]  <- NA
-              ugrd10m[s, hr]  <- NA
-              vgrd10m[s, hr]  <-NA
-              apcpsfc[s, hr]  <- NA
-              tcdcclm[s, hr]  <-  NA
-              dswrfsfc[s, hr]  <- NA
-              dlwrfsfc[s, hr]  <- NA
+              pressfc[s, d]  <- NA
+              tmp2m[s, d] <- NA
+              spfc2m[s, d]  <- NA
+              ugrd10m[s, d]  <- NA
+              vgrd10m[s, d]  <-NA
+              prate[s, d]  <- NA
+              dswrfsfc[s, d]  <- NA
+              dlwrfsfc[s, d]  <- NA
             }
           }
         }
@@ -112,18 +107,20 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
 
     return(list(tmp2m = tmp2m,
                 pressfc = pressfc,
-                rh2m = rh2m,
+                spfc2m = spfc2m,
                 dlwrfsfc = dlwrfsfc,
                 dswrfsfc = dswrfsfc,
                 ugrd10m = ugrd10m,
                 vgrd10m = vgrd10m,
-                apcpsfc = apcpsfc,
-                tcdcclm = tcdcclm))
+                prate = prate,
+                hours_in_future = forecasts$hours_in_future,
+                starting_time = forecasts$time[1]
+                ))
   }
 
-  noaa_var_names <- c("tmp2m", "pressfc", "rh2m", "dlwrfsfc",
-                      "dswrfsfc", "apcpsfc",
-                      "ugrd10m", "vgrd10m", "tcdcclm")
+  noaa_var_names <- c("tmp2m", "pressfc", "spfc2m", "dlwrfsfc",
+                      "dswrfsfc", "prate",
+                      "ugrd10m", "vgrd10m")
 
 
   model_dir <- file.path(output_directory, model_name)
@@ -131,7 +128,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
 
   curr_time <- lubridate::with_tz(Sys.time(), tzone = "UTC")
   curr_date <- lubridate::as_date(curr_time)
-  potential_dates <- seq(curr_date - lubridate::days(3), curr_date, by = "1 day")
+  potential_dates <- seq(curr_date - lubridate::days(6), curr_date, by = "1 day")
 
   if(reprocess){
     potential_dates <- lubridate::as_date(list.dirs(model_name_raw_dir, recursive = FALSE, full.names = FALSE))
@@ -151,83 +148,49 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
     for(j in 1:length(forecast_hours)){
       cycle <- forecast_hours[j]
       curr_forecast_time <- forecast_date + lubridate::hours(cycle)
-      if(cycle < 10) cycle <- paste0("0",cycle)
-      if(cycle == "00"){
-        hours <- c(seq(0, 240, 6),seq(246, 840 , 6))
-      }else{
-        hours <- c(seq(0, 240, 6),seq(246, 384 , 6))
-      }
-      hours_char <- hours
-      hours_char[which(hours < 100)] <- paste0("0",hours[which(hours < 100)])
-      hours_char[which(hours < 10)] <- paste0("0",hours_char[which(hours < 10)])
 
       message(paste0("Processing forecast time: ", curr_forecast_time))
 
       raw_files <- list.files(file.path(model_name_raw_dir,forecast_date,cycle))
-      hours_present <- as.numeric(stringr::str_sub(raw_files, start = 25, end = 27))
+      hours_present <- length(raw_files)
 
       all_downloaded <- FALSE
 
-      write_intermediate_ncdf <- TRUE
-
-      if(cycle == "00"){
-        #Sometime the 16-35 day forecast is not competed for some of the forecasts.  If over 24 hrs has passed then they won't show up.
-        #Go ahead and create the netcdf files
-        if(length(which(hours_present == 840)) == 30 |
-           (length(which(hours_present == 384)) == 31 & curr_forecast_time + lubridate::hours(36) < curr_time) |
-           (length(which(hours_present == 384)) == 31 & write_intermediate_ncdf == TRUE)){
-          all_downloaded <- TRUE
-        }
-      }else{
-        if(length(which(hours_present == 384)) == 31){
-          all_downloaded <- TRUE
-        }
-      }
+      if(hours_present == 781)
+        all_downloaded <- TRUE
+    }
 
       missing_files <- FALSE
       for(site_index in 1:length(site_list)){
         num_files <- length(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle)))
-        if(num_files < 31){
+        if(num_files != 1){
           missing_files <- TRUE
         }
-
       }
 
       if(overwrite){
         missing_files <- TRUE
       }
 
-      if(write_intermediate_ncdf == TRUE & cycle == "00"){
-        existing_ncfiles <- list.files(file.path(model_dir, site_list[1], forecast_date,cycle))
-        if(length(existing_ncfiles) == 31){
-          split_filenames <- stringr::str_split(existing_ncfiles,pattern = "_")
-          df <- as.data.frame(matrix(unlist(split_filenames), nrow = length(existing_ncfiles), byrow = TRUE))
-          count_unique <- tibble(x = factor(df[, ncol(df) - 1])) %>% group_by(x) %>% summarize(count = n())
-          if((nrow(count_unique) == 2 & count_unique[nrow(count_unique),2] != 30) | nrow(count_unique) != 2){
-            missing_files <- TRUE
-          }
-        }
-      }
+     # if(write_intermediate_ncdf == TRUE & cycle == "00"){
+    #    existing_ncfiles <- list.files(file.path(model_dir, site_list[1], forecast_date,cycle))
+    #    if(length(existing_ncfiles) == 31){
+    #      split_filenames <- stringr::str_split(existing_ncfiles,pattern = "_")
+    #      df <- as.data.frame(matrix(unlist(split_filenames), nrow = length(existing_ncfiles), byrow = TRUE))
+    #      count_unique <- tibble(x = factor(df[, ncol(df) - 1])) %>% group_by(x) %>% summarize(count = n())
+    #      if((nrow(count_unique) == 2 & count_unique[nrow(count_unique),2] != 30) | nrow(count_unique) != 2){
+    #        missing_files <- TRUE
+    #      }
+    #    }
+    #  }
 
       if(all_downloaded & missing_files){
 
         #Remove existing files and overwrite
         unlink(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle)))
 
-        ens_index <- 1:31
-        #Run download_downscale_site() over the site_index
-        #Run download_downscale_site() over the site_index
-        output <- parallel::mclapply(X = ens_index,
-                                     FUN = extract_sites,
-                                     hours_char = hours_char,
-                                     hours = hours,
-                                     cycle,
-                                     site_list,
-                                     lat_list,
-                                     lon_list,
-                                     working_directory = file.path(model_name_raw_dir,forecast_date,cycle),
-                                     mc.cores = num_cores)
 
+        output <- extract_sites(site_list, lat_list, lon_list, working_directory = file.path(model_name_raw_dir,forecast_date,cycle))
 
         forecast_times <- lubridate::as_datetime(forecast_date) + lubridate::hours(as.numeric(cycle)) + lubridate::hours(as.numeric(hours_char))
 

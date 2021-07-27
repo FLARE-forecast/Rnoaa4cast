@@ -42,6 +42,9 @@ noaa_gefs_download_downscale <- function(read_from_path,
   message(paste0("debias: ", debias))
   message(paste0("Read From Path: ", read_from_path))
 
+  #The grid download requires longitude to be -180 to 180 so converting here
+  lon_list[which(lon_list > 180)] <- lon_list[which(lon_list > 180)] - 360
+
   if(method == "point"){
 
     message("downloading NOAA using single point method.  Note: only the first 16 days of a 35-day forecast are able to be downloading using this method")
@@ -65,8 +68,7 @@ noaa_gefs_download_downscale <- function(read_from_path,
                        lon_list = lon_list,
                        forecast_time = forecast_time,
                        forecast_date = forecast_date,
-                       model_name_raw = model_name_raw,
-                       num_cores = 1,
+                      model_name_raw = model_name_raw,
                        output_directory = output_directory)
 
     noaaGEFSpoint::noaa_gefs_grid_process_downscale(lat_list = lat_list,
@@ -81,6 +83,7 @@ noaa_gefs_download_downscale <- function(read_from_path,
                                               model_name_raw = model_name_raw,
                                               debias_coefficients = debias_coefficients,
                                               num_cores = num_cores,
-                                              output_directory = output_directory)
+                                              output_directory = output_directory,
+                                              write_intermediate_ncdf = TRUE)
   }
 }
