@@ -202,7 +202,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
         if(length(existing_ncfiles) == 31){
           split_filenames <- stringr::str_split(existing_ncfiles,pattern = "_")
           df <- as.data.frame(matrix(unlist(split_filenames), nrow = length(existing_ncfiles), byrow = TRUE))
-          count_unique <- tibble(x = factor(df[, ncol(df) - 1])) %>% group_by(x) %>% summarize(count = n())
+          count_unique <- tibble::tibble(x = factor(df[, ncol(df) - 1])) %>% dplyr::group_by(x) %>% dplyr::summarize(count = dplyr::n())
           if((nrow(count_unique) == 2 & count_unique[nrow(count_unique),2] != 30) | nrow(count_unique) != 2){
             missing_files <- TRUE
           }

@@ -58,7 +58,7 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
         download_tries <- 1
         download_failed <- TRUE
         while(download_failed & download_tries < 2){
-          Sys.sleep(1.0)
+          Sys.sleep(1)
           download_failed <- FALSE
           out <- tryCatch(download.file(paste0(base_filename1, file_name, vars, location, directory),
                                         destfile = destfile, quiet = TRUE),
