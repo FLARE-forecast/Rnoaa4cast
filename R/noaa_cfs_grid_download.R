@@ -179,7 +179,8 @@ noaa_cfs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_d
 
       for(j in 1:length(forecast_hours)){
 
-        if(is.na(forecast_time) | forecast_hours[j] %in% as.numeric(forecast_time)){
+        if((is.na(forecast_time) | (forecast_hours[j] %in% as.numeric(forecast_time))) &
+           (forecasted_date < curr_date | (forecasted_date == curr_date & lubridate::hour(curr_time) < forecast_hours[j]))){
           cycle <- forecast_hours[j]
 
           if(cycle < 10) cycle <- paste0("0",cycle)

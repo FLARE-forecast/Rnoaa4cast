@@ -36,15 +36,15 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
 
     files_split <- stringr::str_split(list.files(working_directory),pattern = "[.]", simplify = TRUE)
 
-    forecasts <- tibble(file_name = list.files(working_directory, full.names = TRUE),
+    forecasts <- tibble::tibble(file_name = list.files(working_directory, full.names = TRUE),
                         year = stringr::str_sub(files_split[,1], 5, 8),
                         month = stringr::str_sub(files_split[,1], 9, 10),
                         day = stringr::str_sub(files_split[,1], 11, 12),
                         hour = stringr::str_sub(files_split[,1], 13, 14),
                         forecast_timestep = files_split[,1]) %>%
-      mutate(time = lubridate::make_datetime(year = as.numeric(year), month = as.numeric(month), day = as.numeric(day), hour = as.numeric(hour),tz = "UTC")) %>%
-      arrange(time) %>%
-      mutate(hours_in_future = as.numeric((time - min(time))/(60*60)))
+      dplyr::mutate(time = lubridate::make_datetime(year = as.numeric(year), month = as.numeric(month), day = as.numeric(day), hour = as.numeric(hour),tz = "UTC")) %>%
+      dplyr::arrange(time) %>%
+      dplyr::mutate(hours_in_future = as.numeric((time - min(time))/(60*60)))
 
 
     site_length <- length(site_list)
