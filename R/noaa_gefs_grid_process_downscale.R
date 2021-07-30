@@ -370,7 +370,10 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
             end_date <- forecast_noaa_ens %>%
               dplyr::summarise(max_time = max(time))
 
-            identifier <- paste(model_name, site_list[site_index], format(forecast_date, "%Y-%m-%dT%H"),
+            start_date <- forecast_noaa_ens %>%
+              dplyr::summarise(min_time = min(time))
+
+            identifier <- paste(model_name, site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
                                 format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
 
             fname <- paste0(identifier,"_ens",ens_name,".nc")
@@ -381,7 +384,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
 
             if(downscale){
 
-              identifier_ds <- paste(model_name_ds, site_list[site_index], format(forecast_date, "%Y-%m-%dT%H"),
+              identifier_ds <- paste(model_name_ds, site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
                                      format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
 
               fname_ds <- file.path(modelds_site_date_hour_dir, paste0(identifier_ds,"_ens",ens_name,".nc"))
@@ -392,7 +395,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
               if(debias){
 
 
-                identifier_ds_debias <- paste(model_name_ds_debias, site_list[site_index], format(forecast_date, "%Y-%m-%dT%H"),
+                identifier_ds_debias <- paste(model_name_ds_debias, site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
                                               format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
 
                 fname_ds <- file.path(modelds_debias_site_date_hour_dir, paste0(identifier_ds_debias,"_ens",ens_name,".nc"))

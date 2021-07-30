@@ -45,16 +45,16 @@
                            return(NA)
                          },
                          finally = NULL)
-    
+
     urls.out$date <- urls.out$date[4:7]
     urls.out$url <- paste0("https://nomads.ncep.noaa.gov:443/dods/gefs/gefs",urls.out$date)
-    
+
     } else {
     urls.out <- list()
-    urls.out$date <- format(c(Sys.Date() - 3, Sys.Date() - 2, Sys.Date() - 1, Sys.Date()), format = "%Y%m%d") 
-    urls.out$url <- file.path(read_from_path,urls.out$date)    
+    urls.out$date <- format(c(Sys.Date() - 3, Sys.Date() - 2, Sys.Date() - 1, Sys.Date()), format = "%Y%m%d")
+    urls.out$url <- file.path(read_from_path,urls.out$date)
     }
-    
+
   urls.out$model <- "gefs"
 
   if(is.na(urls.out[1])) stop()
@@ -74,9 +74,9 @@
 
     model_list <- c("gefs_pgrb2ap5_all_00z", "gefs_pgrb2ap5_all_06z", "gefs_pgrb2ap5_all_12z", "gefs_pgrb2ap5_all_18z")
     model_hr <- c(0, 6, 12, 18)
- 
+
     if (trimws(read_from_path) == '' || is.null(read_from_path)) {
-      
+
       model.runs <- tryCatch(rNOMADS::GetDODSModelRuns(model.url),
                              error = function(e){
                                warning(paste(e$message, "skipping", model.url),
@@ -84,9 +84,9 @@
                                return(NA)
                              },
                              finally = NULL)
-    
+
       } else {
-      
+
       model.runs <- list()
       model.runs$model.run <- c("gec00_00z_pgrb2a", "gec00_00z_pgrb2b", "gec00_06z_pgrb2a",
                                 "gec00_06z_pgrb2b", "gec00_12z_pgrb2a", "gec00_12z_pgrb2b",
@@ -135,7 +135,7 @@
                                 "gep29_00z_pgrb2a", "gep29_00z_pgrb2b", "gep29_06z_pgrb2a",
                                 "gep29_06z_pgrb2b", "gep29_12z_pgrb2a", "gep29_12z_pgrb2b",
                                 "gep29_18z_pgrb2a", "gep29_18z_pgrb2b", "gep30_00z_pgrb2a",
-                                "gep30_06z_pgrb2a", "gep30_12z_pgrb2a", "gep30_18z_pgrb2a")    
+                                "gep30_06z_pgrb2a", "gep30_12z_pgrb2a", "gep30_18z_pgrb2a")
       }
 
     if(is.na(model.runs)[1]) next
