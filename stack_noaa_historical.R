@@ -1,12 +1,12 @@
 #' @title Function to stack together the first six hours of each NOAA forecast cycle and append them to create a stacked data product
 #'
-#' @param forecast_dates list of dates for which you have NOAA GEFS forecasts with all four cycles (00, 06, 12, 18)
-#' @param site four letter site name
-#' @param noaa_directory  directory where you have noaa forecasts stored
-#' @param noaa_model  name of the noaa model you are using, e.g. "noaa/NOAAGEFS_6hr"
-#' @param output_directory directory where the output files from this function will go
-#' @param model_name name of the model output from this function
-#' @param dates_w_errors list of dates that cause errors, e.g. have missing first timestep
+#' @param dates vector; vector of dates for which you have NOAA GEFS forecasts with all four cycles (00, 06, 12, 18)
+#' @param site character; four letter site name
+#' @param noaa_directory filepath;  directory where you have noaa forecasts stored
+#' @param noaa_model character;  name of the noaa model you are using, e.g. "noaa/NOAAGEFS_6hr"
+#' @param output_directory filepath; directory where the output files from this function will go
+#' @param model_name character; name of the model output from this function
+#' @param dates_w_errors list; list of dates that cause errors, e.g. have missing first timestep
 #'
 #' @return, returns a netCDF file for each NOAA GEFS ensemble (0-31) with the first six hours of each NOAA GEFS forecast cycle stacked to produce a continuous meteorological data product. Returns both 6hr files and temporally downscaled 1hr files for each ensembles
 
