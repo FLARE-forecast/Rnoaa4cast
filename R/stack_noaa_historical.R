@@ -1,18 +1,17 @@
 #' @title Function to stack together the first six hours of each NOAA forecast cycle and append them to create a stacked data product
 #'
-#' @param dates, list of dates for which you have NOAA GEFS forecasts with all four cycles (00, 06, 12, 18)
-#' @param site, four letter site name
-#' @param noaa_directory,  directory where you have noaa forecasts stored
-#' @param noaa_model,  name of the noaa model you are using, e.g. "noaa/NOAAGEFS_6hr"
-#' @param output_directory, directory where the output files from this function will go
-#' @param model_name, name of the model output from this function
-#' @param dates_w_errors, list of dates that cause errors, e.g. have missing first timestep
-#' @export
+#' @param forecast_dates vector; vector of dates for which you have NOAA GEFS forecasts with all four cycles (00, 06, 12, 18)
+#' @param site character; four letter site name
+#' @param noaa_directory filepath;  directory where you have noaa forecasts stored
+#' @param noaa_model character;  name of the noaa model you are using, e.g. "noaa/NOAAGEFS_6hr"
+#' @param output_directory filepath; directory where the output files from this function will go
+#' @param model_name character; name of the model output from this function
+#' @param dates_w_errors list; list of dates that cause errors, e.g. have missing first timestep
 #'
 #' @return, returns a netCDF file for each NOAA GEFS ensemble (0-31) with the first six hours of each NOAA GEFS forecast cycle stacked to produce a continuous meteorological data product. Returns both 6hr files and temporally downscaled 1hr files for each ensembles
 
 
-stack_noaa_forecasts <- function(dates,
+stack_noaa_forecasts <- function(forecast_dates,
                                  site,
                                  noaa_directory,
                                  noaa_model,
@@ -41,7 +40,7 @@ stack_noaa_forecasts <- function(dates,
 
   system_date <- lubridate::as_date(lubridate::with_tz(Sys.time(),"UTC"))
 
-  dates <- lubridate::as_date(dates)
+  dates <- lubridate::as_date(forecast_dates)
   dates <- dates[which(dates < system_date)]
 
   model_name <- model_name
@@ -159,8 +158,8 @@ stack_noaa_forecasts <- function(dates,
     for(k in 1:length(dates)){
 
       noaa_model_directory <- file.path(noaa_directory, noaa_model, site, dates[k])
-
       cycle <- c("00", "06", "12", "18") #list.files(noaa_model_directory)
+
 
       for(f in 1:length(cycle)){
 
@@ -322,6 +321,7 @@ stack_noaa_forecasts <- function(dates,
 
       #Write netCDF
       noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa_ens,ens, lat = lat, lon = lon, cf_units = cf_var_units1, output_file = output_file, overwrite = TRUE)
+
 
       stacked_directory_1hr <- file.path(output_directory, "NOAAGEFS_1hr_stacked")
       model_site_dir_1hr <- file.path(stacked_directory_1hr, site)
