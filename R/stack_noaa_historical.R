@@ -268,7 +268,7 @@ stack_noaa_forecasts <- function(dates,
 
       forecast_noaa_ens$precipitation_flux[2:nrow(forecast_noaa_ens)] <- forecast_noaa_ens$precipitation_flux[1:(nrow(forecast_noaa_ens)-1)]
 
-      next_time_step <- tibble(time = forecast_noaa_ens$time[nrow(forecast_noaa_ens)] + lubridate::hours(6),
+      next_time_step <- tibble::tibble(time = forecast_noaa_ens$time[nrow(forecast_noaa_ens)] + lubridate::hours(6),
                                NOAA.member = ens,
                                air_temperature = NA,
                                air_pressure = NA,
