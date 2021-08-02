@@ -9,6 +9,7 @@
 #' @param dates_w_errors list; list of dates that cause errors, e.g. have missing first timestep
 #'
 #' @return, returns a netCDF file for each NOAA GEFS ensemble (0-31) with the first six hours of each NOAA GEFS forecast cycle stacked to produce a continuous meteorological data product. Returns both 6hr files and temporally downscaled 1hr files for each ensembles
+#' @export
 
 
 stack_noaa_forecasts <- function(forecast_dates,
