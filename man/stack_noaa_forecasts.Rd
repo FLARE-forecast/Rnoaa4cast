@@ -5,7 +5,7 @@
 \title{Function to stack together the first six hours of each NOAA forecast cycle and append them to create a stacked data product}
 \usage{
 stack_noaa_forecasts(
-  dates,
+  forecast_dates,
   site,
   noaa_directory,
   noaa_model,
@@ -15,19 +15,19 @@ stack_noaa_forecasts(
 )
 }
 \arguments{
-\item{dates, }{list of dates for which you have NOAA GEFS forecasts with all four cycles (00, 06, 12, 18)}
+\item{forecast_dates}{vector; vector of dates for which you have NOAA GEFS forecasts with all four cycles (00, 06, 12, 18)}
 
-\item{site, }{four letter site name}
+\item{site}{character; four letter site name}
 
-\item{noaa_directory, }{directory where you have noaa forecasts stored}
+\item{noaa_directory}{filepath;  directory where you have noaa forecasts stored}
 
-\item{noaa_model, }{name of the noaa model you are using, e.g. "noaa/NOAAGEFS_6hr"}
+\item{noaa_model}{character;  name of the noaa model you are using, e.g. "noaa/NOAAGEFS_6hr"}
 
-\item{output_directory, }{directory where the output files from this function will go}
+\item{output_directory}{filepath; directory where the output files from this function will go}
 
-\item{model_name, }{name of the model output from this function}
+\item{model_name}{character; name of the model output from this function}
 
-\item{dates_w_errors, }{list of dates that cause errors, e.g. have missing first timestep}
+\item{dates_w_errors}{list; list of dates that cause errors, e.g. have missing first timestep}
 }
 \value{
 , returns a netCDF file for each NOAA GEFS ensemble (0-31) with the first six hours of each NOAA GEFS forecast cycle stacked to produce a continuous meteorological data product. Returns both 6hr files and temporally downscaled 1hr files for each ensembles
