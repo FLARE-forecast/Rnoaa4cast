@@ -7,6 +7,7 @@
 #' @param output_directory, directory where the output files from this function will go
 #' @param model_name, name of the model output from this function
 #' @param dates_w_errors, list of dates that cause errors, e.g. have missing first timestep
+#' @export
 #'
 #' @return, returns a netCDF file for each NOAA GEFS ensemble (0-31) with the first six hours of each NOAA GEFS forecast cycle stacked to produce a continuous meteorological data product. Returns both 6hr files and temporally downscaled 1hr files for each ensembles
 
@@ -131,7 +132,7 @@ stack_noaa_forecasts <- function(dates,
     missing_dates <- tibble::tibble(date = dates[missing_forecasts],
                                     reference_date = dates[reference_date],
                                     gap_size = gap_size) %>%
-      filter(!(date == Sys.Date() | date == max(dates)))
+      dplyr::filter(!(date == Sys.Date() | date == max(dates)))
 
 
 
@@ -198,7 +199,7 @@ stack_noaa_forecasts <- function(dates,
             if(!is.null(missing_dates)){
               if(dates[k] %in% missing_dates$reference_date & f == 4){
                 curr_missing_dates <- missing_dates %>%
-                  filter(reference_date == dates[k])
+                  dpylr::filter(reference_date == dates[k])
 
                 days_to_include <- max(curr_missing_dates$gap_size) + 0.25
               }
@@ -235,15 +236,15 @@ stack_noaa_forecasts <- function(dates,
     }
 
     noaa_obs_out <- noaa_obs_out %>%
-      arrange(time, ens)
+      dplyr::arrange(time, ens)
 
     forecast_noaa <- noaa_obs_out %>%
-      rename(NOAA.member = ens) %>%
-      select(time, NOAA.member, air_temperature,
+      dplyr::rename(NOAA.member = ens) %>%
+      dplyr::select(time, NOAA.member, air_temperature,
              air_pressure, relative_humidity, surface_downwelling_longwave_flux_in_air,
              surface_downwelling_shortwave_flux_in_air, precipitation_flux,
              specific_humidity, wind_speed) %>%
-      arrange(time, NOAA.member)
+      dplyr::arrange(time, NOAA.member)
 
     for (ens in 1:31) { # i is the ensemble number
 
@@ -289,7 +290,7 @@ stack_noaa_forecasts <- function(dates,
       if(append_data==TRUE){
         hist_met_all_ens <- hist_met_all %>%
           dplyr::filter(NOAA.member == ens) %>%
-          arrange(time, NOAA.member)
+          dplyr::arrange(time, NOAA.member)
 
         overlapping_index <- which(hist_met_all_ens$time == forecast_noaa_ens$time[1])
 
@@ -302,7 +303,7 @@ stack_noaa_forecasts <- function(dates,
 
 
         forecast_noaa_ens <- rbind(hist_met_all_ens, forecast_noaa_ens[2:nrow(forecast_noaa_ens),]) %>%
-          arrange(time)
+          dplyr::arrange(time)
       }
 
       end_date <- forecast_noaa_ens %>%
