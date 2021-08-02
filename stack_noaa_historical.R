@@ -1,5 +1,5 @@
 #' @title Function to stack together the first six hours of each NOAA forecast cycle and append them to create a stacked data product
-#' 
+#'
 #' @param dates, list of dates for which you have NOAA GEFS forecasts with all four cycles (00, 06, 12, 18)
 #' @param site, four letter site name
 #' @param noaa_directory,  directory where you have noaa forecasts stored
@@ -7,15 +7,15 @@
 #' @param output_directory, directory where the output files from this function will go
 #' @param model_name, name of the model output from this function
 #' @param dates_w_errors, list of dates that cause errors, e.g. have missing first timestep
-#' 
+#'
 #' @return, returns a netCDF file for each NOAA GEFS ensemble (0-31) with the first six hours of each NOAA GEFS forecast cycle stacked to produce a continuous meteorological data product. Returns both 6hr files and temporally downscaled 1hr files for each ensembles
 
 
-stack_noaa_forecasts <- function(dates, 
+stack_noaa_forecasts <- function(dates,
                                  site,
-                                 noaa_directory, 
-                                 noaa_model, 
-                                 output_directory, 
+                                 noaa_directory,
+                                 noaa_model,
+                                 output_directory,
                                  model_name = "observed-met-noaa", # file name of the output
                                  dates_w_errors = NA
 ){
@@ -159,7 +159,7 @@ stack_noaa_forecasts <- function(dates,
 
       noaa_model_directory <- file.path(noaa_directory, noaa_model, site, dates[k])
 
-      cycle <- list.files(noaa_model_directory)
+      cycle <- c("00", "06", "12", "18") #list.files(noaa_model_directory)
 
       for(f in 1:length(cycle)){
 
@@ -322,7 +322,7 @@ stack_noaa_forecasts <- function(dates,
       #Write netCDF
       noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa_ens,ens, lat = lat, lon = lon, cf_units = cf_var_units1, output_file = output_file, overwrite = TRUE)
 
-      stacked_directory_1hr <- file.path(output_directory, 'noaa', "NOAAGEFS_1hr_stacked")
+      stacked_directory_1hr <- file.path(output_directory, "NOAAGEFS_1hr_stacked")
       model_site_dir_1hr <- file.path(stacked_directory_1hr, site)
 
       if(!dir.exists(model_site_dir_1hr)){
