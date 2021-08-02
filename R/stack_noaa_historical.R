@@ -199,7 +199,7 @@ stack_noaa_forecasts <- function(dates,
             if(!is.null(missing_dates)){
               if(dates[k] %in% missing_dates$reference_date & f == 4){
                 curr_missing_dates <- missing_dates %>%
-                  dpylr::filter(reference_date == dates[k])
+                  dplyr::filter(reference_date == dates[k])
 
                 days_to_include <- max(curr_missing_dates$gap_size) + 0.25
               }
