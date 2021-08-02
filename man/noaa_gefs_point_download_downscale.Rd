@@ -5,6 +5,7 @@
 \title{Download and Downscale NOAA GEFS for a single site}
 \usage{
 noaa_gefs_point_download_downscale(
+  read_from_path,
   lat_list,
   lon_list,
   site_list,
