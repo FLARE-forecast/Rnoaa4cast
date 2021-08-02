@@ -17,7 +17,8 @@ noaa_gefs_download_downscale(
   run_parallel = FALSE,
   num_cores = 1,
   method = "point",
-  overwrite = FALSE
+  overwrite = FALSE,
+  read_from_path = FALSE
 )
 }
 \arguments{

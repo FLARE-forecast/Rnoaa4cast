@@ -1,6 +1,6 @@
 #' @title Function to stack together the first six hours of each NOAA forecast cycle and append them to create a stacked data product
 #'
-#' @param dates vector; vector of dates for which you have NOAA GEFS forecasts with all four cycles (00, 06, 12, 18)
+#' @param forecast_dates vector; vector of dates for which you have NOAA GEFS forecasts with all four cycles (00, 06, 12, 18)
 #' @param site character; four letter site name
 #' @param noaa_directory filepath;  directory where you have noaa forecasts stored
 #' @param noaa_model character;  name of the noaa model you are using, e.g. "noaa/NOAAGEFS_6hr"
@@ -131,7 +131,7 @@ stack_noaa_forecasts <- function(forecast_dates,
     missing_dates <- tibble::tibble(date = dates[missing_forecasts],
                                     reference_date = dates[reference_date],
                                     gap_size = gap_size) %>%
-      filter(!(date == Sys.Date() | date == max(dates)))
+      dplyr::filter(!(date == Sys.Date() | date == max(dates)))
 
 
 
@@ -158,8 +158,8 @@ stack_noaa_forecasts <- function(forecast_dates,
     for(k in 1:length(dates)){
 
       noaa_model_directory <- file.path(noaa_directory, noaa_model, site, dates[k])
+      cycle <- c("00", "06", "12", "18") #list.files(noaa_model_directory)
 
-      cycle <- list.files(noaa_model_directory)
 
       for(f in 1:length(cycle)){
 
@@ -198,7 +198,7 @@ stack_noaa_forecasts <- function(forecast_dates,
             if(!is.null(missing_dates)){
               if(dates[k] %in% missing_dates$reference_date & f == 4){
                 curr_missing_dates <- missing_dates %>%
-                  filter(reference_date == dates[k])
+                  dplyr::filter(reference_date == dates[k])
 
                 days_to_include <- max(curr_missing_dates$gap_size) + 0.25
               }
@@ -235,15 +235,15 @@ stack_noaa_forecasts <- function(forecast_dates,
     }
 
     noaa_obs_out <- noaa_obs_out %>%
-      arrange(time, ens)
+      dplyr::arrange(time, ens)
 
     forecast_noaa <- noaa_obs_out %>%
-      rename(NOAA.member = ens) %>%
-      select(time, NOAA.member, air_temperature,
+      dplyr::rename(NOAA.member = ens) %>%
+      dplyr::select(time, NOAA.member, air_temperature,
              air_pressure, relative_humidity, surface_downwelling_longwave_flux_in_air,
              surface_downwelling_shortwave_flux_in_air, precipitation_flux,
              specific_humidity, wind_speed) %>%
-      arrange(time, NOAA.member)
+      dplyr::arrange(time, NOAA.member)
 
     for (ens in 1:31) { # i is the ensemble number
 
@@ -267,7 +267,7 @@ stack_noaa_forecasts <- function(forecast_dates,
 
       forecast_noaa_ens$precipitation_flux[2:nrow(forecast_noaa_ens)] <- forecast_noaa_ens$precipitation_flux[1:(nrow(forecast_noaa_ens)-1)]
 
-      next_time_step <- tibble(time = forecast_noaa_ens$time[nrow(forecast_noaa_ens)] + lubridate::hours(6),
+      next_time_step <- tibble::tibble(time = forecast_noaa_ens$time[nrow(forecast_noaa_ens)] + lubridate::hours(6),
                                NOAA.member = ens,
                                air_temperature = NA,
                                air_pressure = NA,
@@ -289,7 +289,7 @@ stack_noaa_forecasts <- function(forecast_dates,
       if(append_data==TRUE){
         hist_met_all_ens <- hist_met_all %>%
           dplyr::filter(NOAA.member == ens) %>%
-          arrange(time, NOAA.member)
+          dplyr::arrange(time, NOAA.member)
 
         overlapping_index <- which(hist_met_all_ens$time == forecast_noaa_ens$time[1])
 
@@ -302,7 +302,7 @@ stack_noaa_forecasts <- function(forecast_dates,
 
 
         forecast_noaa_ens <- rbind(hist_met_all_ens, forecast_noaa_ens[2:nrow(forecast_noaa_ens),]) %>%
-          arrange(time)
+          dplyr::arrange(time)
       }
 
       end_date <- forecast_noaa_ens %>%
@@ -322,7 +322,8 @@ stack_noaa_forecasts <- function(forecast_dates,
       #Write netCDF
       noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa_ens,ens, lat = lat, lon = lon, cf_units = cf_var_units1, output_file = output_file, overwrite = TRUE)
 
-      stacked_directory_1hr <- file.path(output_directory, 'noaa', "NOAAGEFS_1hr_stacked")
+
+      stacked_directory_1hr <- file.path(output_directory, "NOAAGEFS_1hr_stacked")
       model_site_dir_1hr <- file.path(stacked_directory_1hr, site)
 
       if(!dir.exists(model_site_dir_1hr)){
