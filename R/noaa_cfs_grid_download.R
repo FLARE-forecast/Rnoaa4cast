@@ -25,7 +25,7 @@ noaa_cfs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_d
     start_date <- paste0(curr_year,curr_month,curr_day)
     directory <- paste0("&dir=%2Fcfs.",start_date,"%2F",cycle,"%2F6hrly_grib_01")
 
-    date_vector <- seq(forecasted_date, forecasted_date +lubridate::days(196), "1 day")
+    date_vector <- seq(forecasted_date, forecasted_date + lubridate::days(217), "1 day")
     forecast_hours <- c("00", "06", "12", "18")
 
     if(cycle == "00"){
