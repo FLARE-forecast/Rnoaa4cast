@@ -277,7 +277,7 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
           end_date <- forecast_noaa %>%
             dplyr::summarise(max_time = max(time))
 
-          start_date <- forecast_noaa_ens %>%
+          start_date <- forecast_noaa %>%
             dplyr::summarise(min_time = min(time))
 
           identifier <- paste(model_name, site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
