@@ -82,6 +82,10 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
 
             if(length(index) > 0){
 
+              if(is.null(grib$band1[index]) | is.null(grib$band2[index]) | is.null(grib$band3[index]) | is.null(grib$band4[index])){
+                warning(paste0("bad download of file", file_name))
+                return(list(NULL, file_name))
+              }
               pressfc[s, hr]  <- grib$band1[index]
               tmp2m[s, hr] <- grib$band2[index]
               rh2m[s, hr]  <- grib$band3[index]
@@ -227,7 +231,18 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
                                      lon_list,
                                      working_directory = file.path(model_name_raw_dir,forecast_date,cycle),
                                      mc.cores = num_cores)
+        bad_ens_member <- FALSE
+        for(ens in 1:31){
+          if(is.null(unlist(output[[ens]][1]))){
+            bad_ens_member <- TRUE
+            #unlink(unlist(output[[ens]][2]))
+            message(paste0("Bad file: ", unlist(output[[ens]][2])))
+          }
+        }
 
+        if(bad_ens_member){
+          next()
+        }
 
         forecast_times <- lubridate::as_datetime(forecast_date) + lubridate::hours(as.numeric(cycle)) + lubridate::hours(as.numeric(hours_char))
 
