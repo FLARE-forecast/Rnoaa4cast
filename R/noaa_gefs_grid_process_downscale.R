@@ -33,7 +33,8 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
                                              reprocess = FALSE,
                                              write_intermediate_ncdf = TRUE,
                                              process_specific_date = NA,
-                                             process_specific_cycle = NA){
+                                             process_specific_cycle = NA,
+                                             delete_bad_files = TRUE){
 
   extract_sites <- function(ens_index, hours_char, hours, cycle, site_list, lat_list, lon_list, working_directory, process_specific_date){
 
@@ -82,7 +83,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
 
             if(length(index) > 0){
 
-              if(is.null(grib$band1[index]) | is.null(grib$band2[index]) | is.null(grib$band3[index]) | is.null(grib$band4[index])){
+              if(is.null(grib$band1[index]) | is.null(grib$band2[index]) | is.null(grib$band3[index]) | is.null(grib$band4[index]) | is.null(grib$band5[index])){
                 if(is.na(process_specific_date)){
                   return(list(NULL, file_name))
                 }else{
@@ -259,13 +260,16 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
                                      lat_list,
                                      lon_list,
                                      working_directory = file.path(model_name_raw_dir,forecast_date,cycle),
-                                     mc.cores = num_cores,
-                                     process_specific_date = process_specific_date)
+                                     process_specific_date = process_specific_date,
+                                     mc.cores = num_cores
+                                     )
         bad_ens_member <- FALSE
         for(ens in 1:31){
           if(is.null(unlist(output[[ens]][1]))){
             bad_ens_member <- TRUE
-            #unlink(unlist(output[[ens]][2]))
+            if(delete_bad_files){
+              unlink(unlist(output[[ens]][2]))
+            }
             message(paste0("Bad file: ", unlist(output[[ens]][2])))
           }
         }
