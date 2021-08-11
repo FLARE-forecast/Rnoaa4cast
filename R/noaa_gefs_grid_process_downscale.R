@@ -31,9 +31,11 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
                                              num_cores,
                                              output_directory,
                                              reprocess = FALSE,
-                                             write_intermediate_ncdf = TRUE){
+                                             write_intermediate_ncdf = TRUE,
+                                             process_specific_date = NA,
+                                             process_specific_cycle = NA){
 
-  extract_sites <- function(ens_index, hours_char, hours, cycle, site_list, lat_list, lon_list, working_directory){
+  extract_sites <- function(ens_index, hours_char, hours, cycle, site_list, lat_list, lon_list, working_directory, process_specific_date){
 
     site_length <- length(site_list)
     tmp2m <- array(NA, dim = c(site_length, length(hours_char)))
@@ -76,27 +78,40 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
 
           for(s in 1:length(site_list)){
 
-
-
             index <- which(lat_lon[,2] == lats[s] & lat_lon[,1] == lons[s])
 
             if(length(index) > 0){
 
               if(is.null(grib$band1[index]) | is.null(grib$band2[index]) | is.null(grib$band3[index]) | is.null(grib$band4[index])){
-                warning(paste0("bad download of file", file_name))
-                return(list(NULL, file_name))
-              }
-              pressfc[s, hr]  <- grib$band1[index]
-              tmp2m[s, hr] <- grib$band2[index]
-              rh2m[s, hr]  <- grib$band3[index]
-              ugrd10m[s, hr]  <- grib$band4[index]
-              vgrd10m[s, hr]  <- grib$band5[index]
+                if(is.na(process_specific_date)){
+                  return(list(NULL, file_name))
+                }else{
+                  pressfc[s, hr]  <- NA
+                  tmp2m[s, hr] <- NA
+                  rh2m[s, hr]  <- NA
+                  ugrd10m[s, hr]  <- NA
+                  vgrd10m[s, hr]  <- NA
 
-              if(curr_hours[hr] != "000"){
-                apcpsfc[s, hr]  <- grib$band6[index]
-                tcdcclm[s, hr]  <-  grib$band7[index]
-                dswrfsfc[s, hr]  <- grib$band8[index]
-                dlwrfsfc[s, hr]  <- grib$band9[index]
+                  if(curr_hours[hr] != "000"){
+                    apcpsfc[s, hr]  <- NA
+                    tcdcclm[s, hr]  <-  NA
+                    dswrfsfc[s, hr]  <- NA
+                    dlwrfsfc[s, hr]  <- NA
+                  }
+                }
+              }else{
+                pressfc[s, hr]  <- grib$band1[index]
+                tmp2m[s, hr] <- grib$band2[index]
+                rh2m[s, hr]  <- grib$band3[index]
+                ugrd10m[s, hr]  <- grib$band4[index]
+                vgrd10m[s, hr]  <- grib$band5[index]
+
+                if(curr_hours[hr] != "000"){
+                  apcpsfc[s, hr]  <- grib$band6[index]
+                  tcdcclm[s, hr]  <-  grib$band7[index]
+                  dswrfsfc[s, hr]  <- grib$band8[index]
+                  dlwrfsfc[s, hr]  <- grib$band9[index]
+                }
               }
             }else{
               pressfc[s, hr]  <- NA
@@ -141,14 +156,23 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
     potential_dates <- lubridate::as_date(list.dirs(model_name_raw_dir, recursive = FALSE, full.names = FALSE))
   }
   #Remove dates before the new GEFS system
-  potential_dates <- potential_dates[which(potential_dates > lubridate::as_date("2020-09-23"))]
+  if(is.na(process_specific_date)){
+    potential_dates <- potential_dates[which(potential_dates > lubridate::as_date("2020-09-23"))]
+  }else{
+    potential_dates <- lubridate::as_date(process_specific_date)
+  }
+
 
   for(k in 1:length(potential_dates)){
 
 
 
     forecast_date <- lubridate::as_date(potential_dates[k])
-    forecast_hours <- c(0,6,12,18)
+    if(is.na(process_specific_cycle)){
+      forecast_hours <- c(0,6,12,18)
+    }else{
+      forecast_hours <- process_specific_cycle
+    }
 
 
 
@@ -213,6 +237,11 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
         }
       }
 
+      if(!is.na(process_specific_date)){
+        all_downloaded <- TRUE
+        missing_files <- TRUE
+      }
+
       if(all_downloaded & missing_files){
 
         #Remove existing files and overwrite
@@ -230,7 +259,8 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
                                      lat_list,
                                      lon_list,
                                      working_directory = file.path(model_name_raw_dir,forecast_date,cycle),
-                                     mc.cores = num_cores)
+                                     mc.cores = num_cores,
+                                     process_specific_date = process_specific_date)
         bad_ens_member <- FALSE
         for(ens in 1:31){
           if(is.null(unlist(output[[ens]][1]))){
