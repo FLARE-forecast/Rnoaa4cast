@@ -71,6 +71,9 @@ noaa_gefs_download_downscale <- function(site_list,
                        model_name_raw = model_name_raw,
                        output_directory = output_directory)
 
+    # Extracting from GRIB requires in 0-360 so converting back here
+    lon_list[which(lon_list < 0)] <- 360 - lon_list[which(lon_list < 0)]
+
     noaaGEFSpoint::noaa_gefs_grid_process_downscale(lat_list = lat_list,
                                               lon_list = lon_list,
                                               site_list = site_list,
