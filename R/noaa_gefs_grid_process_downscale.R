@@ -180,15 +180,13 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
     for(j in 1:length(forecast_hours)){
       cycle <- forecast_hours[j]
       curr_forecast_time <- forecast_date + lubridate::hours(cycle)
-      if(cycle < 10) cycle <- paste0("0",cycle)
+      if(cycle < 10) cycle <- formatC(cycle, width = 2, format = "d", flag = "0")
       if(cycle == "00"){
         hours <- c(seq(0, 240, 6),seq(246, 840 , 6))
       }else{
         hours <- c(seq(0, 240, 6),seq(246, 384 , 6))
       }
-      hours_char <- hours
-      hours_char[which(hours < 100)] <- paste0("0",hours[which(hours < 100)])
-      hours_char[which(hours < 10)] <- paste0("0",hours_char[which(hours < 10)])
+      hours_char <- formatC(hours, width = 3, format = "d", flag = "0")
 
       message(paste0("Processing forecast time: ", curr_forecast_time))
 
