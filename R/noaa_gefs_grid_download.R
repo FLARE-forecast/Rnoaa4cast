@@ -76,11 +76,13 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
             grib <- rgdal::readGDAL(destfile, silent = TRUE)
             if(curr_hours[i] == "000") {
               if(length(grib@data) != 5) {
+                warning("Bad file: ", destfile, "\n Should be 5 fields but has ", length(grib@data), " fields")
                 unlink(destfile)
                 download_failed <- TRUE
               }
             } else {
               if(length(grib@data) != 9) {
+                warning("Bad file: ", destfile, "\n Should be 9 fields but has ", length(grib@data), " fields")
                 unlink(destfile)
                 download_failed <- TRUE
               }
