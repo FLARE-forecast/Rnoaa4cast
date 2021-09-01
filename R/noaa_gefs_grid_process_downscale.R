@@ -53,7 +53,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
       base_filename2 <- paste0("gec00",".t",cycle,"z.pgrb2a.0p50.f")
     }else{
       if(ens_index-1 < 10){
-        ens_name <- paste0("0",ens_index-1)
+        ens_name <- formatC((ens_index - 1), width = 2, format = "d", flag = "0")
       }else{
         ens_name <- as.character(ens_index-1)
       }
@@ -65,16 +65,20 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
     curr_hours <- hours_char
 
     for(hr in 1:length(curr_hours)){
-      file_name <- paste0(working_directory,"/", base_filename2, curr_hours[hr],".neon.grib")
+      file_name <- file.path(working_directory, paste0(base_filename2, curr_hours[hr], ".neon.grib"))
 
       if(file.exists(file_name)){
         if(file.info(file_name)$size != 0){
           grib <- rgdal::readGDAL(file_name, silent = TRUE)
-          #download_error <- FALSE
-          #if(is.null(grib$band1) | is.null(grib$band2) | is.null(grib$band3) | is.null(grib$band4) | is.null(grib$band5)){
-          #  download_error <- TRUE
-          #  unlink(file_name)
-          #}
+          if(curr_hours[hr] == "000") {
+            if(length(grib@data) != 5) {
+              stop("Error in downloading file ", file_name, ". Not enough fields.")
+            }
+          } else {
+            if(length(grib@data) != 9) {
+              stop("Error in downloading file ", file_name, ". Not enough fields. There are")
+            }
+          }
           lat_lon <- sp::coordinates(grib)
 
           for(s in 1:length(site_list)){
@@ -127,6 +131,8 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
             }
           }
         }
+      } else {
+        stop("No files for ", file_name)
       }
     }
 
@@ -244,10 +250,9 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
       if(all_downloaded & missing_files){
 
         #Remove existing files and overwrite
-        unlink(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle)))
+        unlink(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle), full.names = TRUE), force = TRUE)
 
         ens_index <- 1:31
-        #Run download_downscale_site() over the site_index
         #Run download_downscale_site() over the site_index
         output <- parallel::mclapply(X = ens_index,
                                      FUN = extract_sites,
