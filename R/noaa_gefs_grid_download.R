@@ -57,8 +57,8 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
       if(download_file){
         download_tries <- 1
         download_failed <- TRUE
-        while(download_failed & download_tries < 2){
-          Sys.sleep(1)
+        while(download_failed & download_tries <= 5){
+          Sys.sleep(30)
           download_failed <- FALSE
           out <- tryCatch(download.file(paste0(base_filename1, file_name, vars, location, directory),
                                         destfile = destfile, quiet = TRUE),
@@ -89,6 +89,9 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
             }
           }
           download_tries <- download_tries + 1
+          if(download_failed) {
+            message("Download failed for ", destfile, " [", Sys.time(), "]\nRetrying download ", download_tries, "/5...")
+          }
         }
       }
     }
