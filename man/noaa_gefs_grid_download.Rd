@@ -10,7 +10,8 @@ noaa_gefs_grid_download(
   forecast_time,
   forecast_date,
   model_name_raw,
-  output_directory
+  output_directory,
+  num_cores = 1
 )
 }
 \arguments{

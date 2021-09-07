@@ -69,7 +69,8 @@ noaa_gefs_download_downscale <- function(site_list,
                        forecast_time = forecast_time,
                        forecast_date = forecast_date,
                        model_name_raw = model_name_raw,
-                       output_directory = output_directory)
+                       output_directory = output_directory,
+                       num_cores = num_cores)
 
     # Extracting from GRIB requires in 0-360 so converting back here
     lon_list[which(lon_list < 0)] <- 360 + lon_list[which(lon_list < 0)]
