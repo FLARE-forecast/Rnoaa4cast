@@ -13,10 +13,10 @@
 #' @export
 #'
 #' @examples
-noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, output_directory) {
+noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, output_directory, num_cores = 1) {
 
 
-  download_grid <- function(ens_index, location, directory, hours_char, cycle, base_filename1, vars,working_directory){
+  download_grid <- function(ens_index, location, directory, hours_char, cycle, base_filename1, vars,working_directory, num_cores = 1){
     #for(j in 1:31){
     if(ens_index == 1){
       base_filename2 <- paste0("gec00",".t",cycle,"z.pgrb2a.0p50.f")
@@ -35,7 +35,7 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
     for(i in 1:length(curr_hours)){
       file_name <- paste0(base_filename2, curr_hours[i])
 
-      destfile <- paste0(working_directory,"/", file_name,".neon.grib")
+      destfile <- file.path(working_directory, paste0(file_name,".neon.grib"))
 
       if(file.exists(destfile)){
 
@@ -58,7 +58,9 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
         download_tries <- 1
         download_failed <- TRUE
         while(download_failed & download_tries <= 5){
-          Sys.sleep(30)
+          if(download_tries > 1) {
+            Sys.sleep(5)
+          }
           download_failed <- FALSE
           out <- tryCatch(download.file(paste0(base_filename1, file_name, vars, location, directory),
                                         destfile = destfile, quiet = TRUE),
@@ -90,7 +92,7 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
           }
           download_tries <- download_tries + 1
           if(download_failed) {
-            message("Download failed for ", destfile, " [", Sys.time(), "]\nRetrying download ", download_tries, "/5...")
+            message("Download failed for ", destfile, " [", Sys.time(), "]\nRetrying download ", download_tries - 1, "/5...")
           }
         }
       }
@@ -198,7 +200,7 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
 
             ens_index <- 1:31
 
-            lapply(X = ens_index,
+            parallel::mclapply(X = ens_index,
                                FUN = download_grid,
                                location,
                                directory,
@@ -206,7 +208,19 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
                                cycle,
                                base_filename1,
                                vars,
-                               working_directory = model_date_hour_dir)
+                               working_directory = model_date_hour_dir,
+                               mc.cores = num_cores
+            )
+
+            # lapply(X = ens_index,
+            #                    FUN = download_grid,
+            #                    location,
+            #                    directory,
+            #                    hours_char,
+            #                    cycle,
+            #                    base_filename1,
+            #                    vars,
+            #                    working_directory = model_date_hour_dir)
           }else{
             print(paste("Existing", forecasted_date, cycle))
           }
