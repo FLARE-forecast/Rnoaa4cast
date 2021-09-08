@@ -16,7 +16,7 @@
 noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, output_directory, num_cores = 1) {
 
 
-  download_grid <- function(ens_index, location, directory, hours_char, cycle, base_filename1, vars,working_directory, num_cores = 1){
+  download_grid <- function(ens_index, location, directory, hours_char, cycle, base_filename1, vars,working_directory, output_directory, num_cores = 1){
     #for(j in 1:31){
     if(ens_index == 1){
       base_filename2 <- paste0("gec00",".t",cycle,"z.pgrb2a.0p50.f")
@@ -31,11 +31,14 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
       curr_hours <- hours_char
     }
 
+    log_file <- file.path(output_directory, "download.log")
+
 
     for(i in 1:length(curr_hours)){
       file_name <- paste0(base_filename2, curr_hours[i])
 
       destfile <- file.path(working_directory, paste0(file_name,".neon.grib"))
+      apnd_log <- file.exists(log_file)
 
       if(file.exists(destfile)){
 
@@ -57,7 +60,7 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
       if(download_file){
         download_tries <- 1
         download_failed <- TRUE
-        while(download_failed & download_tries <= 5){
+        while(download_failed & download_tries <= 1){
           if(download_tries > 1) {
             Sys.sleep(5)
           }
@@ -79,19 +82,21 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
             if(curr_hours[i] == "000") {
               if(length(grib@data) != 5) {
                 warning("Bad file: ", destfile, "\n Should be 5 fields but has ", length(grib@data), " fields")
-                unlink(destfile)
+                unlink(destfile, force = TRUE)
                 download_failed <- TRUE
               }
             } else {
               if(length(grib@data) != 9) {
                 warning("Bad file: ", destfile, "\n Should be 9 fields but has ", length(grib@data), " fields")
-                unlink(destfile)
+                unlink(destfile, force = TRUE)
                 download_failed <- TRUE
               }
             }
           }
           download_tries <- download_tries + 1
           if(download_failed) {
+            dat <- data.frame(file_name = destfile, download = FALSE, retry = FALSE)
+            write.table(dat, log_file, append = apnd_log, sep = "\t")
             message("Download failed for ", destfile, " [", Sys.time(), "]\nRetrying download ", download_tries - 1, "/5...")
           }
         }
