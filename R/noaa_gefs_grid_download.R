@@ -95,7 +95,8 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
           }
           download_tries <- download_tries + 1
           if(download_failed) {
-            dat <- data.frame(file_name = destfile, download = FALSE, retry = FALSE)
+            dat <- data.frame(file_name = destfile, download = FALSE, download_time = lubridate::with_tz(Sys.time(), tzone = "UTC"),
+                              retry = FALSE, retry_time = NA)
             write.table(dat, log_file, append = apnd_log, sep = "\t")
             message("Download failed for ", destfile, " [", Sys.time(), "]\nRetrying download ", download_tries - 1, "/5...")
           }
