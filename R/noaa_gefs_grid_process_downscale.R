@@ -67,18 +67,58 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
     for(hr in 1:length(curr_hours)){
       file_name <- file.path(working_directory, paste0(base_filename2, curr_hours[hr], ".neon.grib"))
 
+      if(!file.exists(file_name)) {
+
+        message("File '", file_name, "' does not exist locally, retrying download... [", Sys.time(), "]")
+
+        location <- paste0("&subregion=&leftlon=",
+                           floor(min(lon_list)),
+                           "&rightlon=",
+                           ceiling(max(lon_list)),
+                           "&toplat=",
+                           ceiling(max(lat_list)),
+                           "&bottomlat=",
+                           floor(min(lat_list)))
+
+        base_filename1 <- "https://nomads.ncep.noaa.gov/cgi-bin/filter_gefs_atmos_0p50a.pl?file="
+        vars <- "&lev_10_m_above_ground=on&lev_2_m_above_ground=on&lev_surface=on&lev_entire_atmosphere=on&var_APCP=on&var_DLWRF=on&var_DSWRF=on&var_PRES=on&var_RH=on&var_TMP=on&var_UGRD=on&var_VGRD=on&var_TCDC=on"
+
+        curr_year <- lubridate::year(forecast_date)
+        curr_month <- lubridate::month(forecast_date)
+        if(curr_month < 10) curr_month <- paste0("0",curr_month)
+        curr_day <- lubridate::day(forecast_date)
+        if(curr_day < 10) curr_day <- paste0("0",curr_day)
+        curr_date <- paste0(curr_year,curr_month,curr_day)
+        directory <- paste0("&dir=%2Fgefs.",curr_date,"%2F",cycle,"%2Fatmos%2Fpgrb2ap5")
+
+
+        file_name2 <- strsplit(file_name, "/")[[1]]
+        file_name2 <- gsub(".neon.grib", "", file_name2[length(file_name2)])
+
+        out <- tryCatch(download.file(paste0(base_filename1, file_name2, vars, location, directory),
+                                      destfile = file_name, quiet = TRUE),
+                        error = function(e){
+                          warning(paste(e$message, "skipping", file_name),
+                                  call. = FALSE)
+                          return(NA)
+                        },
+                        finally = NULL)
+        if(file.exists(file_name)) {
+          message("SUCCESS: File '", file_name, "' is downloaded. [", Sys.time(), "]")
+        } else {
+          message("FAILED: File '", file_name, "' failed to download. [", Sys.time(), "]")
+        }
+        if(check_grib_file(file = file_name, hour = curr_hours[hr])) {
+          message("SUCCESS: File '", file_name, "' passed checks. [", Sys.time(), "]")
+        } else {
+          message("FAILED: File '", file_name, "' failed checks. [", Sys.time(), "]")
+        }
+
+      }
+
       if(file.exists(file_name)){
         if(file.info(file_name)$size != 0){
           grib <- rgdal::readGDAL(file_name, silent = TRUE)
-          if(curr_hours[hr] == "000") {
-            if(length(grib@data) != 5) {
-              stop("Error in downloading file ", file_name, ". Not enough fields.")
-            }
-          } else {
-            if(length(grib@data) != 9) {
-              stop("Error in downloading file ", file_name, ". Not enough fields. There are")
-            }
-          }
           lat_lon <- sp::coordinates(grib)
 
           for(s in 1:length(site_list)){
@@ -119,6 +159,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
                 }
               }
             }else{
+              warning("Coordinates of site supplied (Lat: ", lat_list[s], "; Lon: ", lon_list[s], ") are not within the GRIB file coordinates, Lat: ", range(lat_lon[, 2])[1], " to ", range(lat_lon[, 2])[2], " Lon: ", range(lat_lon[, 1])[1], " to ", range(lat_lon[, 1])[2])
               pressfc[s, hr]  <- NA
               tmp2m[s, hr] <- NA
               rh2m[s, hr]  <- NA
@@ -131,8 +172,6 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
             }
           }
         }
-      } else {
-        stop("No files for ", file_name)
       }
     }
 
@@ -253,6 +292,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
         unlink(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle), full.names = TRUE), force = TRUE)
 
         ens_index <- 1:31
+        lon_list[lon_list > 180] <- lon_list[lon_list > 180] - 360
         #Run download_downscale_site() over the site_index
         output <- parallel::mclapply(X = ens_index,
                                      FUN = extract_sites,
@@ -289,7 +329,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
 
           message(paste0("Processing site: ", site_list[site_index]))
 
-          #Convert negetive longitudes to degrees east
+          #Convert negative longitudes to degrees east
           if(lon_list[site_index] < 0){
             lon_east <- 360 + lon_list[site_index]
           }else{
