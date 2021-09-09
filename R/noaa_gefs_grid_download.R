@@ -74,31 +74,16 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
                           },
                           finally = NULL)
 
-          if(is.na(out) | file.info(destfile)$size == 0){
-            download_failed <- TRUE
-          }else{
 
-            grib <- rgdal::readGDAL(destfile, silent = TRUE)
-            if(curr_hours[i] == "000") {
-              if(length(grib@data) != 5) {
-                warning("Bad file: ", destfile, "\n Should be 5 fields but has ", length(grib@data), " fields")
-                unlink(destfile, force = TRUE)
-                download_failed <- TRUE
-              }
-            } else {
-              if(length(grib@data) != 9) {
-                warning("Bad file: ", destfile, "\n Should be 9 fields but has ", length(grib@data), " fields")
-                unlink(destfile, force = TRUE)
-                download_failed <- TRUE
-              }
-            }
-          }
+          download_failed <- !noaaGEFSpoint:::check_grib_file(file = destfile, hour = curr_hours[i])
+
           download_tries <- download_tries + 1
           if(download_failed) {
             dat <- data.frame(file_name = destfile, download = FALSE, download_time = lubridate::with_tz(Sys.time(), tzone = "UTC"),
                               retry = FALSE, retry_time = NA)
-            write.table(dat, log_file, append = apnd_log, sep = "\t")
-            message("Download failed for ", destfile, " [", Sys.time(), "]\nRetrying download ", download_tries - 1, "/5...")
+            write.table(dat, log_file, append = apnd_log, sep = "\t",
+                        row.names = FALSE, col.names = !apnd_log)
+            message("Download failed for ", destfile, " [", Sys.time(), "]") #\nRetrying download ", download_tries - 1, "/5...")
           }
         }
       }
@@ -186,7 +171,7 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
 
           if(new_download){
 
-            print(paste("Downloading", forecasted_date, cycle))
+            message(paste("Downloading", forecasted_date, cycle))
 
             if(cycle == "00"){
               hours <- c(seq(0, 240, 6),seq(246, 840 , 6))
@@ -206,19 +191,7 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
 
             ens_index <- 1:31
 
-            parallel::mclapply(X = ens_index,
-                               FUN = download_grid,
-                               location,
-                               directory,
-                               hours_char,
-                               cycle,
-                               base_filename1,
-                               vars,
-                               working_directory = model_date_hour_dir,
-                               mc.cores = num_cores
-            )
-
-            # lapply(X = ens_index,
+            # parallel::mclapply(X = ens_index,
             #                    FUN = download_grid,
             #                    location,
             #                    directory,
@@ -226,9 +199,24 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
             #                    cycle,
             #                    base_filename1,
             #                    vars,
-            #                    working_directory = model_date_hour_dir)
+            #                    working_directory = model_date_hour_dir,
+            #                    output_directory = output_directory,
+            #                    mc.cores = num_cores,
+            #
+            # )
+
+            lapply(X = ens_index,
+                   FUN = download_grid,
+                   location,
+                   directory,
+                   hours_char,
+                   cycle,
+                   base_filename1,
+                   vars,
+                   working_directory = model_date_hour_dir,
+                   output_directory = output_directory)
           }else{
-            print(paste("Existing", forecasted_date, cycle))
+            message(paste("Existing", forecasted_date, cycle))
           }
         }
       }
