@@ -75,16 +75,21 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
                           finally = NULL)
 
 
-          download_failed <- !noaaGEFSpoint:::check_grib_file(file = destfile, hour = curr_hours[i])
+          download_check <- !noaaGEFSpoint:::check_grib_file(file = destfile, hour = curr_hours[i])
 
-          download_tries <- download_tries + 1
-          if(download_failed) {
-            dat <- data.frame(file_name = destfile, download = FALSE, download_time = lubridate::with_tz(Sys.time(), tzone = "UTC"),
-                              retry = FALSE, retry_time = NA)
-            write.table(dat, log_file, append = apnd_log, sep = "\t",
-                        row.names = FALSE, col.names = !apnd_log)
-            message("Download failed for ", destfile, " [", Sys.time(), "]") #\nRetrying download ", download_tries - 1, "/5...")
+          if(download_check == "Incorrect fields") {
+            message("Incorrect fields in ", destfile, ".")
           }
+
+          #
+          # download_tries <- download_tries + 1
+          # if(download_failed) {
+          #   dat <- data.frame(file_name = destfile, download = FALSE, download_time = lubridate::with_tz(Sys.time(), tzone = "UTC"),
+          #                     retry = FALSE, retry_time = NA)
+          #   write.table(dat, log_file, append = apnd_log, sep = "\t",
+          #               row.names = FALSE, col.names = !apnd_log)
+          #   message("Download failed for ", destfile, " [", Sys.time(), "]") #\nRetrying download ", download_tries - 1, "/5...")
+          # }
         }
       }
     }

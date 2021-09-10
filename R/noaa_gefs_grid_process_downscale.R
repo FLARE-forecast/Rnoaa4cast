@@ -104,16 +104,12 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
                         },
                         finally = NULL)
         if(file.exists(file_name)) {
-          message("SUCCESS: File '", file_name, "' is downloaded. [", Sys.time(), "]")
-        } else {
-          message("FAILED: File '", file_name, "' failed to download. [", Sys.time(), "]")
-        }
-        if(check_grib_file(file = file_name, hour = curr_hours[hr])) {
-          message("SUCCESS: File '", file_name, "' passed checks. [", Sys.time(), "]")
-        } else {
-          message("FAILED: File '", file_name, "' failed checks. [", Sys.time(), "]")
-        }
+          download_check <- !noaaGEFSpoint:::check_grib_file(file = file_name, hour = curr_hours[i])
 
+          if(download_check == "Incorrect fields") {
+            message("Incorrect fields in ", file_name, ".")
+            }
+          }
       }
 
       if(file.exists(file_name)){

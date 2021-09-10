@@ -9,11 +9,11 @@
 check_grib_file <- function(file, hour) {
   if(!file.exists(file)) {
     warning("File ", file, " does not exist.")
-    return(FALSE)
+    return("File does not exist")
   }
   if(file.info(file)$size == 0) {
     unlink(file, force = TRUE)
-    return(FALSE)
+    return("File size = 0")
   } else {
 
     grib <- rgdal::readGDAL(file, silent = TRUE)
@@ -21,17 +21,17 @@ check_grib_file <- function(file, hour) {
       if(length(grib@data) != 5) {
         warning("Bad file: ", file, "\n Should be 5 fields but has ", length(grib@data), " fields")
         unlink(file, force = TRUE)
-        return(FALSE)
+        return("Incorrect fields")
       } else if(length(grib@data) == 5) {
-        return(TRUE)
+        return("Success")
       }
     } else {
       if(length(grib@data) != 9) {
         warning("Bad file: ", file, "\n Should be 9 fields but has ", length(grib@data), " fields")
         unlink(file, force = TRUE)
-        return(FALSE)
+        return("Incorrect fields")
       } else if(length(grib@data) == 9) {
-        return(TRUE)
+        return("Success")
       }
     }
   }
