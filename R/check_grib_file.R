@@ -3,6 +3,8 @@
 #' @param file file path; to file to be checked
 #' @param hour integer; hour of forecast cycle
 #'
+#' @importFrom rgdal readGDAL
+#'
 #' @return
 #' @noRd
 
