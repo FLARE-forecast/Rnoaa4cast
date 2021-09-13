@@ -104,7 +104,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
                         },
                         finally = NULL)
         if(file.exists(file_name)) {
-          download_check <- !noaaGEFSpoint:::check_grib_file(file = file_name, hour = curr_hours[hr])
+          download_check <- noaaGEFSpoint:::check_grib_file(file = file_name, hour = curr_hours[hr])
 
           if(download_check == "Incorrect fields") {
             message("Incorrect fields in ", file_name, ".")

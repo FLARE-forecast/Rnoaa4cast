@@ -74,8 +74,10 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
                           },
                           finally = NULL)
 
+          print(destfile)
+          print(curr_hours[i])
 
-          download_check <- !noaaGEFSpoint:::check_grib_file(file = destfile, hour = curr_hours[i])
+          download_check <- noaaGEFSpoint:::check_grib_file(file = destfile, hour = curr_hours[i])
 
           if(download_check == "Incorrect fields") {
             message("Incorrect fields in ", destfile, ".")
