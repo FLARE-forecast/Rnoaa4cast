@@ -27,7 +27,8 @@ noaa_cfs_download_downscale <- function(site_list,
                                          run_parallel = FALSE,
                                          num_cores = 1,
                                          method = "point",
-                                         overwrite = FALSE){
+                                         overwrite = FALSE,
+                                         grid_name = "neon"){
 
   model_name <- "NOAACFS_6hr"
   model_name_ds <-"NOAACFS_1hr" #Downscaled NOAA GEFS
@@ -48,7 +49,8 @@ noaa_cfs_download_downscale <- function(site_list,
                        forecast_time = forecast_time,
                        forecast_date = forecast_date,
                        model_name_raw = model_name_raw,
-                       output_directory = output_directory)
+                       output_directory = output_directory,
+                       grid_name = grid_name)
 
     noaaGEFSpoint::noaa_cfs_grid_process_downscale(lat_list = lat_list,
                                               lon_list = lon_list,
@@ -62,5 +64,6 @@ noaa_cfs_download_downscale <- function(site_list,
                                               model_name_raw = model_name_raw,
                                               debias_coefficients = debias_coefficients,
                                               num_cores = 1,
-                                              output_directory = output_directory)
+                                              output_directory = output_directory,
+                                              grid_name = grid_name)
 }

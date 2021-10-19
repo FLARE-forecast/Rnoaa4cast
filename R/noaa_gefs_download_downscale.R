@@ -28,7 +28,8 @@ noaa_gefs_download_downscale <- function(site_list,
                                          num_cores = 1,
                                          method = "point",
                                          overwrite = FALSE,
-                                         read_from_path = FALSE){
+                                         read_from_path = FALSE,
+                                         grid_name = "neon"){
 
   model_name <- "NOAAGEFS_6hr"
   model_name_ds <-"NOAAGEFS_1hr" #Downscaled NOAA GEFS
@@ -69,7 +70,8 @@ noaa_gefs_download_downscale <- function(site_list,
                        forecast_time = forecast_time,
                        forecast_date = forecast_date,
                        model_name_raw = model_name_raw,
-                       output_directory = output_directory)
+                       output_directory = output_directory,
+                       grid_name = grid_name)
 
     noaaGEFSpoint::noaa_gefs_grid_process_downscale(lat_list = lat_list,
                                               lon_list = lon_list,
@@ -84,6 +86,7 @@ noaa_gefs_download_downscale <- function(site_list,
                                               debias_coefficients = debias_coefficients,
                                               num_cores = num_cores,
                                               output_directory = output_directory,
-                                              write_intermediate_ncdf = TRUE)
+                                              write_intermediate_ncdf = TRUE,
+                                              grid_name = grid_name)
   }
 }

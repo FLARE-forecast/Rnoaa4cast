@@ -30,9 +30,10 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
                                              debias_coefficients = NULL,
                                              num_cores = 1,
                                              output_directory,
-                                             reprocess = FALSE){
+                                             reprocess = FALSE,
+                                             grid_name){
 
-  extract_sites <- function(site_list, lat_list, lon_list, working_directory){
+  extract_sites <- function(site_list, lat_list, lon_list, working_directory, grid_name){
 
     files_split <- stringr::str_split(list.files(working_directory),pattern = "[.]", simplify = TRUE)
 
@@ -42,6 +43,7 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
                         day = stringr::str_sub(files_split[,1], 11, 12),
                         hour = stringr::str_sub(files_split[,1], 13, 14),
                         forecast_timestep = files_split[,1]) %>%
+      dplyr::filter(stringr::str_detect(file_name, grid_name)) %>%
       dplyr::mutate(time = lubridate::make_datetime(year = as.numeric(year), month = as.numeric(month), day = as.numeric(day), hour = as.numeric(hour),tz = "UTC")) %>%
       dplyr::arrange(time) %>%
       dplyr::mutate(hours_in_future = as.numeric((time - min(time))/(60*60)))
@@ -145,6 +147,7 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
       message(paste0("Processing forecast time: ", curr_forecast_time))
 
       raw_files <- list.files(file.path(model_name_raw_dir,forecast_date,cycle))
+      raw_files <- raw_files[stringr::str_detect(basename(raw_files), grid_name)]
       files_present <- length(raw_files)
 
       all_downloaded <- FALSE
@@ -170,7 +173,7 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
         #Remove existing files and overwrite
         unlink(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle)))
 
-        output <- extract_sites(site_list, lat_list, lon_list, working_directory = file.path(model_name_raw_dir,forecast_date,cycle))
+        output <- extract_sites(site_list, lat_list, lon_list, working_directory = file.path(model_name_raw_dir,forecast_date,cycle), grid_name)
 
         for(site_index in 1:length(site_list)){
 

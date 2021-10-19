@@ -34,9 +34,10 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
                                              write_intermediate_ncdf = TRUE,
                                              process_specific_date = NA,
                                              process_specific_cycle = NA,
-                                             delete_bad_files = TRUE){
+                                             delete_bad_files = TRUE,
+                                             grid_name = "neon"){
 
-  extract_sites <- function(ens_index, hours_char, hours, cycle, site_list, lat_list, lon_list, working_directory, process_specific_date){
+  extract_sites <- function(ens_index, hours_char, hours, cycle, site_list, lat_list, lon_list, working_directory, process_specific_date, grid_name){
 
     site_length <- length(site_list)
     tmp2m <- array(NA, dim = c(site_length, length(hours_char)))
@@ -65,7 +66,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
     curr_hours <- hours_char
 
     for(hr in 1:length(curr_hours)){
-      file_name <- paste0(working_directory,"/", base_filename2, curr_hours[hr],".neon.grib")
+      file_name <- paste0(working_directory,"/", base_filename2, curr_hours[hr],".",grid_name,".grib")
 
       if(file.exists(file_name)){
         if(file.info(file_name)$size != 0){
@@ -261,6 +262,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
                                      lon_list,
                                      working_directory = file.path(model_name_raw_dir,forecast_date,cycle),
                                      process_specific_date = process_specific_date,
+                                     grid_name = grid_name,
                                      mc.cores = num_cores
                                      )
         bad_ens_member <- FALSE
