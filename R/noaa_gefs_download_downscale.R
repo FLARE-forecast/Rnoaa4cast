@@ -29,7 +29,11 @@ noaa_gefs_download_downscale <- function(site_list,
                                          method = "point",
                                          overwrite = FALSE,
                                          read_from_path = FALSE,
-                                         grid_name = "neon"){
+                                         grid_name = "neon",
+                                         process_specific_date = NA,
+                                         process_specific_cycle = NA,
+                                         delete_bad_files = TRUE,
+                                         write_intermediate_ncdf = TRUE){
 
   model_name <- "NOAAGEFS_6hr"
   model_name_ds <-"NOAAGEFS_1hr" #Downscaled NOAA GEFS
@@ -50,43 +54,48 @@ noaa_gefs_download_downscale <- function(site_list,
 
     message("downloading NOAA using single point method.  Note: only the first 16 days of a 35-day forecast are able to be downloading using this method")
 
-      noaaGEFSpoint::noaa_gefs_point_download_downscale(
-        read_from_path = read_from_path,
-        lat_list = lat_list,
-        lon_list = lon_list,
-        site_list = site_list,
-        forecast_time = forecast_time,
-        forecast_date = forecast_date,
-        downscale = downscale,
-        overwrite = overwrite,
-        model_name = model_name,
-        model_name_ds = model_name_ds,
-        output_directory = output_directory)
+    noaaGEFSpoint::noaa_gefs_point_download_downscale(
+      read_from_path = read_from_path,
+      lat_list = lat_list,
+      lon_list = lon_list,
+      site_list = site_list,
+      forecast_time = forecast_time,
+      forecast_date = forecast_date,
+      downscale = downscale,
+      overwrite = overwrite,
+      model_name = model_name,
+      model_name_ds = model_name_ds,
+      output_directory = output_directory)
 
   }else{
 
-    noaaGEFSpoint::noaa_gefs_grid_download(lat_list = lat_list,
-                       lon_list = lon_list,
-                       forecast_time = forecast_time,
-                       forecast_date = forecast_date,
-                       model_name_raw = model_name_raw,
-                       output_directory = output_directory,
-                       grid_name = grid_name)
+    if(is.na(process_specific_date)){
+      noaaGEFSpoint::noaa_gefs_grid_download(lat_list = lat_list,
+                                             lon_list = lon_list,
+                                             forecast_time = forecast_time,
+                                             forecast_date = forecast_date,
+                                             model_name_raw = model_name_raw,
+                                             output_directory = output_directory,
+                                             grid_name = grid_name)
+    }
 
     noaaGEFSpoint::noaa_gefs_grid_process_downscale(lat_list = lat_list,
-                                              lon_list = lon_list,
-                                              site_list = site_list,
-                                              downscale = downscale,
-                                              debias = debias,
-                                              overwrite = overwrite,
-                                              model_name = model_name,
-                                              model_name_ds = model_name_ds,
-                                              model_name_ds_debias = model_name_ds_debias,
-                                              model_name_raw = model_name_raw,
-                                              debias_coefficients = debias_coefficients,
-                                              num_cores = num_cores,
-                                              output_directory = output_directory,
-                                              write_intermediate_ncdf = TRUE,
-                                              grid_name = grid_name)
+                                                    lon_list = lon_list,
+                                                    site_list = site_list,
+                                                    downscale = downscale,
+                                                    debias = debias,
+                                                    overwrite = overwrite,
+                                                    model_name = model_name,
+                                                    model_name_ds = model_name_ds,
+                                                    model_name_ds_debias = model_name_ds_debias,
+                                                    model_name_raw = model_name_raw,
+                                                    debias_coefficients = debias_coefficients,
+                                                    num_cores = num_cores,
+                                                    output_directory = output_directory,
+                                                    write_intermediate_ncdf = write_intermediate_ncdf,
+                                                    process_specific_date = process_specific_date,
+                                                    process_specific_cycle = process_specific_cycle,
+                                                    delete_bad_files = delete_bad_files,
+                                                    grid_name = grid_name)
   }
 }
