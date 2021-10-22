@@ -34,9 +34,10 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
                                              write_intermediate_ncdf = TRUE,
                                              process_specific_date = NA,
                                              process_specific_cycle = NA,
-                                             delete_bad_files = TRUE){
+                                             delete_bad_files = TRUE,
+                                             grid_name = "neon"){
 
-  extract_sites <- function(ens_index, hours_char, hours, cycle, site_list, lat_list, lon_list, working_directory, process_specific_date){
+  extract_sites <- function(ens_index, hours_char, hours, cycle, site_list, lat_list, lon_list, working_directory, process_specific_date, grid_name){
 
     site_length <- length(site_list)
     tmp2m <- array(NA, dim = c(site_length, length(hours_char)))
@@ -65,52 +66,8 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
     curr_hours <- hours_char
 
     for(hr in 1:length(curr_hours)){
-      file_name <- file.path(working_directory, paste0(base_filename2, curr_hours[hr], ".neon.grib"))
 
-      if(!file.exists(file_name)) {
-
-        message("File '", file_name, "' does not exist locally, retrying download... [", Sys.time(), "]")
-
-        location <- paste0("&subregion=&leftlon=",
-                           floor(min(lon_list)),
-                           "&rightlon=",
-                           ceiling(max(lon_list)),
-                           "&toplat=",
-                           ceiling(max(lat_list)),
-                           "&bottomlat=",
-                           floor(min(lat_list)))
-
-        base_filename1 <- "https://nomads.ncep.noaa.gov/cgi-bin/filter_gefs_atmos_0p50a.pl?file="
-        vars <- "&lev_10_m_above_ground=on&lev_2_m_above_ground=on&lev_surface=on&lev_entire_atmosphere=on&var_APCP=on&var_DLWRF=on&var_DSWRF=on&var_PRES=on&var_RH=on&var_TMP=on&var_UGRD=on&var_VGRD=on&var_TCDC=on"
-
-        curr_year <- lubridate::year(forecast_date)
-        curr_month <- lubridate::month(forecast_date)
-        if(curr_month < 10) curr_month <- paste0("0",curr_month)
-        curr_day <- lubridate::day(forecast_date)
-        if(curr_day < 10) curr_day <- paste0("0",curr_day)
-        curr_date <- paste0(curr_year,curr_month,curr_day)
-        directory <- paste0("&dir=%2Fgefs.",curr_date,"%2F",cycle,"%2Fatmos%2Fpgrb2ap5")
-
-
-        file_name2 <- strsplit(file_name, "/")[[1]]
-        file_name2 <- gsub(".neon.grib", "", file_name2[length(file_name2)])
-
-        out <- tryCatch(download.file(paste0(base_filename1, file_name2, vars, location, directory),
-                                      destfile = file_name, quiet = TRUE),
-                        error = function(e){
-                          warning(paste(e$message, "skipping", file_name),
-                                  call. = FALSE)
-                          return(NA)
-                        },
-                        finally = NULL)
-        if(file.exists(file_name)) {
-          download_check <- noaaGEFSpoint:::check_grib_file(file = file_name, hour = curr_hours[hr])
-
-          if(download_check == "Incorrect fields") {
-            message("Incorrect fields in ", file_name, ".")
-            }
-          }
-      }
+      file_name <- paste0(working_directory,"/", base_filename2, curr_hours[hr],".",grid_name,".grib")
 
       if(file.exists(file_name)){
         if(file.info(file_name)$size != 0){
@@ -300,6 +257,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
                                      lon_list,
                                      working_directory = file.path(model_name_raw_dir,forecast_date,cycle),
                                      process_specific_date = process_specific_date,
+                                     grid_name = grid_name,
                                      mc.cores = num_cores
                                      )
         bad_ens_member <- FALSE

@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-noaa_cfs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, output_directory) {
+noaa_cfs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, output_directory, grid_name) {
 
 
   download_grid <- function(forecasted_date, cycle, location, directory, vars,working_directory){
@@ -64,7 +64,7 @@ noaa_cfs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_d
 
           #flxf2021072600.01.2021072600.grb2
 
-          destfile <- paste0(working_directory,"/", file_name,".neon.grib")
+          destfile <- paste0(working_directory,"/", file_name,".",grid_name,".grib")
 
           if(file.exists(destfile)){
 

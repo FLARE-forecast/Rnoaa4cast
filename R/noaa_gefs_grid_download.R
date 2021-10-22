@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, output_directory, num_cores = 1) {
+noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, output_directory, grid_name) {
 
 
   download_grid <- function(ens_index, location, directory, hours_char, cycle, base_filename1, vars,working_directory, output_directory, num_cores = 1){
@@ -37,8 +37,7 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
     for(i in 1:length(curr_hours)){
       file_name <- paste0(base_filename2, curr_hours[i])
 
-      destfile <- file.path(working_directory, paste0(file_name,".neon.grib"))
-      apnd_log <- file.exists(log_file)
+      destfile <- paste0(working_directory,"/", file_name,".",grid_name,".grib")
 
       if(file.exists(destfile)){
 
