@@ -19,6 +19,8 @@ noaa_gefs_point_download_downscale(
 )
 }
 \arguments{
+\item{read_from_path, }{Default FALSE}
+
 \item{lat_list, }{vector of latitudes that correspond to site codes}
 
 \item{lon_list, }{vector of longitudes that correspond to site codes}

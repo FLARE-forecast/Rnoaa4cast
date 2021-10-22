@@ -19,7 +19,10 @@ noaa_gefs_grid_process_downscale(
   num_cores,
   output_directory,
   reprocess = FALSE,
-  write_intermediate_ncdf = TRUE
+  write_intermediate_ncdf = TRUE,
+  process_specific_date = NA,
+  process_specific_cycle = NA,
+  delete_bad_files = TRUE
 )
 }
 \arguments{

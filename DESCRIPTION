@@ -1,6 +1,7 @@
 Package: noaaGEFSpoint
 Title: Downloads And Temporally Downscales NOAA GEFS 6-hr Forecasts for a Point Location
-Version: 0.0.1.02.2
+Version: 0.0.1.02.5
+Date: 2021-09-10
 Authors@R: 
     person(given = "Quinn",
            family = "Thomas",
@@ -23,3 +24,6 @@ Imports:
     magrittr,
     rgdal,
     httr
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

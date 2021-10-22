@@ -54,7 +54,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
       base_filename2 <- paste0("gec00",".t",cycle,"z.pgrb2a.0p50.f")
     }else{
       if(ens_index-1 < 10){
-        ens_name <- paste0("0",ens_index-1)
+        ens_name <- formatC((ens_index - 1), width = 2, format = "d", flag = "0")
       }else{
         ens_name <- as.character(ens_index-1)
       }
@@ -66,16 +66,12 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
     curr_hours <- hours_char
 
     for(hr in 1:length(curr_hours)){
+
       file_name <- paste0(working_directory,"/", base_filename2, curr_hours[hr],".",grid_name,".grib")
 
       if(file.exists(file_name)){
         if(file.info(file_name)$size != 0){
           grib <- rgdal::readGDAL(file_name, silent = TRUE)
-          #download_error <- FALSE
-          #if(is.null(grib$band1) | is.null(grib$band2) | is.null(grib$band3) | is.null(grib$band4) | is.null(grib$band5)){
-          #  download_error <- TRUE
-          #  unlink(file_name)
-          #}
           lat_lon <- sp::coordinates(grib)
 
           for(s in 1:length(site_list)){
@@ -116,6 +112,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
                 }
               }
             }else{
+              warning("Coordinates of site supplied (Lat: ", lat_list[s], "; Lon: ", lon_list[s], ") are not within the GRIB file coordinates, Lat: ", range(lat_lon[, 2])[1], " to ", range(lat_lon[, 2])[2], " Lon: ", range(lat_lon[, 1])[1], " to ", range(lat_lon[, 1])[2])
               pressfc[s, hr]  <- NA
               tmp2m[s, hr] <- NA
               rh2m[s, hr]  <- NA
@@ -181,15 +178,13 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
     for(j in 1:length(forecast_hours)){
       cycle <- forecast_hours[j]
       curr_forecast_time <- forecast_date + lubridate::hours(cycle)
-      if(cycle < 10) cycle <- paste0("0",cycle)
+      if(cycle < 10) cycle <- formatC(cycle, width = 2, format = "d", flag = "0")
       if(cycle == "00"){
         hours <- c(seq(0, 240, 6),seq(246, 840 , 6))
       }else{
         hours <- c(seq(0, 240, 6),seq(246, 384 , 6))
       }
-      hours_char <- hours
-      hours_char[which(hours < 100)] <- paste0("0",hours[which(hours < 100)])
-      hours_char[which(hours < 10)] <- paste0("0",hours_char[which(hours < 10)])
+      hours_char <- formatC(hours, width = 3, format = "d", flag = "0")
 
       message(paste0("Processing forecast time: ", curr_forecast_time))
 
@@ -247,10 +242,10 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
       if(all_downloaded & missing_files){
 
         #Remove existing files and overwrite
-        unlink(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle)))
+        unlink(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle), full.names = TRUE), force = TRUE)
 
         ens_index <- 1:31
-        #Run download_downscale_site() over the site_index
+        lon_list[lon_list > 180] <- lon_list[lon_list > 180] - 360
         #Run download_downscale_site() over the site_index
         output <- parallel::mclapply(X = ens_index,
                                      FUN = extract_sites,
@@ -288,7 +283,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
 
           message(paste0("Processing site: ", site_list[site_index]))
 
-          #Convert negetive longitudes to degrees east
+          #Convert negative longitudes to degrees east
           if(lon_list[site_index] < 0){
             lon_east <- 360 + lon_list[site_index]
           }else{

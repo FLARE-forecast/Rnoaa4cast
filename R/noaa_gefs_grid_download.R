@@ -16,7 +16,7 @@
 noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, output_directory, grid_name) {
 
 
-  download_grid <- function(ens_index, location, directory, hours_char, cycle, base_filename1, vars,working_directory){
+  download_grid <- function(ens_index, location, directory, hours_char, cycle, base_filename1, vars,working_directory, output_directory, num_cores = 1){
     #for(j in 1:31){
     if(ens_index == 1){
       base_filename2 <- paste0("gec00",".t",cycle,"z.pgrb2a.0p50.f")
@@ -30,6 +30,8 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
       base_filename2 <- paste0("gep",ens_name,".t",cycle,"z.pgrb2a.0p50.f")
       curr_hours <- hours_char
     }
+
+    log_file <- file.path(output_directory, "download.log")
 
 
     for(i in 1:length(curr_hours)){
@@ -57,8 +59,10 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
       if(download_file){
         download_tries <- 1
         download_failed <- TRUE
-        while(download_failed & download_tries < 2){
-          Sys.sleep(1)
+        while(download_failed & download_tries <= 1){
+          if(download_tries > 1) {
+            Sys.sleep(5)
+          }
           download_failed <- FALSE
           out <- tryCatch(download.file(paste0(base_filename1, file_name, vars, location, directory),
                                         destfile = destfile, quiet = TRUE),
@@ -69,22 +73,21 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
                           },
                           finally = NULL)
 
-          if(is.na(out) | file.info(destfile)$size == 0){
-            download_failed <- TRUE
-          }else{
+          download_check <- noaaGEFSpoint:::check_grib_file(file = destfile, hour = curr_hours[i])
 
-            grib <- rgdal::readGDAL(destfile, silent = TRUE)
-            if(is.null(grib$band1) | is.null(grib$band2) | is.null(grib$band3) | is.null(grib$band4) | is.null(grib$band5)){
-              if(curr_hours[i] != "000" & (is.null(grib$band6) | is.null(grib$band7) | is.null(grib$band8) | is.null(grib$band9))){
-                unlink(destfile)
-                download_failed <- TRUE
-              }else{
-                unlink(destfile)
-                download_failed <- TRUE
-              }
-            }
+          if(download_check == "Incorrect fields") {
+            message("Incorrect fields in ", destfile, ".")
           }
-          download_tries <- download_tries + 1
+
+          #
+          # download_tries <- download_tries + 1
+          # if(download_failed) {
+          #   dat <- data.frame(file_name = destfile, download = FALSE, download_time = lubridate::with_tz(Sys.time(), tzone = "UTC"),
+          #                     retry = FALSE, retry_time = NA)
+          #   write.table(dat, log_file, append = apnd_log, sep = "\t",
+          #               row.names = FALSE, col.names = !apnd_log)
+          #   message("Download failed for ", destfile, " [", Sys.time(), "]") #\nRetrying download ", download_tries - 1, "/5...")
+          # }
         }
       }
     }
@@ -171,7 +174,7 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
 
           if(new_download){
 
-            print(paste("Downloading", forecasted_date, cycle))
+            message(paste("Downloading", forecasted_date, cycle))
 
             if(cycle == "00"){
               hours <- c(seq(0, 240, 6),seq(246, 840 , 6))
@@ -191,17 +194,32 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
 
             ens_index <- 1:31
 
+            # parallel::mclapply(X = ens_index,
+            #                    FUN = download_grid,
+            #                    location,
+            #                    directory,
+            #                    hours_char,
+            #                    cycle,
+            #                    base_filename1,
+            #                    vars,
+            #                    working_directory = model_date_hour_dir,
+            #                    output_directory = output_directory,
+            #                    mc.cores = num_cores,
+            #
+            # )
+
             lapply(X = ens_index,
-                               FUN = download_grid,
-                               location,
-                               directory,
-                               hours_char,
-                               cycle,
-                               base_filename1,
-                               vars,
-                               working_directory = model_date_hour_dir)
+                   FUN = download_grid,
+                   location,
+                   directory,
+                   hours_char,
+                   cycle,
+                   base_filename1,
+                   vars,
+                   working_directory = model_date_hour_dir,
+                   output_directory = output_directory)
           }else{
-            print(paste("Existing", forecasted_date, cycle))
+            message(paste("Existing", forecasted_date, cycle))
           }
         }
       }

@@ -1,6 +1,7 @@
 ##' @title Download and Downscale NOAA GEFS for a single site
 ##' @return None
 ##'
+##' @param read_from_path, Default FALSE
 ##' @param site_index, index of site_list, lat_list, lon_list to be downloaded
 ##' @param lat_list, vector of latitudes that correspond to site codes
 ##' @param lon_list, vector of longitudes that correspond to site codes
@@ -37,7 +38,7 @@
   lon.dom <- seq(0, 359, by = 0.5) #domain of longitudes in model (1 degree resolution)
   lat.dom <- seq(-90, 90, by = 0.5) #domain of latitudes in model (1 degree resolution)
 
-  if (trimws(read_from_path) == '' || is.null(read_from_path)) {
+  if (!read_from_path || is.null(read_from_path)) {
     urls.out <- tryCatch(rNOMADS::GetDODSDates(abbrev = "gens_bc"),
                          error = function(e){
                            warning(paste(e$message, "NOAA Server not responsive"),
@@ -213,8 +214,7 @@
             lon <- which.min(abs(lon.dom - lon_east)) - 1 #NOMADS indexes start at 0
             lat <- which.min(abs(lat.dom - lat_list[site_index])) - 1 #NOMADS indexes start at 0
 
-            noaa_data[[j]] <- tryCatch(rNOMADS::DODSGrab(read_from_path = read_from_path,
-                                                         model.url = curr_model.url,
+            noaa_data[[j]] <- tryCatch(rNOMADS::DODSGrab(model.url = curr_model.url,
                                                          model.run = model.run,
                                                          variables	= noaa_var_names[j],
                                                          time = c(0, 64),
