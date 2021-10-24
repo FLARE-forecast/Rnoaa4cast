@@ -185,7 +185,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
       message(paste0("Processing forecast time: ", curr_forecast_time))
 
       if(s3_mode){
-        s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name_raw, forecast_date, cycle))
+        s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name_raw, forecast_date, cycle), max = Inf)
         s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
         empty <- grepl("/$", s3_list)
         s3_list <- s3_list[!empty]
@@ -218,7 +218,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
       missing_files <- FALSE
       for(site_index in 1:length(site_list)){
         if(s3_mode){
-          s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name, site_list[site_index], forecast_date,cycle))
+          s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name, site_list[site_index], forecast_date,cycle), max = Inf)
           s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
           empty <- grepl("/$", s3_list)
           s3_list <- s3_list[!empty]
@@ -239,7 +239,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
 
       if(write_intermediate_ncdf == TRUE & cycle == "00"){
         if(s3_mode){
-          s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name, site_list[site_index], forecast_date,cycle))
+          s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name, site_list[site_index], forecast_date,cycle), max = Inf)
           s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
           empty <- grepl("/$", s3_list)
           s3_list <- s3_list[!empty]

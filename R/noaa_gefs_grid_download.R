@@ -103,7 +103,7 @@ noaa_gefs_grid_download <- function(lat_list,
 
 
           if(s3_mode){
-            s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = model_date_hour_dir)
+            s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = model_date_hour_dir, max = Inf)
             s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
             empty <- grepl("/$", s3_list)
             s3_list <- s3_list[!empty]
