@@ -265,12 +265,20 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
       if(all_downloaded & missing_files){
 
         if(s3_mode){
+
+          if(!dir.exists(file.path(output_directory, model_name_raw, forecast_date, cycle))){
+            dir.create(file.path(output_directory, model_name_raw, forecast_date, cycle), recursive=TRUE, showWarnings = FALSE)
+          }
+
           aws.s3::s3sync(path = file.path(output_directory, model_name_raw, forecast_date, cycle),
                          bucket = bucket,
                          prefix = file.path(model_name_raw, forecast_date, cycle),
                          direction = "download")
-          for(s3_file_index in 1:length(existing_ncfiles))
+          if(length(existing_ncfiles) > 0){
+          for(s3_file_index in 1:length(existing_ncfiles)){
             aws.s3::delete_object(object = existing_ncfiles[s3_file_index], bucket = bucket)
+          }
+          }
         }else{
           #Remove existing files and overwrite
           unlink(list.files(file.path(output_directory, model_name, site_list[site_index], forecast_date,cycle), full.names = TRUE), force = TRUE)
@@ -446,7 +454,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
             start_date <- forecast_noaa_ens %>%
               dplyr::summarise(min_time = min(time))
 
-            identifier <- paste(model_name, site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
+            identifier <- paste(basename(model_name), site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
                                 format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
 
             fname_6r <- paste0(identifier,"_ens",ens_name,".nc")
@@ -458,7 +466,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
 
             if(downscale){
 
-              identifier_ds <- paste(model_name_ds, site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
+              identifier_ds <- paste(basename(model_name_ds), site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
                                      format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
 
               modelds_site_date_hour_dir
@@ -469,7 +477,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
               noaaGEFSpoint::temporal_downscale(input_file = output_file, output_file = output_file_ds, overwrite = TRUE, hr = 1)
 
               if(debias){
-                identifier_ds_debias <- paste(model_name_ds_debias, site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
+                identifier_ds_debias <- paste(basename(model_name_ds_debias), site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
                                               format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
 
                 fname_6r_ds_debias <- paste0(identifier_ds_debias,"_ens",ens_name,".nc")
@@ -485,6 +493,8 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
               }
             }
             if(s3_mode){
+              unlink(file.path(output_directory, model_name_raw, forecast_date, cycle), recursive = TRUE)
+
               file_6r <- file.path(model_site_date_hour_dir,fname_6r)
               success_transfer <- aws.s3::put_object(file = file.path(output_directory, file_6r),
                                                      object = file_6r,
@@ -494,7 +504,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
               }
 
               if(downscale){
-                file_6r_ds <- file.path(modelds_debias_site_date_hour_dir, fname_6r_ds)
+                file_6r_ds <- file.path(modelds_site_date_hour_dir, fname_6r_ds)
                 success_transfer <- aws.s3::put_object(file = file.path(output_directory, file_6r_ds),
                                                        object = file_6r_ds,
                                                        bucket = bucket)
