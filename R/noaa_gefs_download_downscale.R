@@ -54,7 +54,7 @@ noaa_gefs_download_downscale <- function(site_list,
 
     message("downloading NOAA using single point method.  Note: only the first 16 days of a 35-day forecast are able to be downloading using this method")
 
-    noaaGEFSpoint::noaa_gefs_point_download_downscale(
+    Rnoaa4cast::noaa_gefs_point_download_downscale(
       read_from_path = read_from_path,
       lat_list = lat_list,
       lon_list = lon_list,
@@ -70,7 +70,7 @@ noaa_gefs_download_downscale <- function(site_list,
   }else{
 
     if(is.na(process_specific_date)){
-      noaaGEFSpoint::noaa_gefs_grid_download(lat_list = lat_list,
+      Rnoaa4cast::noaa_gefs_grid_download(lat_list = lat_list,
                                              lon_list = lon_list,
                                              forecast_time = forecast_time,
                                              forecast_date = forecast_date,
@@ -79,7 +79,7 @@ noaa_gefs_download_downscale <- function(site_list,
                                              grid_name = grid_name)
     }
 
-    noaaGEFSpoint::noaa_gefs_grid_process_downscale(lat_list = lat_list,
+    Rnoaa4cast::noaa_gefs_grid_process_downscale(lat_list = lat_list,
                                                     lon_list = lon_list,
                                                     site_list = site_list,
                                                     downscale = downscale,

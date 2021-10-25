@@ -461,7 +461,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
             output_file <- file.path(output_directory, model_site_date_hour_dir,fname_6r)
 
             #Write netCDF
-            noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa_ens,ens, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = TRUE)
+            Rnoaa4cast::write_noaa_gefs_netcdf(df = forecast_noaa_ens,ens, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = TRUE)
 
 
             if(downscale){
@@ -474,7 +474,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
               output_file_ds <- file.path(output_directory, modelds_site_date_hour_dir,fname_6r_ds)
 
               #Run downscaling
-              noaaGEFSpoint::temporal_downscale(input_file = output_file, output_file = output_file_ds, overwrite = TRUE, hr = 1)
+              Rnoaa4cast::temporal_downscale(input_file = output_file, output_file = output_file_ds, overwrite = TRUE, hr = 1)
 
               if(debias){
                 identifier_ds_debias <- paste(basename(model_name_ds_debias), site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
@@ -489,7 +489,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
                                                 LongWave = c(debias_ccoefficients[site_index]$lw_intercept, debias_coefficients[site_index]$lw_slope),
                                                 WindSpeed = c(debias_coefficients[site_index]$wind_intercept, debias_coefficients[site_index]$wind_slope))
 
-                noaaGEFSpoint::debias_met_forecast(input_file = output_file_ds, output_file = output_file_ds_debias, spatial_downscale_coeff, overwrite = TRUE)
+                Rnoaa4cast::debias_met_forecast(input_file = output_file_ds, output_file = output_file_ds_debias, spatial_downscale_coeff, overwrite = TRUE)
               }
             }
             if(s3_mode){

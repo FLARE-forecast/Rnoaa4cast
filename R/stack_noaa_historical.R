@@ -18,7 +18,9 @@ stack_noaa_forecasts <- function(forecast_dates,
                                  noaa_model,
                                  output_directory,
                                  model_name = "observed-met-noaa", # file name of the output
-                                 dates_w_errors = NA
+                                 dates_w_errors = NA,
+                                 s3_mode = FALSE,
+                                 bucket = NULL
 ){
 
   cf_met_vars <- c("air_temperature",
@@ -48,16 +50,34 @@ stack_noaa_forecasts <- function(forecast_dates,
   cf_units <- cf_var_units1
   identifier <- paste(model_name, site,sep="_")
   fname <- paste0(identifier,".nc")
-  output_file <- file.path(output_directory, fname)
-  stacked_directory <- file.path(output_directory, paste0(noaa_model, "_stacked"))
+  output_file <- file.path(output_directory, site, fname)
+  stacked_directory <- file.path(paste0(noaa_model, "_stacked"), site)
+  local_stacked_directory <- file.path(output_directory, stacked_directory)
+  stacked_directory_1hr <- file.path("noaa/NOAAGEFS_1hr_stacked", site)
+  local_stacked_directory_1hr <- file.path(output_directory, "noaa/NOAAGEFS_1hr_stacked", site)
+
+  noaa6hr_model_directory <- file.path(noaa_model, site)
+  local_noaa6hr_model_directory <- file.path(output_directory, noaa_model, site)
 
   # set up directories
-  if(!dir.exists(stacked_directory)){
-    dir.create(stacked_directory, recursive=TRUE, showWarnings = FALSE)
+  if(!dir.exists(local_stacked_directory)){
+    dir.create(local_stacked_directory, recursive=TRUE, showWarnings = FALSE)
   }
 
   # check output directory to see if there are already existing files to append to
-  hist_files <- list.files(file.path(stacked_directory, site))
+  if(s3_mode){
+    s3_objects <- aws.s3::get_bucket(bucket = bucket,
+                                     prefix = stacked_directory,
+                                     max = Inf)
+    s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+    empty <- grepl("/$", s3_list)
+    s3_list <- s3_list[!empty]
+    hist_files <- s3_list
+  }else{
+    hist_files <- list.files(local_stacked_directory, full.names = TRUE)
+  }
+
+  hist_files <- hist_files[stringr::str_detect(hist_files, model_name)]
   hist_met_all <- NULL
   run_fx <- TRUE
   append_data <- FALSE
@@ -65,9 +85,17 @@ stack_noaa_forecasts <- function(forecast_dates,
 
   if(length(hist_files) > 1){
     for(i in 1:length(hist_files)){
-      ens <- dplyr::last(unlist(stringr::str_split(basename(hist_files[i]),"_")))
+      if(s3_mode){
+        aws.s3::save_object(object = hist_files[i],
+                            bucket = bucket,
+                            file = file.path(output_directory, hist_files[i]))
+        curr_hist_file <- file.path(output_directory, hist_files[i])
+      }else{
+        curr_hist_file <- hist_files[i]
+      }
+      ens <- dplyr::last(unlist(stringr::str_split(basename(curr_hist_file),"_")))
       ens <- as.numeric(stringr::str_sub(ens,4,5))
-      hist_met_nc <- ncdf4::nc_open(file.path(stacked_directory, site, hist_files[i]))
+      hist_met_nc <- ncdf4::nc_open(curr_hist_file)
       hist_met_time <- ncdf4::ncvar_get(hist_met_nc, "time")
       origin <- stringr::str_sub(ncdf4::ncatt_get(hist_met_nc, "time")$units, 13, 28)
       origin <- lubridate::ymd_hm(origin)
@@ -108,7 +136,17 @@ stack_noaa_forecasts <- function(forecast_dates,
 
   for(k in 1:length(dates)){
 
-    avialable_cycles <- list.files(file.path(noaa_directory, noaa_model, site, dates[k]))
+    if(s3_mode){
+      s3_objects <- aws.s3::get_bucket(bucket = bucket,
+                                       prefix = file.path(noaa6hr_model_directory, dates[k]),
+                                       max = Inf)
+      s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+      empty <- grepl("/$", s3_list)
+      s3_list <- s3_list[!empty]
+      avialable_cycles <- s3_list
+    }else{
+      avialable_cycles <- list.files(file.path(local_noaa6hr_model_directory, dates[k]))
+    }
     if(length(avialable_cycles) < 4 | dates[k] %in% lubridate::as_date(dates_w_errors)){
       missing_forecasts <- c(missing_forecasts, k)
     }
@@ -153,40 +191,57 @@ stack_noaa_forecasts <- function(forecast_dates,
 
   # loop through each date of forecasts and extract the first day, stack together to create a continuous dataset of day 1 forecasts
 
-
-
   if(run_fx){
     for(k in 1:length(dates)){
 
-      noaa_model_directory <- file.path(noaa_directory, noaa_model, site, dates[k])
+      noaa_model_directory <- file.path(output_directory, noaa_model, site, dates[k])
       cycle <- c("00", "06", "12", "18") #list.files(noaa_model_directory)
 
 
       for(f in 1:length(cycle)){
 
         date_time <- lubridate::as_datetime(dates[k]) + lubridate::hours(as.numeric(cycle[f]))
-        forecast_dir <- file.path(noaa_model_directory, cycle[f])
-        print(forecast_dir)
+        local_forecast_dir <- file.path(local_noaa6hr_model_directory, dates[k], cycle[f])
 
-        if(!is.null(forecast_dir)){
 
-          forecast_files <- list.files(forecast_dir, pattern = ".nc", full.names = TRUE)
+        if(s3_mode){
+          s3_objects <- aws.s3::get_bucket(bucket = bucket,
+                                           prefix = file.path(noaa6hr_model_directory, dates[k], cycle[f]),
+                                           max = Inf)
+          s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+          empty <- grepl("/$", s3_list)
+          forecast_files <- s3_list[!empty]
+          forecast_files <- forecast_files[stringr::str_detect(forecast_files, ".nc")]
           nfiles <- length(forecast_files)
-
+        }else{
+          if(!is.null(local_forecast_dir)){
+            forecast_files <- list.files(file.path(local_forecast_dir, dates[k], cycle[f]), pattern = ".nc", full.names = TRUE)
+            nfiles <- length(forecast_files)
+          }
         }
 
-        for(j in 1:nfiles){
+        if(nfiles > 0){
 
-          if(!is.null(forecast_dir)) {
+          for(j in 1:nfiles){
 
-            ens <- dplyr::last(unlist(stringr::str_split(basename(forecast_files[j]),"_")))
+            if(s3_mode){
+              local_file <- file.path(output_directory, forecast_files[j])
+              aws.s3::save_object(object = forecast_files[j],
+                                  bucket = bucket,
+                                  file = local_file)
+            }else{
+             local_file <-  forecast_files[j]
+            }
+            ens <- dplyr::last(unlist(stringr::str_split(basename(local_file),"_")))
             ens <- stringr::str_sub(ens,1,5)
-            noaa_met_nc <- ncdf4::nc_open(forecast_files[j])
+            noaa_met_nc <- ncdf4::nc_open(local_file)
             noaa_met_time <- ncdf4::ncvar_get(noaa_met_nc, "time")
             origin <- stringr::str_sub(ncdf4::ncatt_get(noaa_met_nc, "time")$units, 13, 28)
             origin <- lubridate::ymd_hm(origin)
             noaa_met_time <- origin + lubridate::hours(noaa_met_time)
             noaa_met <- tibble::tibble(time = noaa_met_time)
+            lat <- ncdf4::ncvar_get(noaa_met_nc, "latitude")
+            lon <- ncdf4::ncvar_get(noaa_met_nc, "longitude")
 
             for(i in 1:length(cf_met_vars)){
               noaa_met <- cbind(noaa_met, ncdf4::ncvar_get(noaa_met_nc, cf_met_vars[i]))
@@ -227,11 +282,6 @@ stack_noaa_forecasts <- function(forecast_dates,
 
           }
         }
-
-        noaa_met_nc <- ncdf4::nc_open(forecast_files[1])
-        lat <- ncdf4::ncvar_get(noaa_met_nc, "latitude")
-        lon <- ncdf4::ncvar_get(noaa_met_nc, "longitude")
-        ncdf4::nc_close(noaa_met_nc)
       }
     }
 
@@ -241,9 +291,9 @@ stack_noaa_forecasts <- function(forecast_dates,
     forecast_noaa <- noaa_obs_out %>%
       dplyr::rename(NOAA.member = ens) %>%
       dplyr::select(time, NOAA.member, air_temperature,
-             air_pressure, relative_humidity, surface_downwelling_longwave_flux_in_air,
-             surface_downwelling_shortwave_flux_in_air, precipitation_flux,
-             specific_humidity, wind_speed) %>%
+                    air_pressure, relative_humidity, surface_downwelling_longwave_flux_in_air,
+                    surface_downwelling_shortwave_flux_in_air, precipitation_flux,
+                    specific_humidity, wind_speed) %>%
       dplyr::arrange(time, NOAA.member)
 
     for (ens in 1:31) { # i is the ensemble number
@@ -269,15 +319,15 @@ stack_noaa_forecasts <- function(forecast_dates,
       forecast_noaa_ens$precipitation_flux[2:nrow(forecast_noaa_ens)] <- forecast_noaa_ens$precipitation_flux[1:(nrow(forecast_noaa_ens)-1)]
 
       next_time_step <- tibble::tibble(time = forecast_noaa_ens$time[nrow(forecast_noaa_ens)] + lubridate::hours(6),
-                               NOAA.member = ens,
-                               air_temperature = NA,
-                               air_pressure = NA,
-                               relative_humidity = NA,
-                               surface_downwelling_longwave_flux_in_air = last_longwave,
-                               surface_downwelling_shortwave_flux_in_air = last_shortwave,
-                               precipitation_flux = last_precip,
-                               specific_humidity = NA,
-                               wind_speed = NA)
+                                       NOAA.member = ens,
+                                       air_temperature = NA,
+                                       air_pressure = NA,
+                                       relative_humidity = NA,
+                                       surface_downwelling_longwave_flux_in_air = last_longwave,
+                                       surface_downwelling_shortwave_flux_in_air = last_shortwave,
+                                       precipitation_flux = last_precip,
+                                       specific_humidity = NA,
+                                       wind_speed = NA)
 
 
 
@@ -311,32 +361,53 @@ stack_noaa_forecasts <- function(forecast_dates,
 
       model_name_6hr <- paste0(model_name, "-6hr")
       identifier <- paste(model_name_6hr, site, format(dplyr::first(forecast_noaa_ens$time), "%Y-%m-%dT%H"), sep="_")
-      model_site_dir <- file.path(stacked_directory, site)
 
-      if(!dir.exists(model_site_dir)){
-        dir.create(model_site_dir, recursive=TRUE, showWarnings = FALSE)
+      if(!dir.exists(local_stacked_directory)){
+        dir.create(local_stacked_directory, recursive=TRUE, showWarnings = FALSE)
       }
 
       fname <- paste0(identifier,"_ens",ens_name,".nc")
-      output_file <- file.path(model_site_dir,fname)
+      output_file <- file.path(local_stacked_directory,fname)
 
       #Write netCDF
-      noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa_ens,ens, lat = lat, lon = lon, cf_units = cf_var_units1, output_file = output_file, overwrite = TRUE)
+      Rnoaa4cast::write_noaa_gefs_netcdf(df = forecast_noaa_ens,
+                                            ens, lat = lat,
+                                            lon = lon,
+                                            cf_units = cf_var_units1,
+                                            output_file = output_file,
+                                            overwrite = TRUE)
 
-
-      stacked_directory_1hr <- file.path(output_directory, "NOAAGEFS_1hr_stacked")
-      model_site_dir_1hr <- file.path(stacked_directory_1hr, site)
-
-      if(!dir.exists(model_site_dir_1hr)){
-        dir.create(model_site_dir_1hr, recursive=TRUE, showWarnings = FALSE)
+      if(!dir.exists(local_stacked_directory_1hr)){
+        dir.create(local_stacked_directory_1hr, recursive=TRUE, showWarnings = FALSE)
       }
 
       model_name_1hr <- paste0(model_name, "-1hr")
       identifier_ds <- paste(model_name_1hr, site, format(dplyr::first(forecast_noaa_ens$time), "%Y-%m-%dT%H"), sep="_")
-      fname_ds <- file.path(model_site_dir_1hr, paste0(identifier_ds,"_ens",ens_name,".nc"))
+      fname_ds <- paste0(identifier_ds,"_ens",ens_name,".nc")
+      output_file_ds <- file.path(local_stacked_directory_1hr, fname_ds)
 
       #Run downscaling
-      noaaGEFSpoint::temporal_downscale(input_file = output_file, output_file = fname_ds, overwrite = TRUE, hr = 1)
+      Rnoaa4cast::temporal_downscale(input_file = output_file,
+                                        output_file = output_file_ds,
+                                        overwrite = TRUE,
+                                        hr = 1)
+
+      if(s3_mode){
+        unlink(local_noaa6hr_model_directory, recursive = TRUE)
+        success_transfer <- aws.s3::put_object(file = file.path(local_stacked_directory,fname),
+                                               object = file.path(stacked_directory,fname),
+                                               bucket = bucket)
+        if(success_transfer){
+          unlink(file.path(local_stacked_directory,fname), force = TRUE)
+        }
+        success_transfer <- aws.s3::put_object(file = file.path(local_stacked_directory_1hr,fname_ds),
+                                               object = file.path(stacked_directory_1hr,fname_ds),
+                                               bucket = bucket)
+        if(success_transfer){
+          unlink(file.path(local_stacked_directory_1hr,fname_ds), force = TRUE)
+        }
+      }
     }
+    unlink(local_noaa6hr_model_directory, recursive = TRUE)
   }
 }
