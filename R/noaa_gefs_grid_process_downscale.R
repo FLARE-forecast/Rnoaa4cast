@@ -195,7 +195,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
       }
 
 
-      hours_present <- as.numeric(stringr::str_sub(raw_files, start = 25, end = 27))
+      hours_present <- as.numeric(stringr::str_sub(basename(raw_files), start = 25, end = 27))
 
       all_downloaded <- FALSE
 
@@ -239,7 +239,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
 
       if(write_intermediate_ncdf == TRUE & cycle == "00"){
         if(s3_mode){
-          s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name, site_list[site_index], forecast_date,cycle), max = Inf)
+          s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name, site_list[1], forecast_date,cycle), max = Inf)
           s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
           empty <- grepl("/$", s3_list)
           s3_list <- s3_list[!empty]
@@ -274,11 +274,6 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
                          bucket = bucket,
                          prefix = file.path(model_name_raw, forecast_date, cycle),
                          direction = "download")
-          if(length(existing_ncfiles) > 0){
-          for(s3_file_index in 1:length(existing_ncfiles)){
-            aws.s3::delete_object(object = existing_ncfiles[s3_file_index], bucket = bucket)
-          }
-          }
         }else{
           #Remove existing files and overwrite
           unlink(list.files(file.path(output_directory, model_name, site_list[site_index], forecast_date,cycle), full.names = TRUE), force = TRUE)
@@ -331,6 +326,19 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
 
           model_site_date_hour_dir <- file.path(model_name, site_list[site_index], forecast_date,cycle)
 
+          if(s3_mode){
+            s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name, site_list[site_index], forecast_date,cycle), max = Inf)
+            s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+            empty <- grepl("/$", s3_list)
+            s3_list <- s3_list[!empty]
+            existing_ncfiles <- s3_list
+          if(length(existing_ncfiles) > 0){
+            for(s3_file_index in 1:length(existing_ncfiles)){
+              aws.s3::delete_object(object = existing_ncfiles[s3_file_index], bucket = bucket)
+            }
+          }
+          }
+
           if(!dir.exists(file.path(output_directory, model_site_date_hour_dir))){
             dir.create(file.path(output_directory, model_site_date_hour_dir), recursive=TRUE, showWarnings = FALSE)
           }else{
@@ -344,7 +352,21 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
             }else{
               unlink(list.files(file.path(output_directory, modelds_site_date_hour_dir), full.names = TRUE))
             }
+            if(s3_mode){
+              s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name_ds, site_list[site_index], forecast_date,cycle), max = Inf)
+              s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+              empty <- grepl("/$", s3_list)
+              s3_list <- s3_list[!empty]
+              existing_ncfiles <- s3_list
+              if(length(existing_ncfiles) > 0){
+                for(s3_file_index in 1:length(existing_ncfiles)){
+                  aws.s3::delete_object(object = existing_ncfiles[s3_file_index], bucket = bucket)
+                }
+              }
+            }
           }
+
+
 
           if(debias){
             modelds_debias_site_date_hour_dir <- file.path(model_name_ds_debias,site_list[site_index], forecast_date,cycle)
@@ -353,8 +375,19 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
             }else{
               unlink(list.files(file.path(output_directory, modelds_debias_site_date_hour_dir), full.names = TRUE))
             }
+            if(s3_mode){
+              s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name_ds_debias, site_list[site_index], forecast_date,cycle), max = Inf)
+              s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+              empty <- grepl("/$", s3_list)
+              s3_list <- s3_list[!empty]
+              existing_ncfiles <- s3_list
+              if(length(existing_ncfiles) > 0){
+                for(s3_file_index in 1:length(existing_ncfiles)){
+                  aws.s3::delete_object(object = existing_ncfiles[s3_file_index], bucket = bucket)
+                }
+              }
+            }
           }
-
 
           noaa_data <- list()
 

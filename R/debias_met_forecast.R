@@ -98,7 +98,7 @@ debias_met_forecast <- function(input_file, output_file, spatial_downscale_coeff
     select(time, NOAA.member, all_of(cf_var_names))
 
   #Write netCDF
-  noaaGEFSpoint::write_noaa_gefs_netcdf(df = noaa_met,
+  Rnoaa4cast::write_noaa_gefs_netcdf(df = noaa_met,
                                         ens = ens,
                                         lat = lat.in,
                                         lon = lon.in,
