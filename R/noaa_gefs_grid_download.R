@@ -182,8 +182,7 @@ noaa_gefs_grid_download <- function(lat_list,
                                     },
                                     finally = NULL)
 
-                    #download_check <- noaaGEFSpoint:::check_grib_file(file = destfile, hour = curr_hours[i])
-                    download_check <- check_grib_file(file = destfile, hour = curr_hours[hr])
+                    download_check <- Rnoaa4cast:::check_grib_file(file = destfile, hour = curr_hours[i])
 
                     if(download_check == FALSE){
                       unlink(destfile, force = TRUE)

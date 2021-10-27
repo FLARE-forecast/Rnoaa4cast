@@ -253,7 +253,7 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
 
           noaa_data$air_temperature$value <- noaa_data$air_temperature$value + 273.15
 
-          relative_humidity[which(!is.na(noaa_data$specific_humidity$value))] <- noaaGEFSpoint:::qair2rh(qair = noaa_data$specific_humidity$value[which(!is.na(noaa_data$specific_humidity$value))],
+          relative_humidity[which(!is.na(noaa_data$specific_humidity$value))] <- Rnoaa4cast:::qair2rh(qair = noaa_data$specific_humidity$value[which(!is.na(noaa_data$specific_humidity$value))],
                                                                                          T = noaa_data$air_temperature$value[which(!is.na(noaa_data$specific_humidity$value))],
                                                                                          press = noaa_data$air_pressure$value[which(!is.na(noaa_data$specific_humidity$value))])
 
@@ -290,7 +290,7 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
           output_file <- file.path(model_site_date_hour_dir,fname)
 
           #Write netCDF
-          noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa,ens = NA, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = TRUE)
+          Rnoaa4cast::write_noaa_gefs_netcdf(df = forecast_noaa,ens = NA, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = TRUE)
 
           if(downscale){
 
@@ -300,7 +300,7 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
             fname_ds <- file.path(modelds_site_date_hour_dir, paste0(identifier_ds,".nc"))
 
             #Run downscaling
-            noaaGEFSpoint::temporal_downscale(input_file = output_file, output_file = fname_ds, overwrite = TRUE, hr = 1)
+            Rnoaa4cast::temporal_downscale(input_file = output_file, output_file = fname_ds, overwrite = TRUE, hr = 1)
 
             if(debias){
 
@@ -315,7 +315,7 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
                                               LongWave = c(debias_ccoefficients[site_index]$lw_intercept, debias_coefficients[site_index]$lw_slope),
                                               WindSpeed = c(debias_coefficients[site_index]$wind_intercept, debias_coefficients[site_index]$wind_slope))
 
-              noaaGEFSpoint::debias_met_forecast(input_file = output_file, output_file = fname_ds, spatial_downscale_coeff, overwrite = TRUE)
+              Rnoaa4cast::debias_met_forecast(input_file = output_file, output_file = fname_ds, spatial_downscale_coeff, overwrite = TRUE)
 
             }
           }

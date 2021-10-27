@@ -44,7 +44,7 @@ noaa_cfs_download_downscale <- function(site_list,
   #The grid download requires longitude to be -180 to 180 so converting here
   lon_list[which(lon_list > 180)] <- lon_list[which(lon_list > 180)] - 360
 
-    noaaGEFSpoint::noaa_cfs_grid_download(lat_list = lat_list,
+    Rnoaa4cast::noaa_cfs_grid_download(lat_list = lat_list,
                        lon_list = lon_list,
                        forecast_time = forecast_time,
                        forecast_date = forecast_date,
@@ -52,7 +52,7 @@ noaa_cfs_download_downscale <- function(site_list,
                        output_directory = output_directory,
                        grid_name = grid_name)
 
-    noaaGEFSpoint::noaa_cfs_grid_process_downscale(lat_list = lat_list,
+    Rnoaa4cast::noaa_cfs_grid_process_downscale(lat_list = lat_list,
                                               lon_list = lon_list,
                                               site_list = site_list,
                                               downscale = downscale,
