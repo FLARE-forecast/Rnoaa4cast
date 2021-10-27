@@ -1,4 +1,4 @@
-Package: noaaGEFSpoint
+Package: Rnoaa4cast
 Title: Downloads And Temporally Downscales NOAA GEFS 6-hr Forecasts for a Point Location
 Version: 0.0.1.02.5
 Date: 2021-09-10

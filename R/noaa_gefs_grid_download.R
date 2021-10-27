@@ -13,85 +13,17 @@
 #' @export
 #'
 #' @examples
-noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, output_directory, grid_name) {
+noaa_gefs_grid_download <- function(lat_list,
+                                    lon_list,
+                                    forecast_time,
+                                    forecast_date,
+                                    model_name_raw,
+                                    output_directory,
+                                    grid_name,
+                                    s3_mode = FALSE,
+                                    bucket = NULL) {
 
-
-  download_grid <- function(ens_index, location, directory, hours_char, cycle, base_filename1, vars,working_directory, output_directory, num_cores = 1){
-    #for(j in 1:31){
-    if(ens_index == 1){
-      base_filename2 <- paste0("gec00",".t",cycle,"z.pgrb2a.0p50.f")
-      curr_hours <- hours_char[hours <= 384]
-    }else{
-      if((ens_index-1) < 10){
-        ens_name <- paste0("0",ens_index - 1)
-      }else{
-        ens_name <- as.character(ens_index -1)
-      }
-      base_filename2 <- paste0("gep",ens_name,".t",cycle,"z.pgrb2a.0p50.f")
-      curr_hours <- hours_char
-    }
-
-    log_file <- file.path(output_directory, "download.log")
-
-
-    for(i in 1:length(curr_hours)){
-      file_name <- paste0(base_filename2, curr_hours[i])
-
-      destfile <- paste0(working_directory,"/", file_name,".",grid_name,".grib")
-
-      if(file.exists(destfile)){
-
-        fsz <- file.info(destfile)$size
-        gribf <- file(destfile, "rb")
-        fsz4 <- fsz-4
-        seek(gribf,where = fsz4,origin = "start")
-        last4 <- readBin(gribf,"raw",4)
-        if(as.integer(last4[1])==55 & as.integer(last4[2])==55 & as.integer(last4[3])==55 & as.integer(last4[4])==55) {
-          download_file <- FALSE
-        } else {
-          download_file <- TRUE
-        }
-        close(gribf)
-      }else{
-        download_file <- TRUE
-      }
-
-      if(download_file){
-        download_tries <- 1
-        download_failed <- TRUE
-        while(download_failed & download_tries <= 1){
-          if(download_tries > 1) {
-            Sys.sleep(5)
-          }
-          download_failed <- FALSE
-          out <- tryCatch(download.file(paste0(base_filename1, file_name, vars, location, directory),
-                                        destfile = destfile, quiet = TRUE),
-                          error = function(e){
-                            warning(paste(e$message, "skipping", file_name),
-                                    call. = FALSE)
-                            return(NA)
-                          },
-                          finally = NULL)
-
-          download_check <- noaaGEFSpoint:::check_grib_file(file = destfile, hour = curr_hours[i])
-
-          if(download_check == "Incorrect fields") {
-            message("Incorrect fields in ", destfile, ".")
-          }
-
-          #
-          # download_tries <- download_tries + 1
-          # if(download_failed) {
-          #   dat <- data.frame(file_name = destfile, download = FALSE, download_time = lubridate::with_tz(Sys.time(), tzone = "UTC"),
-          #                     retry = FALSE, retry_time = NA)
-          #   write.table(dat, log_file, append = apnd_log, sep = "\t",
-          #               row.names = FALSE, col.names = !apnd_log)
-          #   message("Download failed for ", destfile, " [", Sys.time(), "]") #\nRetrying download ", download_tries - 1, "/5...")
-          # }
-        }
-      }
-    }
-  }
+  lon_list[which(lon_list > 180)] <- lon_list[which(lon_list > 180)] - 360
 
 
   if(length(which(lon_list > 180)) > 0){
@@ -99,8 +31,6 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
   }
 
   forecast_date <- lubridate::as_date(forecast_date)
-
-  model_dir <- file.path(output_directory, model_name_raw)
 
   curr_time <- lubridate::with_tz(Sys.time(), tzone = "UTC")
   curr_date <- lubridate::as_date(curr_time)
@@ -165,9 +95,20 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
 
           if(cycle < 10) cycle <- paste0("0",cycle)
 
-          model_date_hour_dir <- file.path(model_dir,forecasted_date,cycle)
-          if(!dir.exists(model_date_hour_dir)){
-            dir.create(model_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
+          model_date_hour_dir <- file.path(model_name_raw,forecasted_date,cycle)
+          full_dir <- file.path(output_directory, model_date_hour_dir)
+          if(!dir.exists(full_dir)){
+            dir.create(full_dir, recursive=TRUE, showWarnings = FALSE)
+          }
+
+
+          if(s3_mode){
+            s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = model_date_hour_dir, max = Inf)
+            s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+            empty <- grepl("/$", s3_list)
+            s3_list <- s3_list[!empty]
+          }else{
+            s3_list <- NULL
           }
 
           new_download <- TRUE
@@ -192,32 +133,73 @@ noaa_gefs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_
             curr_date <- paste0(curr_year,curr_month,curr_day)
             directory <- paste0("&dir=%2Fgefs.",curr_date,"%2F",cycle,"%2Fatmos%2Fpgrb2ap5")
 
-            ens_index <- 1:31
+            for(ens_index in 1:31){
+              if(ens_index == 1){
+                base_filename2 <- paste0("gec00",".t",cycle,"z.pgrb2a.0p50.f")
+                curr_hours <- hours_char[hours <= 384]
+              }else{
+                if((ens_index-1) < 10){
+                  ens_name <- paste0("0",ens_index - 1)
+                }else{
+                  ens_name <- as.character(ens_index -1)
+                }
+                base_filename2 <- paste0("gep",ens_name,".t",cycle,"z.pgrb2a.0p50.f")
+                curr_hours <- hours_char
+              }
 
-            # parallel::mclapply(X = ens_index,
-            #                    FUN = download_grid,
-            #                    location,
-            #                    directory,
-            #                    hours_char,
-            #                    cycle,
-            #                    base_filename1,
-            #                    vars,
-            #                    working_directory = model_date_hour_dir,
-            #                    output_directory = output_directory,
-            #                    mc.cores = num_cores,
-            #
-            # )
+              log_file <- file.path(output_directory, "download.log")
 
-            lapply(X = ens_index,
-                   FUN = download_grid,
-                   location,
-                   directory,
-                   hours_char,
-                   cycle,
-                   base_filename1,
-                   vars,
-                   working_directory = model_date_hour_dir,
-                   output_directory = output_directory)
+              for(hr in 1:length(curr_hours)){
+                file_name <- paste0(base_filename2, curr_hours[hr], ".",grid_name,".grib")
+                noaa_file_name <- paste0(base_filename2, curr_hours[hr])
+                destfile <- file.path(output_directory, model_date_hour_dir, file_name)
+
+                download_file <- FALSE
+                if(!s3_mode){
+                  if(!file.exists(destfile)){
+                    download_file <- TRUE
+                  }
+                }else{
+                  s3_file <- file.path(model_date_hour_dir, file_name)
+                  if(!(s3_file %in% s3_list)){
+                    download_file <- TRUE
+                  }
+                }
+                if(download_file){
+                  download_tries <- 1
+                  download_failed <- TRUE
+                  while(download_failed & download_tries <= 1){
+                    if(download_tries > 1) {
+                      Sys.sleep(5)
+                    }
+                    download_failed <- FALSE
+                    out <- tryCatch(download.file(paste0(base_filename1, noaa_file_name, vars, location, directory),
+                                                  destfile = destfile, quiet = TRUE),
+                                    error = function(e){
+                                      warning(paste(e$message, "skipping", file_name),
+                                              call. = FALSE)
+                                      return(NA)
+                                    },
+                                    finally = NULL)
+
+                    download_check <- Rnoaa4cast:::check_grib_file(file = destfile, hour = curr_hours[i])
+
+                    if(download_check == FALSE){
+                      unlink(destfile, force = TRUE)
+                    }else{
+                      if(s3_mode){
+                        success_transfer <- aws.s3::put_object(file = destfile,
+                                                               object = file.path(model_date_hour_dir, file_name),
+                                                               bucket = bucket)
+                        if(success_transfer){
+                          unlink(destfile, force = TRUE)
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }else{
             message(paste("Existing", forecasted_date, cycle))
           }

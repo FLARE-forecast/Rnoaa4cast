@@ -102,7 +102,7 @@ temporal_downscale <- function(input_file, output_file, overwrite = TRUE, hr = 1
     dplyr::select("time", all_of(cf_var_names), "NOAA.member")
 
   #Write netCDF
-  noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa_ds,
+  Rnoaa4cast::write_noaa_gefs_netcdf(df = forecast_noaa_ds,
                          ens = ens,
                          lat = lat.in,
                          lon = lon.in,

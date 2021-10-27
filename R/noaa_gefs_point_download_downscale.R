@@ -300,7 +300,7 @@
             output_file <- file.path(model_site_date_hour_dir,fname)
 
             #Write netCDF
-            noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa_ens,ens, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = overwrite)
+            Rnoaa4cast::write_noaa_gefs_netcdf(df = forecast_noaa_ens,ens, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = overwrite)
 
             if(downscale){
               #Downscale the forecast from 6hr to 1hr
@@ -316,7 +316,7 @@
               fname_ds <- file.path(modelds_site_date_hour_dir, paste0(identifier_ds,"_ens",ens_name,".nc"))
 
               #Run downscaling
-              noaaGEFSpoint::temporal_downscale(input_file = output_file, output_file = fname_ds, overwrite = overwrite, hr = 1)
+              Rnoaa4cast::temporal_downscale(input_file = output_file, output_file = fname_ds, overwrite = overwrite, hr = 1)
             }
           }
         }
