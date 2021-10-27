@@ -1,4 +1,4 @@
 library(testthat)
-library(noaaGEFSpoint)
+library(Rnoaa4cast)
 
-test_check("noaaGEFSpoint")
+test_check("Rnoaa4cast")
