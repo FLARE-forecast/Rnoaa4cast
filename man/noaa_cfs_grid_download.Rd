@@ -10,7 +10,8 @@ noaa_cfs_grid_download(
   forecast_time,
   forecast_date,
   model_name_raw,
-  output_directory
+  output_directory,
+  grid_name
 )
 }
 \arguments{

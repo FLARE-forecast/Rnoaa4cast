@@ -18,29 +18,53 @@ noaa_gefs_download_downscale(
   num_cores = 1,
   method = "point",
   overwrite = FALSE,
-  read_from_path = FALSE
+  read_from_path = FALSE,
+  grid_name = "neon",
+  process_specific_date = NA,
+  process_specific_cycle = NA,
+  delete_bad_files = TRUE,
+  write_intermediate_ncdf = TRUE
 )
 }
 \arguments{
+\item{site_list, }{vector of site codes, used in directory and file name generation}
+
 \item{lat_list, }{vector of latitudes that correspond to site codes}
 
 \item{lon_list, }{vector of longitudes that correspond to site codes}
 
-\item{output_directory, }{directory where the model output will be save}
+\item{output_directory}{path: directory where the model output will be save}
 
-\item{downscale, }{logical specifying whether to downscale from 6-hr to 1-hr}
+\item{downscale}{logical specifying whether to downscale from 6-hr to 1-hr}
 
-\item{run_parallel, }{logical whether to run on multiple cores}
+\item{debias}{logical: ...}
 
-\item{num_cores, }{number of cores used if run_parallel == TRUE}
+\item{run_parallel}{logical: whether to run on multiple cores}
+
+\item{num_cores}{number of cores used if run_parallel == TRUE}
+
+\item{method}{the "point",}
 
 \item{overwrite, }{logical stating to overwrite any existing output_file}
+
+\item{read_from_path}{= FALSE,}
+
+\item{grid_name}{"neon",}
+
+\item{process_specific_date}{...}
+
+\item{process_specific_cycle}{...}
+
+\item{delete_bad_files}{logical: ...}
+
+\item{write_intermediate_ncdf}{...}
 }
 \value{
 None
 }
 \description{
-Script to launch NOAA download and temporal downscaling
+Downloads a set of NOAA Global Ensemble Forecast System (GEFS)
+forecasts, downscaling them if requested.
 }
 \author{
 Quinn Thomas

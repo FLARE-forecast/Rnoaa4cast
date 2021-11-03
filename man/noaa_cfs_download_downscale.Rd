@@ -17,7 +17,8 @@ noaa_cfs_download_downscale(
   run_parallel = FALSE,
   num_cores = 1,
   method = "point",
-  overwrite = FALSE
+  overwrite = FALSE,
+  grid_name = "neon"
 )
 }
 \arguments{
