@@ -35,7 +35,9 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
                                              process_specific_date = NA,
                                              process_specific_cycle = NA,
                                              delete_bad_files = TRUE,
-                                             grid_name = "neon"){
+                                             grid_name = "neon",
+                                             s3_mode = FALSE,
+                                             bucket = NULL){
 
   extract_sites <- function(ens_index, hours_char, hours, cycle, site_list, lat_list, lon_list, working_directory, process_specific_date, grid_name){
 
@@ -139,20 +141,18 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
                 tcdcclm = tcdcclm))
   }
 
+  lon_list[which(lon_list > 180)] <- lon_list[which(lon_list > 180)] - 360
+
   noaa_var_names <- c("tmp2m", "pressfc", "rh2m", "dlwrfsfc",
                       "dswrfsfc", "apcpsfc",
                       "ugrd10m", "vgrd10m", "tcdcclm")
-
-
-  model_dir <- file.path(output_directory, model_name)
-  model_name_raw_dir <- file.path(output_directory, model_name_raw)
 
   curr_time <- lubridate::with_tz(Sys.time(), tzone = "UTC")
   curr_date <- lubridate::as_date(curr_time)
   potential_dates <- seq(curr_date - lubridate::days(3), curr_date, by = "1 day")
 
   if(reprocess){
-    potential_dates <- lubridate::as_date(list.dirs(model_name_raw_dir, recursive = FALSE, full.names = FALSE))
+    potential_dates <- lubridate::as_date(list.dirs(file.path(output_directory, model_name_raw), recursive = FALSE, full.names = FALSE))
   }
   #Remove dates before the new GEFS system
   if(is.na(process_specific_date)){
@@ -164,16 +164,12 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
 
   for(k in 1:length(potential_dates)){
 
-
-
     forecast_date <- lubridate::as_date(potential_dates[k])
     if(is.na(process_specific_cycle)){
       forecast_hours <- c(0,6,12,18)
     }else{
       forecast_hours <- process_specific_cycle
     }
-
-
 
     for(j in 1:length(forecast_hours)){
       cycle <- forecast_hours[j]
@@ -188,8 +184,18 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
 
       message(paste0("Processing forecast time: ", curr_forecast_time))
 
-      raw_files <- list.files(file.path(model_name_raw_dir,forecast_date,cycle))
-      hours_present <- as.numeric(stringr::str_sub(raw_files, start = 25, end = 27))
+      if(s3_mode){
+        s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name_raw, forecast_date, cycle), max = Inf)
+        s3_list <- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+        empty <- grepl("/$", s3_list)
+        s3_list <- s3_list[!empty]
+        raw_files <- s3_list
+      }else{
+        raw_files <- list.files(file.path(output_directory, model_name_raw, forecast_date, cycle))
+      }
+
+
+      hours_present <- as.numeric(stringr::str_sub(basename(raw_files), start = 25, end = 27))
 
       all_downloaded <- FALSE
 
@@ -210,20 +216,37 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
       }
 
       missing_files <- FALSE
-      for(site_index in 1:length(site_list)){
-        num_files <- length(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle)))
-        if(num_files < 31){
-          missing_files <- TRUE
-        }
+      #for(site_index in 1:length(site_list)){
+      if(s3_mode){
+        s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name, site_list[1], forecast_date,cycle), max = Inf)
+        s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+        empty <- grepl("/$", s3_list)
+        s3_list <- s3_list[!empty]
+        existing_ncfiles <- s3_list
+        num_files <- length(existing_ncfiles)
+      }else{
+        num_files <- length(list.files(file.path(output_directory, model_name, site_list[1], forecast_date,cycle)))
 
       }
+      if(num_files < 31){
+        missing_files <- TRUE
+      }
+      #}
 
       if(overwrite){
         missing_files <- TRUE
       }
 
       if(write_intermediate_ncdf == TRUE & cycle == "00"){
-        existing_ncfiles <- list.files(file.path(model_dir, site_list[1], forecast_date,cycle))
+        if(s3_mode){
+          s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name, site_list[1], forecast_date,cycle), max = Inf)
+          s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+          empty <- grepl("/$", s3_list)
+          s3_list <- s3_list[!empty]
+          existing_ncfiles <- s3_list
+        }else{
+          existing_ncfiles <- list.files(file.path(model_name, site_list[1], forecast_date,cycle))
+        }
         if(length(existing_ncfiles) == 31){
           split_filenames <- stringr::str_split(existing_ncfiles,pattern = "_")
           df <- as.data.frame(matrix(unlist(split_filenames), nrow = length(existing_ncfiles), byrow = TRUE))
@@ -241,218 +264,294 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
 
       if(all_downloaded & missing_files){
 
-        #Remove existing files and overwrite
-        unlink(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle), full.names = TRUE), force = TRUE)
+        if(s3_mode){
 
-        ens_index <- 1:31
-        lon_list[lon_list > 180] <- lon_list[lon_list > 180] - 360
-        #Run download_downscale_site() over the site_index
-        output <- parallel::mclapply(X = ens_index,
-                                     FUN = extract_sites,
-                                     hours_char = hours_char,
-                                     hours = hours,
-                                     cycle,
-                                     site_list,
-                                     lat_list,
-                                     lon_list,
-                                     working_directory = file.path(model_name_raw_dir,forecast_date,cycle),
-                                     process_specific_date = process_specific_date,
-                                     grid_name = grid_name,
-                                     mc.cores = num_cores
-                                     )
-        bad_ens_member <- FALSE
-        for(ens in 1:31){
-          if(is.null(unlist(output[[ens]][1]))){
-            bad_ens_member <- TRUE
-            if(delete_bad_files){
-              unlink(unlist(output[[ens]][2]))
-            }
-            message(paste0("Bad file: ", unlist(output[[ens]][2])))
-          }
-        }
-
-        if(bad_ens_member){
-          next()
-        }
-
-        forecast_times <- lubridate::as_datetime(forecast_date) + lubridate::hours(as.numeric(cycle)) + lubridate::hours(as.numeric(hours_char))
-
-        for(site_index in 1:length(site_list)){
-
-
-
-          message(paste0("Processing site: ", site_list[site_index]))
-
-          #Convert negative longitudes to degrees east
-          if(lon_list[site_index] < 0){
-            lon_east <- 360 + lon_list[site_index]
-          }else{
-            lon_east <- lon_list[site_index]
+          if(!dir.exists(file.path(output_directory, model_name_raw, forecast_date, cycle))){
+            dir.create(file.path(output_directory, model_name_raw, forecast_date, cycle), recursive=TRUE, showWarnings = FALSE)
           }
 
-          model_site_date_hour_dir <- file.path(model_dir, site_list[site_index], forecast_date,cycle)
-
-          if(!dir.exists(model_site_date_hour_dir)){
-            dir.create(model_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
-          }else{
-            unlink(list.files(model_site_date_hour_dir, full.names = TRUE))
+          for(k in 1:length(raw_files)){
+            aws.s3::save_object(object = raw_files[k], bucket = bucket, file = file.path(output_directory, raw_files[k]))
           }
 
-          if(downscale){
-            modelds_site_date_hour_dir <- file.path(output_directory,model_name_ds,site_list[site_index], forecast_date,cycle)
-            if(!dir.exists(modelds_site_date_hour_dir)){
-              dir.create(modelds_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
-            }else{
-              unlink(list.files(modelds_site_date_hour_dir, full.names = TRUE))
-            }
-          }
-
-          if(debias){
-            modelds_debias_site_date_hour_dir <- file.path(output_directory,model_name_ds_debias,site_list[site_index], forecast_date,cycle)
-            if(!dir.exists(modelds_debias_site_date_hour_dir)){
-              dir.create(modelds_debias_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
-            }else{
-              unlink(list.files(modelds_debias_site_date_hour_dir, full.names = TRUE))
-            }
-          }
-
-
-          noaa_data <- list()
-
-          for(v in 1:length(noaa_var_names)){
-
-            value <- NULL
-            ensembles <- NULL
-            forecast.date <- NULL
-
-            noaa_data[v] <- NULL
-
-
-
-            for(ens in 1:31){
-              curr_ens <- output[[ens]]
-
-              #             if(length(which(!is.na(curr_ens[[noaa_var_names[v]]][site_index, ]))) == 0){
-              #                message(paste0("skipping site: ",site_list[site_index], "because not in gridded raw data"))
-              #                next
-              #              }
-              value <- tryCatch({
-                c(value, curr_ens[[noaa_var_names[v]]][site_index, ])
-              },
-              error=function(e) {
-                message("curr_ens:")
-                message(curr_ens)
-                message(e)
-                stop()
+          ens_index <- 1:31
+          lon_list[lon_list > 180] <- lon_list[lon_list > 180] - 360
+          #Run download_downscale_site() over the site_index
+          output <- parallel::mclapply(X = ens_index,
+                                       FUN = extract_sites,
+                                       hours_char = hours_char,
+                                       hours = hours,
+                                       cycle,
+                                       site_list,
+                                       lat_list,
+                                       lon_list,
+                                       working_directory = file.path(output_directory, model_name_raw,forecast_date,cycle),
+                                       process_specific_date = process_specific_date,
+                                       grid_name = grid_name,
+                                       mc.cores = num_cores
+          )
+          bad_ens_member <- FALSE
+          for(ens in 1:31){
+            if(is.null(unlist(output[[ens]][1]))){
+              bad_ens_member <- TRUE
+              if(delete_bad_files){
+                unlink(unlist(output[[ens]][2]))
               }
-              )
-
-              ensembles <- c(ensembles, rep(ens, length(curr_ens[[noaa_var_names[v]]][site_index, ])))
-              forecast.date <- c(forecast.date, forecast_times)
+              message(paste0("Bad file: ", unlist(output[[ens]][2])))
             }
-            noaa_data[[v]] <- list(value = value,
-                                   ensembles = ensembles,
-                                   forecast.date = lubridate::as_datetime(forecast.date))
-
           }
 
-          #These are the cf standard names
-          cf_var_names <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
-                            "surface_downwelling_shortwave_flux_in_air", "precipitation_flux", "eastward_wind", "northward_wind","cloud_area_fraction")
+          if(bad_ens_member){
+            next()
+          }
 
-          #Replace "eastward_wind" and "northward_wind" with "wind_speed"
-          cf_var_names1 <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
-                             "surface_downwelling_shortwave_flux_in_air", "precipitation_flux","specific_humidity", "cloud_area_fraction","wind_speed")
+          forecast_times <- lubridate::as_datetime(forecast_date) + lubridate::hours(as.numeric(cycle)) + lubridate::hours(as.numeric(hours_char))
 
-          cf_var_units1 <- c("K", "Pa", "1", "Wm-2", "Wm-2", "kgm-2s-1", "1", "1", "ms-1")  #Negative numbers indicate negative exponents
-
-          names(noaa_data) <- cf_var_names
-
-          specific_humidity <- rep(NA, length(noaa_data$relative_humidity$value))
-
-          noaa_data$relative_humidity$value <- noaa_data$relative_humidity$value / 100
-
-          noaa_data$air_temperature$value <- noaa_data$air_temperature$value + 273.15
-
-          specific_humidity[which(!is.na(noaa_data$relative_humidity$value))] <- rh2qair(rh = noaa_data$relative_humidity$value[which(!is.na(noaa_data$relative_humidity$value))],
-                                                                                         T = noaa_data$air_temperature$value[which(!is.na(noaa_data$relative_humidity$value))],
-                                                                                         press = noaa_data$air_pressure$value[which(!is.na(noaa_data$relative_humidity$value))])
+          for(site_index in 1:length(site_list)){
 
 
-          #Calculate wind speed from east and north components
-          wind_speed <- sqrt(noaa_data$eastward_wind$value^2 + noaa_data$northward_wind$value^2)
 
-          forecast_noaa <- tibble::tibble(time = noaa_data$air_temperature$forecast.date,
-                                          NOAA.member = noaa_data$air_temperature$ensembles,
-                                          air_temperature = noaa_data$air_temperature$value,
-                                          air_pressure= noaa_data$air_pressure$value,
-                                          relative_humidity = noaa_data$relative_humidity$value,
-                                          surface_downwelling_longwave_flux_in_air = noaa_data$surface_downwelling_longwave_flux_in_air$value,
-                                          surface_downwelling_shortwave_flux_in_air = noaa_data$surface_downwelling_shortwave_flux_in_air$value,
-                                          precipitation_flux = noaa_data$precipitation_flux$value,
-                                          specific_humidity = specific_humidity,
-                                          cloud_area_fraction = noaa_data$cloud_area_fraction$value,
-                                          wind_speed = wind_speed)
+            message(paste0("Processing site: ", site_list[site_index]))
 
-          forecast_noaa$cloud_area_fraction <- forecast_noaa$cloud_area_fraction / 100 #Convert from % to proportion
-
-          # Convert the 3 hr precip rate to per second.
-          forecast_noaa$precipitation_flux <- forecast_noaa$precipitation_flux / (60 * 60 * 6)
-
-          for (ens in 1:31) { # i is the ensemble number
-
-
-            #Turn the ensemble number into a string
-            if(ens-1< 10){
-              ens_name <- paste0("0",ens-1)
+            #Convert negative longitudes to degrees east
+            if(lon_list[site_index] < 0){
+              lon_east <- 360 + lon_list[site_index]
             }else{
-              ens_name <- ens - 1
+              lon_east <- lon_list[site_index]
             }
 
-            forecast_noaa_ens <- forecast_noaa %>%
-              dplyr::filter(NOAA.member == ens) %>%
-              dplyr::filter(!is.na(air_temperature))
+            model_site_date_hour_dir <- file.path(model_name, site_list[site_index], forecast_date,cycle)
 
-            end_date <- forecast_noaa_ens %>%
-              dplyr::summarise(max_time = max(time))
+            if(s3_mode){
+              s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name, site_list[site_index], forecast_date,cycle), max = Inf)
+              s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+              empty <- grepl("/$", s3_list)
+              s3_list <- s3_list[!empty]
+              existing_ncfiles <- s3_list
+              if(length(existing_ncfiles) > 0){
+                for(s3_file_index in 1:length(existing_ncfiles)){
+                  aws.s3::delete_object(object = existing_ncfiles[s3_file_index], bucket = bucket)
+                }
+              }
+            }
 
-            start_date <- forecast_noaa_ens %>%
-              dplyr::summarise(min_time = min(time))
-
-            identifier <- paste(model_name, site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
-                                format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
-
-            fname <- paste0(identifier,"_ens",ens_name,".nc")
-            output_file <- file.path(model_site_date_hour_dir,fname)
-
-            #Write netCDF
-            noaaGEFSpoint::write_noaa_gefs_netcdf(df = forecast_noaa_ens,ens, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = TRUE)
+            if(!dir.exists(file.path(output_directory, model_site_date_hour_dir))){
+              dir.create(file.path(output_directory, model_site_date_hour_dir), recursive=TRUE, showWarnings = FALSE)
+            }else{
+              unlink(list.files(output_directory, model_site_date_hour_dir, full.names = TRUE))
+            }
 
             if(downscale){
+              modelds_site_date_hour_dir <- file.path(model_name_ds,site_list[site_index], forecast_date,cycle)
+              if(!dir.exists(file.path(output_directory, modelds_site_date_hour_dir))){
+                dir.create(file.path(output_directory, modelds_site_date_hour_dir), recursive=TRUE, showWarnings = FALSE)
+              }else{
+                unlink(list.files(file.path(output_directory, modelds_site_date_hour_dir), full.names = TRUE))
+              }
+              if(s3_mode){
+                s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name_ds, site_list[site_index], forecast_date,cycle), max = Inf)
+                s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+                empty <- grepl("/$", s3_list)
+                s3_list <- s3_list[!empty]
+                existing_ncfiles <- s3_list
+                if(length(existing_ncfiles) > 0){
+                  for(s3_file_index in 1:length(existing_ncfiles)){
+                    aws.s3::delete_object(object = existing_ncfiles[s3_file_index], bucket = bucket)
+                  }
+                }
+              }
+            }
 
-              identifier_ds <- paste(model_name_ds, site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
-                                     format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
-
-              fname_ds <- file.path(modelds_site_date_hour_dir, paste0(identifier_ds,"_ens",ens_name,".nc"))
-
-              #Run downscaling
-              noaaGEFSpoint::temporal_downscale(input_file = output_file, output_file = fname_ds, overwrite = TRUE, hr = 1)
-
-              if(debias){
 
 
-                identifier_ds_debias <- paste(model_name_ds_debias, site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
-                                              format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
+            if(debias){
+              modelds_debias_site_date_hour_dir <- file.path(model_name_ds_debias,site_list[site_index], forecast_date,cycle)
+              if(!dir.exists(file.path(output_directory, modelds_debias_site_date_hour_dir))){
+                dir.create(file.path(output_directory, modelds_debias_site_date_hour_dir), recursive=TRUE, showWarnings = FALSE)
+              }else{
+                unlink(list.files(file.path(output_directory, modelds_debias_site_date_hour_dir), full.names = TRUE))
+              }
+              if(s3_mode){
+                s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name_ds_debias, site_list[site_index], forecast_date,cycle), max = Inf)
+                s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+                empty <- grepl("/$", s3_list)
+                s3_list <- s3_list[!empty]
+                existing_ncfiles <- s3_list
+                if(length(existing_ncfiles) > 0){
+                  for(s3_file_index in 1:length(existing_ncfiles)){
+                    aws.s3::delete_object(object = existing_ncfiles[s3_file_index], bucket = bucket)
+                  }
+                }
+              }
+            }
 
-                fname_ds <- file.path(modelds_debias_site_date_hour_dir, paste0(identifier_ds_debias,"_ens",ens_name,".nc"))
+            noaa_data <- list()
 
-                spatial_downscale_coeff <- list(AirTemp = c(debias_coefficients[site_index]$temp_intercept, debias_coefficients[site_index]$temp_slope),
-                                                ShortWave = c(debias_coefficients[site_index]$sw_intercept, debias_coefficients[site_index]$sw_slope),
-                                                LongWave = c(debias_ccoefficients[site_index]$lw_intercept, debias_coefficients[site_index]$lw_slope),
-                                                WindSpeed = c(debias_coefficients[site_index]$wind_intercept, debias_coefficients[site_index]$wind_slope))
+            for(v in 1:length(noaa_var_names)){
 
-                noaaGEFSpoint::debias_met_forecast(input_file = output_file, output_file = fname_ds, spatial_downscale_coeff, overwrite = TRUE)
+              value <- NULL
+              ensembles <- NULL
+              forecast.date <- NULL
 
+              noaa_data[v] <- NULL
+
+
+
+              for(ens in 1:31){
+                curr_ens <- output[[ens]]
+
+                value <- tryCatch({
+                  c(value, curr_ens[[noaa_var_names[v]]][site_index, ])
+                },
+                error=function(e) {
+                  message("curr_ens:")
+                  message(curr_ens)
+                  message(e)
+                  stop()
+                }
+                )
+
+                ensembles <- c(ensembles, rep(ens, length(curr_ens[[noaa_var_names[v]]][site_index, ])))
+                forecast.date <- c(forecast.date, forecast_times)
+              }
+              noaa_data[[v]] <- list(value = value,
+                                     ensembles = ensembles,
+                                     forecast.date = lubridate::as_datetime(forecast.date))
+
+            }
+
+            #These are the cf standard names
+            cf_var_names <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
+                              "surface_downwelling_shortwave_flux_in_air", "precipitation_flux", "eastward_wind", "northward_wind","cloud_area_fraction")
+
+            #Replace "eastward_wind" and "northward_wind" with "wind_speed"
+            cf_var_names1 <- c("air_temperature", "air_pressure", "relative_humidity", "surface_downwelling_longwave_flux_in_air",
+                               "surface_downwelling_shortwave_flux_in_air", "precipitation_flux","specific_humidity", "cloud_area_fraction","wind_speed")
+
+            cf_var_units1 <- c("K", "Pa", "1", "Wm-2", "Wm-2", "kgm-2s-1", "1", "1", "ms-1")  #Negative numbers indicate negative exponents
+
+            names(noaa_data) <- cf_var_names
+
+            specific_humidity <- rep(NA, length(noaa_data$relative_humidity$value))
+
+            noaa_data$relative_humidity$value <- noaa_data$relative_humidity$value / 100
+
+            noaa_data$air_temperature$value <- noaa_data$air_temperature$value + 273.15
+
+            specific_humidity[which(!is.na(noaa_data$relative_humidity$value))] <- rh2qair(rh = noaa_data$relative_humidity$value[which(!is.na(noaa_data$relative_humidity$value))],
+                                                                                           T = noaa_data$air_temperature$value[which(!is.na(noaa_data$relative_humidity$value))],
+                                                                                           press = noaa_data$air_pressure$value[which(!is.na(noaa_data$relative_humidity$value))])
+
+
+            #Calculate wind speed from east and north components
+            wind_speed <- sqrt(noaa_data$eastward_wind$value^2 + noaa_data$northward_wind$value^2)
+
+            forecast_noaa <- tibble::tibble(time = noaa_data$air_temperature$forecast.date,
+                                            NOAA.member = noaa_data$air_temperature$ensembles,
+                                            air_temperature = noaa_data$air_temperature$value,
+                                            air_pressure= noaa_data$air_pressure$value,
+                                            relative_humidity = noaa_data$relative_humidity$value,
+                                            surface_downwelling_longwave_flux_in_air = noaa_data$surface_downwelling_longwave_flux_in_air$value,
+                                            surface_downwelling_shortwave_flux_in_air = noaa_data$surface_downwelling_shortwave_flux_in_air$value,
+                                            precipitation_flux = noaa_data$precipitation_flux$value,
+                                            specific_humidity = specific_humidity,
+                                            cloud_area_fraction = noaa_data$cloud_area_fraction$value,
+                                            wind_speed = wind_speed)
+
+            forecast_noaa$cloud_area_fraction <- forecast_noaa$cloud_area_fraction / 100 #Convert from % to proportion
+
+            # Convert the 3 hr precip rate to per second.
+            forecast_noaa$precipitation_flux <- forecast_noaa$precipitation_flux / (60 * 60 * 6)
+
+            for (ens in 1:31) { # i is the ensemble number
+
+
+              #Turn the ensemble number into a string
+              if(ens-1< 10){
+                ens_name <- paste0("0",ens-1)
+              }else{
+                ens_name <- ens - 1
+              }
+
+              forecast_noaa_ens <- forecast_noaa %>%
+                dplyr::filter(NOAA.member == ens) %>%
+                dplyr::filter(!is.na(air_temperature))
+
+              end_date <- forecast_noaa_ens %>%
+                dplyr::summarise(max_time = max(time))
+
+              start_date <- forecast_noaa_ens %>%
+                dplyr::summarise(min_time = min(time))
+
+              identifier <- paste(basename(model_name), site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
+                                  format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
+
+              fname_6r <- paste0(identifier,"_ens",ens_name,".nc")
+              output_file <- file.path(output_directory, model_site_date_hour_dir,fname_6r)
+
+              #Write netCDF
+              Rnoaa4cast::write_noaa_gefs_netcdf(df = forecast_noaa_ens,ens, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = TRUE)
+
+
+              if(downscale){
+
+                identifier_ds <- paste(basename(model_name_ds), site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
+                                       format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
+
+                modelds_site_date_hour_dir
+                fname_6r_ds <- paste0(identifier_ds,"_ens",ens_name,".nc")
+                output_file_ds <- file.path(output_directory, modelds_site_date_hour_dir,fname_6r_ds)
+
+                #Run downscaling
+                Rnoaa4cast::temporal_downscale(input_file = output_file, output_file = output_file_ds, overwrite = TRUE, hr = 1)
+
+                if(debias){
+                  identifier_ds_debias <- paste(basename(model_name_ds_debias), site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
+                                                format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
+
+                  fname_6r_ds_debias <- paste0(identifier_ds_debias,"_ens",ens_name,".nc")
+                  output_file_ds_debias <- file.path(output_directory, modelds_debias_site_date_hour_dir,fname_6r_ds_debias)
+
+
+                  spatial_downscale_coeff <- list(AirTemp = c(debias_coefficients[site_index]$temp_intercept, debias_coefficients[site_index]$temp_slope),
+                                                  ShortWave = c(debias_coefficients[site_index]$sw_intercept, debias_coefficients[site_index]$sw_slope),
+                                                  LongWave = c(debias_ccoefficients[site_index]$lw_intercept, debias_coefficients[site_index]$lw_slope),
+                                                  WindSpeed = c(debias_coefficients[site_index]$wind_intercept, debias_coefficients[site_index]$wind_slope))
+
+                  Rnoaa4cast::debias_met_forecast(input_file = output_file_ds, output_file = output_file_ds_debias, spatial_downscale_coeff, overwrite = TRUE)
+                }
+              }
+              if(s3_mode){
+                unlink(file.path(output_directory, model_name_raw, forecast_date, cycle), recursive = TRUE)
+
+                file_6r <- file.path(model_site_date_hour_dir,fname_6r)
+                success_transfer <- aws.s3::put_object(file = file.path(output_directory, file_6r),
+                                                       object = file_6r,
+                                                       bucket = bucket)
+                if(success_transfer){
+                  unlink(file.path(output_directory, file_6r), force = TRUE)
+                }
+
+                if(downscale){
+                  file_6r_ds <- file.path(modelds_site_date_hour_dir, fname_6r_ds)
+                  success_transfer <- aws.s3::put_object(file = file.path(output_directory, file_6r_ds),
+                                                         object = file_6r_ds,
+                                                         bucket = bucket)
+                  if(success_transfer){
+                    unlink(file.path(output_directory, file_6r_ds), force = TRUE)
+                  }
+
+                }
+
+                if(debias){
+                  file_6r_ds_debais <- file.path(modelds_debias_site_date_hour_dir, fname_6r_ds_debias)
+                  success_transfer <- aws.s3::put_object(file = file.path(output_directory, file_6r_ds_debais),
+                                                         object = file_6r_ds_debais,
+                                                         bucket = bucket)
+                  if(success_transfer){
+                    unlink(file.path(output_directory, file_6r_ds_debais), force = TRUE)
+                  }
+                }
               }
             }
           }

@@ -1,7 +1,7 @@
 test_that("point download works", {
   output_directory <- "downloads"
   dir.create(output_directory, showWarnings = FALSE)
-  noaaGEFSpoint::noaa_gefs_point_download_downscale(read_from_path = FALSE,
+  Rnoaa4cast::noaa_gefs_point_download_downscale(read_from_path = FALSE,
                                                     lat_list = 37.31,
                                                     lon_list = 280.16,
                                                     site_list = "FCRE",

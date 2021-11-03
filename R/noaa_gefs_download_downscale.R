@@ -90,7 +90,6 @@ noaa_gefs_download_downscale <- function(site_list,
                                                    model_name_ds = model_name_ds,
                                                    output_directory = output_directory)
 
-
   }else{
 
     if(is.na(process_specific_date)){
