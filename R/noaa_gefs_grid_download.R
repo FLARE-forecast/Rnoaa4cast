@@ -190,7 +190,6 @@ noaa_gefs_grid_download <- function(lat_list,
                         success_transfer <- aws.s3::put_object(file = destfile,
                                                                object = file.path(model_date_hour_dir, file_name),
                                                                 bucket = bucket)
-                        print(success_transfer)
                         if(success_transfer){
                           unlink(destfile, force = TRUE)
                         }
