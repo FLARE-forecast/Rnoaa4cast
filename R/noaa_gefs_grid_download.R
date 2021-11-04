@@ -182,15 +182,15 @@ noaa_gefs_grid_download <- function(lat_list,
                                     },
                                     finally = NULL)
 
-                    download_check <- Rnoaa4cast:::check_grib_file(file = destfile, hour = curr_hours[i])
-
+                    download_check <- Rnoaa4cast:::check_grib_file(file = destfile, hour = curr_hours[hr])
                     if(download_check == FALSE){
                       unlink(destfile, force = TRUE)
                     }else{
                       if(s3_mode){
                         success_transfer <- aws.s3::put_object(file = destfile,
                                                                object = file.path(model_date_hour_dir, file_name),
-                                                               bucket = bucket)
+                                                                bucket = bucket)
+                        print(success_transfer)
                         if(success_transfer){
                           unlink(destfile, force = TRUE)
                         }
