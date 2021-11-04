@@ -20,7 +20,8 @@ stack_noaa_forecasts <- function(forecast_dates,
                                  model_name = "observed-met-noaa", # file name of the output
                                  dates_w_errors = NA,
                                  s3_mode = FALSE,
-                                 bucket = NULL
+                                 bucket = NULL,
+                                 verbose = FALSE
 ){
 
   cf_met_vars <- c("air_temperature",
@@ -118,13 +119,13 @@ stack_noaa_forecasts <- function(forecast_dates,
     max_datetime <- max(hist_met_all$time) - lubridate::hours(6)
 
     if(lubridate::as_date(max_datetime) == max(dates)){
-      print('Already up to date, cancel the rest of the function')
+      message('Already up to date, cancel the rest of the function')
       run_fx <- FALSE
     }else if(lubridate::as_date(max_datetime) > max(dates)){
-      print('Already up to date, cancel the rest of the function')
+      message('Already up to date, cancel the rest of the function')
       run_fx <- FALSE
     }else if(lubridate::as_date(max_datetime) > min(dates)){
-      print('Appending existing historical files')
+      message('Appending existing historical files')
       append_data <- TRUE
       dates <- dates[dates > max_datetime]
     }else{
@@ -203,7 +204,9 @@ stack_noaa_forecasts <- function(forecast_dates,
         date_time <- lubridate::as_datetime(dates[k]) + lubridate::hours(as.numeric(cycle[f]))
         local_forecast_dir <- file.path(local_noaa6hr_model_directory, dates[k], cycle[f])
 
-
+        if(verbose){
+        message(file.path(noaa6hr_model_directory, dates[k], cycle[f]))
+        }
         if(s3_mode){
           s3_objects <- aws.s3::get_bucket(bucket = bucket,
                                            prefix = file.path(noaa6hr_model_directory, dates[k], cycle[f]),
@@ -242,9 +245,15 @@ stack_noaa_forecasts <- function(forecast_dates,
             noaa_met <- tibble::tibble(time = noaa_met_time)
             lat <- ncdf4::ncvar_get(noaa_met_nc, "latitude")
             lon <- ncdf4::ncvar_get(noaa_met_nc, "longitude")
+            nc_var_names <- names(noaa_met_nc$var)
 
             for(i in 1:length(cf_met_vars)){
+              if(cf_met_vars[i] %in% nc_var_names){
               noaa_met <- cbind(noaa_met, ncdf4::ncvar_get(noaa_met_nc, cf_met_vars[i]))
+              }else{
+
+                noaa_met <- cbind(noaa_met, rep(NA, length(noaa_met_time)))
+              }
             }
 
             ncdf4::nc_close(noaa_met_nc)
