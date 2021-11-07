@@ -18,7 +18,12 @@ noaa_gefs_download_downscale(
   num_cores = 1,
   method = "point",
   overwrite = FALSE,
-  read_from_path = FALSE
+  read_from_path = FALSE,
+  grid_name = "neon",
+  process_specific_date = NA,
+  process_specific_cycle = NA,
+  delete_bad_files = TRUE,
+  write_intermediate_ncdf = TRUE
 )
 }
 \arguments{

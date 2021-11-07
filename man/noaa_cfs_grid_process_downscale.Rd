@@ -18,7 +18,8 @@ noaa_cfs_grid_process_downscale(
   debias_coefficients = NULL,
   num_cores = 1,
   output_directory,
-  reprocess = FALSE
+  reprocess = FALSE,
+  grid_name
 )
 }
 \arguments{

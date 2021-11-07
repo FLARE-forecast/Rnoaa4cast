@@ -11,7 +11,9 @@ noaa_gefs_grid_download(
   forecast_date,
   model_name_raw,
   output_directory,
-  num_cores = 1
+  grid_name,
+  s3_mode = FALSE,
+  bucket = NULL
 )
 }
 \arguments{
