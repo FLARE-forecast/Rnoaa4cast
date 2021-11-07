@@ -11,7 +11,10 @@ stack_noaa_forecasts(
   noaa_model,
   output_directory,
   model_name = "observed-met-noaa",
-  dates_w_errors = NA
+  dates_w_errors = NA,
+  s3_mode = FALSE,
+  bucket = NULL,
+  verbose = FALSE
 )
 }
 \arguments{
