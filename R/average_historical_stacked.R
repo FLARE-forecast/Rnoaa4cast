@@ -1,8 +1,8 @@
 #' Average ensemble from stacked historical noaa forecasts
 #'
-#' @param forecast_dates
-#' @param noaa_stacked_directory
-#' @param output_file
+#' @param forecast_dates vector of dates will be included in stacked file
+#' @param noaa_stacked_directory full path to directory with the 6hr stacked files for the site
+#' @param output_file name (with full path) of averaged stack file
 #'
 #' @return
 #' @export
@@ -41,7 +41,7 @@ average_stacked_forecasts <- function(forecast_dates, # vector of the date range
 
   # look in output directory for existing file
   hist_file <- output_file
-  hist_files <- list.files(output_directory)
+  hist_files <- list.files(noaa_stacked_directory)
   append_data <- FALSE
   run_fx <- TRUE
 
