@@ -134,57 +134,6 @@ stack_noaa_forecasts <- function(forecast_dates,
   }
 
   missing_forecasts <- NULL
-
-  for(k in 1:length(dates)){
-
-    if(s3_mode){
-      s3_objects <- aws.s3::get_bucket(bucket = bucket,
-                                       prefix = file.path(noaa6hr_model_directory, dates[k]),
-                                       max = Inf)
-      s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
-      empty <- grepl("/$", s3_list)
-      s3_list <- s3_list[!empty]
-      avialable_cycles <- s3_list
-    }else{
-      avialable_cycles <- list.files(file.path(local_noaa6hr_model_directory, dates[k]))
-    }
-    if(length(avialable_cycles) < 4 | dates[k] %in% lubridate::as_date(dates_w_errors)){
-      missing_forecasts <- c(missing_forecasts, k)
-    }
-  }
-
-  if(length(missing_forecasts) > 0){
-
-    reference_date <- rep(NA, length(missing_forecasts))
-    gap_size <- rep(NA, length(missing_forecasts))
-    for(m in 1:length(missing_forecasts)){
-      curr_index <- missing_forecasts[m]
-      curr_gap_size <- 0
-      while(curr_index %in% missing_forecasts){
-        curr_index <- curr_index - 1
-        curr_gap_size <- curr_gap_size + 1
-      }
-      reference_date[m] <- curr_index
-      gap_size[m] <- curr_gap_size
-    }
-
-    missing_dates <- tibble::tibble(date = dates[missing_forecasts],
-                                    reference_date = dates[reference_date],
-                                    gap_size = gap_size) %>%
-      dplyr::filter(!(date == Sys.Date() | date == max(dates)))
-
-
-
-    if(max(missing_dates$gap_size) > 16){
-      stop("Gap between missing forecasts is too large (> 16 days); Adjust dates included")
-    }
-
-    dates <- dates[which(!(dates %in% missing_dates$date))]
-
-  }else{
-    missing_dates <- NULL
-  }
-
   # set up dataframe for output_directory
   noaa_obs_out <- NULL
   daily_noaa <- NULL
@@ -193,6 +142,57 @@ stack_noaa_forecasts <- function(forecast_dates,
   # loop through each date of forecasts and extract the first day, stack together to create a continuous dataset of day 1 forecasts
 
   if(run_fx){
+
+    for(k in 1:length(dates)){
+
+      if(s3_mode){
+        s3_objects <- aws.s3::get_bucket(bucket = bucket,
+                                         prefix = file.path(noaa6hr_model_directory, dates[k]),
+                                         max = Inf)
+        s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+        empty <- grepl("/$", s3_list)
+        s3_list <- s3_list[!empty]
+        avialable_cycles <- s3_list
+      }else{
+        avialable_cycles <- list.files(file.path(local_noaa6hr_model_directory, dates[k]))
+      }
+      if(length(avialable_cycles) < 4 | dates[k] %in% lubridate::as_date(dates_w_errors)){
+        missing_forecasts <- c(missing_forecasts, k)
+      }
+    }
+
+    if(length(missing_forecasts) > 0){
+
+      reference_date <- rep(NA, length(missing_forecasts))
+      gap_size <- rep(NA, length(missing_forecasts))
+      for(m in 1:length(missing_forecasts)){
+        curr_index <- missing_forecasts[m]
+        curr_gap_size <- 0
+        while(curr_index %in% missing_forecasts){
+          curr_index <- curr_index - 1
+          curr_gap_size <- curr_gap_size + 1
+        }
+        reference_date[m] <- curr_index
+        gap_size[m] <- curr_gap_size
+      }
+
+      missing_dates <- tibble::tibble(date = dates[missing_forecasts],
+                                      reference_date = dates[reference_date],
+                                      gap_size = gap_size) %>%
+        dplyr::filter(!(date == Sys.Date() | date == max(dates)))
+
+
+
+      if(max(missing_dates$gap_size) > 16){
+        stop("Gap between missing forecasts is too large (> 16 days); Adjust dates included")
+      }
+
+      dates <- dates[which(!(dates %in% missing_dates$date))]
+
+    }else{
+      missing_dates <- NULL
+    }
+
     for(k in 1:length(dates)){
 
       noaa_model_directory <- file.path(output_directory, noaa_model, site, dates[k])
