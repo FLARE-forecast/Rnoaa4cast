@@ -4,16 +4,14 @@
 \alias{average_stacked_forecasts}
 \title{Average ensemble from stacked historical noaa forecasts}
 \usage{
-average_stacked_forecasts(
-  forecast_dates,
-  site,
-  noaa_hour,
-  noaa_stacked_directory,
-  output_file
-)
+average_stacked_forecasts(forecast_dates, noaa_stacked_directory, output_file)
 }
 \arguments{
-\item{output_file}{}
+\item{forecast_dates}{vector of dates will be included in stacked file}
+
+\item{noaa_stacked_directory}{full path to directory with the 6hr stacked files for the site}
+
+\item{output_file}{name (with full path) of averaged stack file}
 }
 \value{
 

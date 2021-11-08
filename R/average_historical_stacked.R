@@ -1,20 +1,17 @@
 #' Average ensemble from stacked historical noaa forecasts
 #'
-#' @param forecast_dates
-#' @param site
-#' @param noaa_hour
-#' @param noaa_stacked_directory
-#' @param output_file
+#' @param forecast_dates vector of dates will be included in stacked file
+#' @param noaa_stacked_directory full path to directory with the 6hr stacked files for the site
+#' @param output_file name (with full path) of averaged stack file
 #'
 #' @return
 #' @export
 #'
 #' @examples
 average_stacked_forecasts <- function(forecast_dates, # vector of the date range you'd like to create
-                                      site,
-                                      noaa_hour, # numeric; whether you want to average the 1hr or 6hr forecasts
                                       noaa_stacked_directory, # file path of the directory where the stacked ensemble files are stored
-                                      output_file){ # file  where you want the output to go
+                                      output_file # file  where you want the output to go
+                                      ){
 
 
 
@@ -42,14 +39,9 @@ average_stacked_forecasts <- function(forecast_dates, # vector of the date range
   dates <- lubridate::as_date(forecast_dates)
   dates <- dates[which(dates < system_date)]
 
-  #identifier <- paste(outfile_name, sep="_")
-  #fname <- paste0(identifier,".nc")
-  output_file
-
-
   # look in output directory for existing file
-  hist_file <- outfile_name
-  hist_files <- list.files(output_directory)
+  hist_file <- output_file
+  hist_files <- list.files(noaa_stacked_directory)
   append_data <- FALSE
   run_fx <- TRUE
 
@@ -84,8 +76,7 @@ average_stacked_forecasts <- function(forecast_dates, # vector of the date range
 
   if(run_fx){
     # read in stacked 1hr files
-    #stacked_directory <- file.path(noaa_directory, "noaa", paste0('NOAAGEFS_', noaa_hour, 'hr_stacked'), site)
-    stacked_files <- list.files(file.path(noaa_stacked_directory, site))
+    stacked_files <- list.files(noaa_stacked_directory, full.names = TRUE)
     stacked_met_all <- NULL
     #run_fx <- TRUE
     #append_data <- FALSE
@@ -95,7 +86,7 @@ average_stacked_forecasts <- function(forecast_dates, # vector of the date range
       for(i in 1:length(stacked_files)){
         ens <- dplyr::last(unlist(stringr::str_split(string = basename(stacked_files[i]),pattern = "_")))
         ens <- as.numeric(stringr::str_sub(ens,4,5))
-        stacked_met_nc <- ncdf4::nc_open(file.path(noaa_stacked_directory, site, stacked_files[i]))
+        stacked_met_nc <- ncdf4::nc_open(stacked_files[i])
         stacked_met_time <- ncdf4::ncvar_get(stacked_met_nc, "time")
         origin <- stringr::str_sub(ncdf4::ncatt_get(stacked_met_nc, "time")$units, 13, 28)
         origin <- lubridate::ymd_hm(origin)
@@ -115,7 +106,7 @@ average_stacked_forecasts <- function(forecast_dates, # vector of the date range
         stacked_met_all <- rbind(stacked_met_all, stacked_met)
       }
 
-      noaa_met_nc <- ncdf4::nc_open(file.path(noaa_stacked_directory, site, stacked_files[1]))
+      noaa_met_nc <- ncdf4::nc_open(stacked_files[1])
       lat <- ncdf4::ncvar_get(noaa_met_nc, "latitude")
       lon <- ncdf4::ncvar_get(noaa_met_nc, "longitude")
       ncdf4::nc_close(noaa_met_nc)
@@ -126,13 +117,13 @@ average_stacked_forecasts <- function(forecast_dates, # vector of the date range
     stacked_met_mean <- NULL
     stacked_met_mean <- stacked_met_all %>%
       dplyr::group_by(time) %>%
-      dplyr::mutate(air_temperature = mean(air_temperature),
-                    air_pressure = mean(air_pressure),
-                    relative_humidity = mean(relative_humidity),
-                    surface_downwelling_longwave_flux_in_air = mean(surface_downwelling_longwave_flux_in_air),
-                    surface_downwelling_shortwave_flux_in_air = mean(surface_downwelling_shortwave_flux_in_air),
-                    precipitation_flux = mean(precipitation_flux),
-                    specific_humidity = mean(specific_humidity),
+      dplyr::mutate(air_temperature = mean(air_temperature, na.rm = TRUE),
+                    air_pressure = mean(air_pressure, na.rm = TRUE),
+                    relative_humidity = mean(relative_humidity, na.rm = TRUE),
+                    surface_downwelling_longwave_flux_in_air = mean(surface_downwelling_longwave_flux_in_air, na.rm = TRUE),
+                    surface_downwelling_shortwave_flux_in_air = mean(surface_downwelling_shortwave_flux_in_air, na.rm = TRUE),
+                    precipitation_flux = mean(precipitation_flux, na.rm = TRUE),
+                    specific_humidity = mean(specific_humidity, na.rm = TRUE),
                     wind_speed = mean(wind_speed)) %>%
       dplyr::distinct(time, .keep_all = TRUE) %>%
       dplyr::select(-NOAA.member)  %>%
