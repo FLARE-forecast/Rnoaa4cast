@@ -1,13 +1,13 @@
 ##' @title Download NOAA GEFS Forecasts
 ##'
 ##' @description Downloads a set of NOAA Global Ensemble Forecast System (GEFS)
-##' forecasts for the set of point locatins  or ranges, downscaling them in
+##' forecasts for a set of point locations or spatial ranges, downscaling them in
 ##' time if requested.
 ##'
 ##' @param site_list Vector of site codes, e.g. "NOAA", used in directory and file name generation.
 ##' @param lat_list Vector or range of latitudes to be downloaded (see details).
 ##' @param lon_list Vector or range of longitudes to be downloaded (see details).
-##' @param output_directory Path: directory where the model output will be save.
+##' @param output_directory Path: directory where the model output will be saved.
 ##' @param forecast_time The 'hour' of the requested forecast, one of "00",
 ##' "06", "12", or "18", see details.
 ##' @param forecast_date The date, or coercible string, of the requested
@@ -21,7 +21,7 @@
 ##' @param run_parallel Logical: whether to run on multiple cores.
 ##' @param num_cores Integer: number of cores used if run_parallel = TRUE.
 ##' @param method Character string indicating the download method, either "point" or "grid"?????.
-##' @param overwrite Logical stating wether to overwrite any existing output files.
+##' @param overwrite Logical stating whether to overwrite any existing output files.
 ##' @param read_from_path
 ##' @param grid_name Grid mode only: a short grid name used in directory and file name generation.
 ##' @param process_specific_date Grid mode only: ...
@@ -33,17 +33,25 @@
 ##' @section Coordinates
 ##' The coordinates will be interpreted differently depending on the download
 ##' method. If a point download is requested lat_list and lon_list should
-##' provide a vectors of coordinates to be downloaded the same length as
-##' site_list. If a grid download is requested lat_list and lon_list should
-##' provide a pair of latitude and longitude value defining the range (not
-##' corners) of a rectangular grid of points to be downloaded.
-##'      Does the order matter????? Can't cross the date line right?
+##' provide a vectors of coordinates to be downloaded with the same length as
+##' site_list. If a grid download is requested lat_list and lon_list should at
+##' minimum provide a pair of latitude and longitude values defining a range (not
+##' corners) of a rectangular grid of points to be downloaded. Providing a list
+##' of more than two point locations will result in a exrtacted region that
+##' encompasses them all.
+##' Providing a single set of coordinates will work but will (likely)result in
+##' a 3x3 region surrounding the point requested.
 ##' Only decimal coordinates are currently accepted.
+##'           Does the order matter????? Can't cross the date line right?
 ##' @section Forecast Times
 ##' NOAA GEFS forecasts are made 4 times daily. The hour 00 (midnight) forecast
 ##' goes out for 35 days while the other (hour 06, 12, and 18) only go out to 16 days.
 ##' @section Weather Debiasing
-##' ...
+##' NOAA forecasts are made for a fixed grid. The meterology at actual
+##' locations may differ systemtically from their nearest forecast location.
+##' Debiasing allows adjust the forecast based on linear relationships between
+##' the forecast location and your site based on parameters you can determine
+##' from your local meteorology.
 ##'
 ##' @return None
 
