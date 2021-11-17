@@ -26,7 +26,7 @@ check_grib_file <- function(file, hour) {
     seek(gribf,where = fsz4,origin = "start")
     last4 <- readBin(gribf,"raw",4)
     if(!(as.integer(last4[1])==55 & as.integer(last4[2])==55 & as.integer(last4[3])==55 & as.integer(last4[4])==55)) {
-      close(gribf)
+           close(gribf)
       return(FALSE)
     } else {
       if(hour == "000") {

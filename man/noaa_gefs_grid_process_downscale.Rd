@@ -23,7 +23,9 @@ noaa_gefs_grid_process_downscale(
   process_specific_date = NA,
   process_specific_cycle = NA,
   delete_bad_files = TRUE,
-  grid_name = "neon"
+  grid_name = "neon",
+  s3_mode = FALSE,
+  bucket = NULL
 )
 }
 \arguments{
