@@ -1,13 +1,37 @@
-
-#' Download gridded forecast in the box bounded by the latitude and longitude list
+#' @title Download NOAA GEFS Gridded Forecast
 #'
-#' @param lat_list
-#' @param lon_list
-#' @param forecast_time
-#' @param forecast_date
-#' @param model_name_raw
-#' @param num_cores
-#' @param output_directory
+#' @description Download a NOAA Global Ensemble Forecast System (GEFS) gridded
+#' forecast for a rectangular region with specified latitude and longitude
+#' bounds.
+#'
+#' @param lat_list Vector or range of latitudes to be downloaded (see details).
+#' @param lon_list Vector or range of longitudes to be downloaded (see details).
+#' @param forecast_time The 'hour' of the requested forecast, one of "00",
+##' "06", "12", or "18", see details.
+#' @param forecast_date The date, or coercible string, of the requested
+##' forecast.
+#' @param model_name_raw A string with the model name used as the root of the
+#' downloaded directory tree. (Add a default.)
+#' @param num_cores DEPRECATED
+#' @param output_directory Path: directory where the forecast output and logs
+#' will be saved.
+#' @param grid_name A short grid name used in directory and file name generation.
+#' @param s3_mode Logical: save the forecast to a Amazon S3 bucket rather than locally.
+#' @param bucket If s3_mode = TRUE, the S3 bucket name to save to.
+#'
+#' @details
+#' @section Coordinates
+#' [Copy from noaa_gefs_download_downscale]
+#' @section Forecast Times
+#' NOAA GEFS forecasts are made 4 times daily. The hour 00 (midnight) forecast
+#' goes out for 35 days while the other (hour 06, 12, and 18) only go out to 16 days.
+#' @section Forecast Data
+#' NOAA GEFS forecasts produce thousands of files that this function downloads
+#' and stores in a directory tree, or using nested object names (keys) for S3 storage. ...
+#' @section S3 Storage
+#' Amazon Web Services S3 is a web service storage alternative. Given the large number of files ...
+#' Files are saved locally before upload to the S3 bucke so output_directory is still required.
+#' (are they deleted after?)
 #'
 #' @return
 #' @export
