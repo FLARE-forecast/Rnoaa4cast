@@ -4,26 +4,46 @@
 ##' forecasts for the set of point locatins  or ranges, downscaling them in
 ##' time if requested.
 ##'
-##' @param site_list vector of site codes, e.g. "NOAA", used in directory and file name generation
-##' @param lat_list, vector of latitudes that correspond to site codes
-##' @param lon_list, vector of longitudes that correspond to site codes
-##' @param output_directory Path: directory where the model output will be save
+##' @param site_list Vector of site codes, e.g. "NOAA", used in directory and file name generation.
+##' @param lat_list Vector or range of latitudes to be downloaded (see details).
+##' @param lon_list Vector or range of longitudes to be downloaded (see details).
+##' @param output_directory Path: directory where the model output will be save.
 ##' @param forecast_time The 'hour' of the requested forecast, one of "00",
 ##' "06", "12", or "18", see details.
-##' @param forecast_date The date, or coercible string, of the requested forecast, defaults to ?????.
-##' @param downscale Logical specifying whether to downscale from 6-hr to 1-hr data.
-##' @param debias Logical: ...
-##' @param debias_coefficients
+##' @param forecast_date The date, or coercible string, of the requested
+##' forecast, defaults to ?????.
+##' @param downscale Logical specifying whether to downscale from 6-hr to 1-hr
+##' data.
+##' @param debias Logical specifying whether weather data should be adjusted
+##' for a bias verses the nearest forecast point (wording?).
+##' @param debias_coefficients If debias = TRUE, a vector of debasing parameter
+##' value lists (see details).
 ##' @param run_parallel Logical: whether to run on multiple cores.
-##' @param num_cores Integer: number of cores used if run_parallel == TRUE.
+##' @param num_cores Integer: number of cores used if run_parallel = TRUE.
 ##' @param method Character string indicating the download method, either "point" or "grid"?????.
-##' @param overwrite Logical stating to overwrite any existing output_file
+##' @param overwrite Logical stating wether to overwrite any existing output files.
 ##' @param read_from_path
-##' @param grid_name "neon"
-##' @param process_specific_date ...
-##' @param process_specific_cycle ...
-##' @param delete_bad_files Logical: ...
-##' @param write_intermediate_ncdf ...
+##' @param grid_name Grid mode only: a short grid name used in directory and file name generation.
+##' @param process_specific_date Grid mode only: ...
+##' @param process_specific_cycle Grid mode only: ...
+##' @param delete_bad_files Grid mode only: Logical: ...
+##' @param write_intermediate_ncdf Grid mode only: ...
+##'
+##' @details
+##' @section Coordinates
+##' The coordinates will be interpreted differently depending on the download
+##' method. If a point download is requested lat_list and lon_list should
+##' provide a vectors of coordinates to be downloaded the same length as
+##' site_list. If a grid download is requested lat_list and lon_list should
+##' provide a pair of latitude and longitude value defining the range (not
+##' corners) of a rectangular grid of points to be downloaded.
+##'      Does the order matter????? Can't cross the date line right?
+##' Only decimal coordinates are currently accepted.
+##' @section Forecast Times
+##' NOAA GEFS forecasts are made 4 times daily. The hour 00 (midnight) forecast
+##' goes out for 35 days while the other (hour 06, 12, and 18) only go out to 16 days.
+##' @section Weather Debiasing
+##' ...
 ##'
 ##' @return None
 
@@ -61,6 +81,10 @@ noaa_gefs_download_downscale <- function(site_list,
   #Validate parameters:
   #All pass-through variables will be validated in their respective functions:
   #method
+  #Check lengths of site_list, lat_list, and lon_list match here?
+  #What is site_list used for in noaa_gefs_grid_process_downscale.  It is not needed for
+  #noaa_gefs_grid_download
+  #grid_name?
 
 
   #The grid download requires longitude to be -180 to 180 so converting here
