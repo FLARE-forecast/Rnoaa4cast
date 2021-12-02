@@ -7,9 +7,9 @@
 #' @param lat_list Vector or range of latitudes to be downloaded (see details).
 #' @param lon_list Vector or range of longitudes to be downloaded (see details).
 #' @param forecast_time The 'hour' of the requested forecast, one of "00",
-##' "06", "12", or "18", see details.
+#' "06", "12", or "18", see details.
 #' @param forecast_date The date, or coercible string, of the requested
-##' forecast.
+#' forecast.
 #' @param model_name_raw A string with the model name used as the root of the
 #' downloaded directory tree. (Add a default.)
 #' @param num_cores DEPRECATED
@@ -26,17 +26,22 @@
 #' NOAA GEFS forecasts are made 4 times daily. The hour 00 (midnight) forecast
 #' goes out for 35 days while the other (hour 06, 12, and 18) only go out to 16 days.
 #' @section Forecast Data
-#' NOAA GEFS forecasts produce thousands of files that this function downloads
-#' and stores in a directory tree, or using nested object names (keys) for S3 storage. ...
+#' NOAA GEFS forecasts produce thousands of files that this function downloads and stores in a
+#' directory tree, or using nested object names (keys) for S3 storage. MORE...
 #' @section S3 Storage
 #' Amazon Web Services S3 is a web service storage alternative. Given the large number of files ...
 #' Files are saved locally before upload to the S3 bucke so output_directory is still required.
 #' (are they deleted after?)
 #'
-#' @return
+#' @return None.
 #' @export
 #'
 #' @examples
+
+#JMR_NOTES:
+# - Add a default for model_name_raw?
+# - Should forecast_time and forecast_date default to all?
+
 noaa_gefs_grid_download <- function(lat_list,
                                     lon_list,
                                     forecast_time,

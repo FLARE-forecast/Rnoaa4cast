@@ -1,22 +1,39 @@
-
-#' Extract and temporally downscale points from downloaded grid files
+#' @title Extract and downscale points from a NOAA CFS Forecast
 #'
-#' @param lat_list
-#' @param lon_list
-#' @param site_list
-#' @param downscale
-#' @param overwrite
-#' @param model_name
-#' @param model_name_ds
+#' @description This function extracts a set of point location forecasts from a previously
+#' downloaded gridded NOAA Climate (Coupled) Forecast System (CFS) forecast and optionally
+#' temporally downscales them.
+#'
+#' @param lat_list Vector or range of latitudes to be downloaded (see details).
+#' @param lon_list Vector or range of longitudes to be downloaded (see details).
+#' @param site_list Vector of site codes, e.g. "NOAA", used in directory and file name generation.
+#' @param downscale Logical specifying whether to downscale from 6-hr to 1-hr data.
+#' @param debias Logical specifying whether to downscale from 6-hr to 1-hr data.
+#' @param overwrite Logical stating whether to overwrite any existing output files
+#' @param model_name Directory name for the 6-hr forecast, this will be used in directory and file
+#' name generation.
+#' @param model_name_ds Directory name for downscaled 1-hr forecasts, this will be used in
+#' directory and file name generation.
+#' @param model_name_ds_debias Directory name for downscaled and diabiased forecasts, this will be
+#' used in directory and file name generation.
 #' @param model_name_raw
-#' @param num_cores
-#' @param output_directory
+#' @param debias_coefficients Data frame containing debasing parameter values.
+#' @param num_cores DEPRECATED?????
+#' @param output_directory Path: directory where the model output will be saved.
+#' @param reprocess Logical: if true re-extract dates that were previously processed.
+#' @param grid_name  A short grid name used in directory and file name generation.
 #'
 #' @return
 #' @export
 #'
 #' @examples
-#'
+
+#JMR_NOTES:
+# - I think the model_name parameters should have defaults and / or could be derived from a single
+#name.
+# - I don't understand what model_name_raw directory is used for.
+# - num_cores is not used.  Need to check upstream.
+
 noaa_cfs_grid_process_downscale <- function(lat_list,
                                              lon_list,
                                              site_list,

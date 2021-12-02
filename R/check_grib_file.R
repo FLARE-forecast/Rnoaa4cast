@@ -1,12 +1,18 @@
-#' Check GRIB file
+#' @title Check a GRIB File for Validity
 #'
-#' @param file file path; to file to be checked
-#' @param hour integer; hour of forecast cycle
+#' @description Perform some basic checks that a NOAA forecast GRIB file appears to be valid.
+#'
+#' @param file File path to file to be checked.
+#' @param hour Integer: hour of forecast cycle (0, 6, 12, 18 / "00", "06", "12", or "18")
 #'
 #' @importFrom rgdal readGDAL
 #'
 #' @return
 #' @noRd
+
+#JMR_NOTES:
+# - The original documentation says hour is an interger but it is treated as character below.
+#Determine how the calling code uses it.
 
 check_grib_file <- function(file, hour) {
 
@@ -29,6 +35,7 @@ check_grib_file <- function(file, hour) {
            close(gribf)
       return(FALSE)
     } else {
+      #JMR_NOTE: Shouldn't this be "00" or 0?
       if(hour == "000") {
         if(length(grib@data) != 5) {
           warning("Bad file: ", file, "\n Should be 5 fields but has ", length(grib@data), " fields")
