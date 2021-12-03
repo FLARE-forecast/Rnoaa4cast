@@ -13,7 +13,7 @@
 #' most recent date.))
 ##' @param downscale Logical specifying whether to downscale from 6-hr to 1-hr data.
 ##' @param debias Logical specifying whether weather data should be adjusted
-##' for a bias verses the nearest forecast point (wording?).
+##' for a bias verses the nearest forecast point.
 ##' @param debias_coefficients If debias = TRUE, a data frame of debasing parameter value lists (see
 ##' details).
 ##' @param run_parallel Logical: whether to run on multiple cores.
@@ -30,16 +30,16 @@
 ##' site_list. If a grid download is requested lat_list and lon_list should at
 ##' minimum provide a pair of latitude and longitude values defining a range (not
 ##' corners) of a rectangular grid of points to be downloaded. Providing a list
-##' of more than two point locations will result in a exrtacted region that
+##' of more than two point locations will result in a extracted region that
 ##' encompasses them all.
 ##' Providing a single set of coordinates will work but will (likely) result in
-##' a 3x3 region surrounding the point requested.
-##' Only decimal coordinates are currently accepted.
+##' a 3x3 region surrounding the point requested. Only decimal coordinates, without cardinal
+##' directions, are currently accepted.
 ##' @section Forecast Times
-##' NOAA GEFS forecasts are made 4 times daily. The hour 00 (midnight) forecast
-##' goes out for 35 days while the other (hour 06, 12, and 18) only go out to 16 days.
+##' NOAA CFS forecasts are made once daily. ...
+#Add frequency and duration!!!!!
 ##' @section Weather Debiasing
-##' NOAA forecasts are made for a fixed grid. The meteorology at actual ocations may differ
+##' NOAA forecasts are made for a fixed grid. The meteorology at actual locations may differ
 ##' systemically from their nearest forecast location. Debiasing allows adjust the forecast based
 ##' on linear relationships between the forecast location and your site based on parameters you can
 ##' determine from your local meteorology. See \code{\link{debias_met_forecast}} for how to pass
@@ -58,6 +58,7 @@
 # - Are the forecast_times relevant here? CFS is only generated once a day.
 # - method is not used!  Is this for interface compatibility with noaa_gefs_download_downscale()?
 # - Passing forecast_date = NA to noaa_cfs_grid_download() may be a problem.
+# - Review wording for debias parameter description.
 
 noaa_cfs_download_downscale <- function(site_list,
                                          lat_list,

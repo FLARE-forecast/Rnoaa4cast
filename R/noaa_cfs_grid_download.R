@@ -16,7 +16,7 @@
 #'
 #' @details
 #' @section Coordinates
-#' [Copy from noaa_gefs_download_downscale]
+#' ((Copy from noaa_gefs_download_downscale))
 #'
 #' @return
 #' @export

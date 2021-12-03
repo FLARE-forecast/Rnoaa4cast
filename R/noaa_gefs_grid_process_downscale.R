@@ -20,7 +20,8 @@
 #' @param num_cores The number of processor cores to run in parrallel on.
 #' @param output_directory Path: directory where the model output will be saved.
 #' @param reprocess Logical: if true re-extract dates that were previously processed.
-#' @param write_intermediate_ncdf
+#' @param write_intermediate_ncdf Logical: retain the intermediate netCDF files created during
+#' processing?
 #' @param process_specific_date A date, or coercible string, specifying specific date(s) to extract.
 #' If omitted all dates will be processed.
 #' @param process_specific_cycle A vector of forecast times ("00", "06", "12", or "18" hours), to
@@ -41,6 +42,8 @@
 # - I think the model_name parameters should have defaults and / or could be derived from a single
 #name.
 # - I don't understand what model_name_raw directory is used for.
+# - The value of write_intermediate_ncdf is overridden in the code.
+# - Not sure I have the purpose of write_intermediate_ncdf correct.
 
 noaa_gefs_grid_process_downscale <- function(lat_list,
                                              lon_list,
@@ -224,10 +227,11 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
 
       all_downloaded <- FALSE
 
+      #JMR_NOTE: Is this a testing artifact or temporary fix or does thte paremeter need to go away?
       write_intermediate_ncdf <- TRUE
 
       if(cycle == "00"){
-        #Sometime the 16-35 day forecast is not competed for some of the forecasts.  If over 24 hrs has passed then they won't show up.
+        #Sometime the 16-35 day forecast is not completed for some of the forecasts.  If over 24 hrs has passed then they won't show up.
         #Go ahead and create the netcdf files
         if(length(which(hours_present == 840)) == 30 |
            (length(which(hours_present == 384)) == 31 & curr_forecast_time + lubridate::hours(36) < curr_time) |

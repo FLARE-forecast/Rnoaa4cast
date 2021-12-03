@@ -21,7 +21,7 @@
 #'
 #' @details
 #' @section Coordinates
-#' [Copy from noaa_gefs_download_downscale]
+#' ((Copy from noaa_gefs_download_downscale))
 #' @section Forecast Times
 #' NOAA GEFS forecasts are made 4 times daily. The hour 00 (midnight) forecast
 #' goes out for 35 days while the other (hour 06, 12, and 18) only go out to 16 days.

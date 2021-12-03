@@ -14,12 +14,12 @@
 #' most recent date.))
 ##' @param downscale Logical specifying whether to downscale from 6-hr to 1-hr data.
 ##' @param debias Logical specifying whether weather data should be adjusted
-##' for a bias verses the nearest forecast point (wording?).
+##' for a bias verses the nearest forecast point.
 ##' @param debias_coefficients If debias = TRUE, a data frame of debasing parameter value lists (see
 ##' details).
 ##' @param run_parallel Logical: whether to run on multiple cores.
 ##' @param num_cores Integer: number of cores used if run_parallel = TRUE.
-##' @param method Character string indicating the download method, either "point" or "grid"?????.
+##' @param method Character string indicating the download method, either "point" or "grid".
 ##' @param overwrite Logical stating whether to overwrite any existing output files.
 ##' @param read_from_path Point mode only:
 ##' @param grid_name Grid mode only: a short grid name used in directory and file name generation.
@@ -28,7 +28,8 @@
 ##' @param process_specific_cycle Grid mode only: A vector of forecast times ("00", "06", "12", or
 ##' "18" hours), to extract. If omitted all cycles will be processed.
 ##' @param delete_bad_files Grid mode only: Logical: delete bad files?
-##' @param write_intermediate_ncdf Grid mode only: ...
+##' @param write_intermediate_ncdf Grid mode only: Logical: retain the intermediate netCDF files
+##' created during processing?
 ##'
 ##' @details
 ##' @section Coordinates
@@ -38,25 +39,25 @@
 ##' site_list. If a grid download is requested lat_list and lon_list should at
 ##' minimum provide a pair of latitude and longitude values defining a range (not
 ##' corners) of a rectangular grid of points to be downloaded. Providing a list
-##' of more than two point locations will result in a exrtacted region that
+##' of more than two point locations will result in a extracted region that
 ##' encompasses them all.
 ##' Providing a single set of coordinates will work but will (likely) result in
-##' a 3x3 region surrounding the point requested.
-##' Only decimal coordinates are currently accepted.
-##'           Does the order matter????? Can't cross the date line right?
+##' a 3x3 region surrounding the point requested. Only decimal coordinates, without cardinal
+##' directions, are currently accepted.
 ##' @section Forecast Times
-##' NOAA GEFS forecasts are made 4 times daily. The hour 00 (midnight) forecast
-##' goes out for 35 days while the other (hour 06, 12, and 18) only go out to 16 days.
+##' NOAA GEFS forecasts are made 4 times daily. The forecast made at hour 00 (midnight) goes out for
+##' 35 days while the others (hour 06, 12, and 18) only go out to 16 days. Forecasts contain
+##' predictions at six hour resolution, also denoted as 00, 06, 12, and 18, for their forecast
+##' window.  Forecasts can be donwscaled to 1 hour by setting \code{downscale = TRUE}.
 ##' @section Weather Debiasing
-##' NOAA forecasts are made for a fixed grid. The meteorology at actual
-##' locations may differ systemically from their nearest forecast location.
-##' Debiasing allows adjust the forecast based on linear relationships between
-##' the forecast location and your site based on parameters you can determine
-##' from your local meteorology.  IS A LIST OR DATAFRAME USED?????
-##' See debias_met_forecast() for data structure...
+##' NOAA forecasts are made for a fixed grid. The meteorology at actual locations may differ
+##' systemically from their nearest forecast location. Debiasing allows adjust the forecast based
+##' on linear relationships between the forecast location and your site based on parameters you can
+##' determine from your local meteorology. See \code{\link{debias_met_forecast}} for how to pass
+##' debiasing parameters.
 ##'
 ##' @return None
-
+##'
 ##' @export
 ##'
 ##' @author Quinn Thomas
@@ -69,6 +70,9 @@
 # - A central coordinate processing fucntion or object is in order.
 # - The difference between forcast hours and cycles is confusing and needs be clarified in the docs.
 # - Check that forecast_date = NA doesn't cause issues downstream.
+# - Review wording for debias parameter description.
+# - Not sure I have the purpose of write_intermediate_ncdf correct. See
+#noaa_gefs_grid_process_downscale().
 
 noaa_gefs_download_downscale <- function(site_list,
                                          lat_list,
@@ -95,6 +99,7 @@ noaa_gefs_download_downscale <- function(site_list,
   model_name_ds_debias <-"NOAAGEFS_1hr-debias" #Downscaled NOAA GEFS
   model_name_raw <- "NOAAGEFS_raw"
 
+  #JMR_NOTE:
   #Validate parameters:
   #All pass-through variables will be validated in their respective functions:
   #method
