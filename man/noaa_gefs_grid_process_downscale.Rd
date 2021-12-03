@@ -2,7 +2,7 @@
 % Please edit documentation in R/noaa_gefs_grid_process_downscale.R
 \name{noaa_gefs_grid_process_downscale}
 \alias{noaa_gefs_grid_process_downscale}
-\title{Extract and temporally downscale points from downloaded grid files}
+\title{Extract and downscale points from a NOAA GEFS Forecast}
 \usage{
 noaa_gefs_grid_process_downscale(
   lat_list,
@@ -29,14 +29,55 @@ noaa_gefs_grid_process_downscale(
 )
 }
 \arguments{
-\item{output_directory}{}
+\item{lat_list}{Vector or range of latitudes to be downloaded (see details).}
+
+\item{lon_list}{Vector or range of longitudes to be downloaded (see details).}
+
+\item{site_list}{Vector of site codes, e.g. "NOAA", used in directory and file name generation.}
+
+\item{downscale}{Logical specifying whether to downscale from 6-hr to 1-hr data.}
+
+\item{overwrite}{Logical stating whether to overwrite any existing output files}
+
+\item{model_name}{Directory name for the 6-hr forecast, this will be used in directory and file
+name generation.}
+
+\item{model_name_ds}{Directory name for downscaled 1-hr forecasts, this will be used in
+directory and file name generation.}
+
+\item{model_name_ds_debias}{Directory name for downscaled and diabiased forecasts, this will be
+used in directory and file name generation.}
+
+\item{debias_coefficients}{Data frame containing debasing parameter values.}
+
+\item{num_cores}{The number of processor cores to run in parrallel on.}
+
+\item{output_directory}{Path: directory where the model output will be saved.}
+
+\item{reprocess}{Logical: if true re-extract dates that were previously processed.}
+
+\item{write_intermediate_ncdf}{Logical: retain the intermediate netCDF files created during
+processing?}
+
+\item{process_specific_date}{A date, or coercible string, specifying specific date(s) to extract.
+If omitted all dates will be processed.}
+
+\item{process_specific_cycle}{A vector of forecast times ("00", "06", "12", or "18" hours), to
+extract. If omitted all cycles will be processed.}
+
+\item{delete_bad_files}{Logical: delete bad files?}
+
+\item{grid_name}{A short grid name used in directory and file name generation.}
+
+\item{s3_mode}{Logical: save the forecast to a Amazon S3 bucket rather than locally.}
+
+\item{bucket}{If s3_mode = TRUE, the S3 bucket name to save to.}
 }
 \value{
 
 }
 \description{
-Extract and temporally downscale points from downloaded grid files
-}
-\examples{
-
+This function extracts a set of point location forecasts from a previously
+downloaded gridded NOAA Global Ensemble Forecast System (GEFS) forecast and optionally temporally
+downscales them.
 }

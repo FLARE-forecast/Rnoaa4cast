@@ -2,7 +2,7 @@
 % Please edit documentation in R/noaa_gefs_point_download_downscale.R
 \name{noaa_gefs_point_download_downscale}
 \alias{noaa_gefs_point_download_downscale}
-\title{Download and Downscale NOAA GEFS for a single site}
+\title{Download NOAA GEFS Forecasts for a Set of Points}
 \usage{
 noaa_gefs_point_download_downscale(
   read_from_path,
@@ -19,31 +19,38 @@ noaa_gefs_point_download_downscale(
 )
 }
 \arguments{
-\item{read_from_path, }{Default FALSE}
+\item{read_from_path}{A local path to read previously downloaded data from????? (Default FALSE?????)
+If not provided data will be downloaded from NOAA.}
 
-\item{lat_list, }{vector of latitudes that correspond to site codes}
+\item{lat_list}{Vector of latitudes that correspond to site codes.}
 
-\item{lon_list, }{vector of longitudes that correspond to site codes}
+\item{lon_list}{Vector of longitudes that correspond to site codes.}
 
-\item{site_list, }{vector of site codes, used in directory and file name generation}
+\item{site_list}{Vector of site codes, e.g. "SITE", used in directory and file name generation.}
 
-\item{downscale, }{logical specifying whether to downscale from 6-hr to 1-hr}
+\item{forecast_time}{The 'hour' of the requested forecast, one of "00", "06", "12", or "18",
+see details.}
 
-\item{overwrite, }{logical stating to overwrite any existing output_file}
+\item{forecast_date}{The date, or coercible string, of the requested forecast, defaults to ?????.}
 
-\item{model_name, }{directory name for the 6-hr forecast, this will be used in directory and file name generation}
+\item{downscale}{Logical specifying whether to downscale from 6-hr to 1-hr data.}
 
-\item{model_name_ds, }{directory name for the 1-hr forecast, this will be used in directory and file name generation}
+\item{overwrite}{Logical stating whether to overwrite any existing output files.}
 
-\item{output_directory, }{directory where the model output will be save}
+\item{model_name}{Directory name for the 6-hr forecast, this will be used in directory and file
+name generation.}
 
-\item{site_index, }{index of site_list, lat_list, lon_list to be downloaded}
+\item{model_name_ds}{Directory name for downscaled 1-hr forecasts, this will be used in
+directory and file name generation.}
+
+\item{output_directory}{Directory where the model output will be saved.}
 }
 \value{
 None
 }
 \description{
-Download and Downscale NOAA GEFS for a single site
+Downloads a set of NOAA Global Ensemble Forecast System (GEFS) forecasts for a set
+of point locations, downscaling them in time if requested.
 }
 \author{
 Quinn Thomas

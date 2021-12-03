@@ -2,7 +2,7 @@
 % Please edit documentation in R/write_noaa_gefs_netcdf.R
 \name{write_noaa_gefs_netcdf}
 \alias{write_noaa_gefs_netcdf}
-\title{Write NOAA GEFS netCDF}
+\title{Write a (NOAA GEFS?) forecast to netCDF}
 \usage{
 write_noaa_gefs_netcdf(
   df,
@@ -15,26 +15,27 @@ write_noaa_gefs_netcdf(
 )
 }
 \arguments{
-\item{df}{data frame of meterological variables to be written to netcdf.  Columns
-must start with time with the following columns in the order of \code{cf_units}}
+\item{df}{A data frame of meteorological variables to be written to a netCDF file. Columns
+must start with 'time' with the following columns in the order of \code{cf_units}.}
 
-\item{ens}{ensemble index used for subsetting df}
+\item{ens}{Optional: An ensemble index used for subsetting df.}
 
-\item{lat}{latitude in degree north}
+\item{lat}{Latitude for the forecast location in degree north.}
 
-\item{lon}{longitude in degree east}
+\item{lon}{Longitude for the forecast location in degree east.}
 
-\item{cf_units}{vector of variable names in order they appear in df}
+\item{cf_units}{Vector of variable unit descriptor strings in the order they appear in df.}
 
-\item{output_file}{name, with full path, of the netcdf file that is generated}
+\item{output_file}{Name, with full path, of the netcdf file that is generated.}
 
-\item{overwrite}{logical to overwrite existing netcdf file}
+\item{overwrite}{Logical stating whether to overwrite an existing output file.}
 }
 \value{
-NA
+None
 }
 \description{
-Write NOAA GEFS netCDF
+This function takes a data frame containing meteorological forecast data and
+related metadata and saves it to a netCDF file.
 }
 \author{
 Quinn Thomas

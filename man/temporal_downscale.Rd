@@ -2,24 +2,25 @@
 % Please edit documentation in R/temporal_downscale.R
 \name{temporal_downscale}
 \alias{temporal_downscale}
-\title{Downscale NOAA GEFS frin 6hr to 1hr}
+\title{Temporally Downscale a NOAA GEFS Forecast}
 \usage{
 temporal_downscale(input_file, output_file, overwrite = TRUE, hr = 1)
 }
 \arguments{
-\item{input_file, }{full path to 6hr file}
+\item{input_file}{Full path to The path to a NOAA GEFS 6hr forecast netCDF file to downscale.}
 
-\item{output_file, }{full path to 1hr file that will be generated}
+\item{output_file}{Full path to 1hr file that will be generated.}
 
-\item{overwrite, }{logical stating to overwrite any existing output_file}
+\item{overwrite}{Logical stating whether to overwrite an existing output file.}
 
-\item{hr}{time step in hours of temporal downscaling (default = 1)}
+\item{hr}{Time step in hours of temporal downscaling (default = 1).}
 }
 \value{
 None
 }
 \description{
-Downscale NOAA GEFS frin 6hr to 1hr
+Downscale a 6hr NOAA Global Ensemble Forecast System (GEFS) forecast (in netCDF
+form) to a finer time resolution.
 }
 \author{
 Quinn Thomas
