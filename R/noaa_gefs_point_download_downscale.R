@@ -1,28 +1,61 @@
-##' @title Download and Downscale NOAA GEFS for a single site
+##' @title Download NOAA GEFS Forecasts for a Set of Points
+##'
+##' @description Downloads a set of NOAA Global Ensemble Forecast System (GEFS) forecasts for a set
+##' of point locations, downscaling them in time if requested.
+##'
+##' @param read_from_path A local path to read previously downloaded data from????? (Default FALSE?????)
+##' If not provided data will be downloaded from NOAA.
+##' @param lat_list Vector of latitudes that correspond to site codes.
+##' @param lon_list Vector of longitudes that correspond to site codes.
+##' @param site_list Vector of site codes, e.g. "SITE", used in directory and file name generation.
+##' @param forecast_time The 'hour' of the requested forecast, one of "00", "06", "12", or "18",
+##' see details.
+##' @param forecast_date The date, or coercible string, of the requested forecast, defaults to ?????.
+##' @param downscale Logical specifying whether to downscale from 6-hr to 1-hr data.
+##' @param overwrite Logical stating whether to overwrite any existing output files.
+##' @param model_name Directory name for the 6-hr forecast, this will be used in directory and file
+##' name generation.
+##' @param model_name_ds Directory name for downscaled 1-hr forecasts, this will be used in
+##' directory and file name generation.
+##' @param output_directory Directory where the model output will be saved.
+##'
+##' @details
+##' @section Site Code
+##' For each site you request you need to provide a site code.  This should be a short alphanumeric
+##' code.  These codes are used in file and directory names so in addition to being short they
+##' should not include whitespace or special charactgers (dash '-', period '.', and underscore '_'
+##' should be okay in most cases). Environmental observation networks such as NEON, FLUXNET, etc.
+##' use codes to identify their sites. While your are free to use these descriptors if you are
+##' downloading one of their locations your choice of site code will not effect the results. The
+##' code is for your use and is not used to find the location, only coordinates are used for that.
+##' @section Coordinates
+##' Pairs of coordinates must be provided for each location requested in site_list.
+##' @section Forecast Times
+##' NOAA GEFS forecasts are made 4 times daily. The hour 00 (midnight) forecast
+##' goes out for 35 days while the other (hour 06, 12, and 18) only go out to 16 days.
+##' @section Temporal Downscaling
+##' If the 'downscale' argument is set to true the forecast data will be interpolated to to a one
+##' hour timestep.  If you wish to downscale previously downloaded data provide the path to that
+##' data in 'read_from_path'.
+##' @section Forecast File Format
+##' ...
+##'
 ##' @return None
 ##'
-##' @param read_from_path, Default FALSE
-##' @param site_index, index of site_list, lat_list, lon_list to be downloaded
-##' @param lat_list, vector of latitudes that correspond to site codes
-##' @param lon_list, vector of longitudes that correspond to site codes
-##' @param site_list, vector of site codes, used in directory and file name generation
-##' @param downscale, logical specifying whether to downscale from 6-hr to 1-hr
-##' @param overwrite, logical stating to overwrite any existing output_file
-##' @param model_name, directory name for the 6-hr forecast, this will be used in directory and file name generation
-##' @param model_name_ds, directory name for the 1-hr forecast, this will be used in directory and file name generation
-##' @param output_directory, directory where the model output will be save
 ##' @export
 ##'
 ##' @author Quinn Thomas
 ##'
-##'
 
+#JMR_NOTES:
+# - read_from_path should default to something. The original docs say it defuaults to FALSE but this
+#is a confusing choice for a character string. It doesn't make much sense that it is the first
+#argument since it is (meant to be) optional and is not the main use case?
 
-
- noaa_gefs_point_download_downscale <- function(read_from_path,
+ noaa_gefs_point_download_downscale <- function(read_from_path,#Move down?
                                     lat_list,
                                     lon_list,
-                                    site_list,
+                                    site_list,#Should move up?
                                     forecast_time = NA,
                                     forecast_date = NA,
                                     downscale,

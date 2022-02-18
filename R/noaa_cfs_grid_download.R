@@ -1,19 +1,37 @@
-
-#' Download gridded forecast in the box bounded by the latitude and longitude list
+#' @title Download NOAA CFS Gridded Forecast
 #'
-#' @param lat_list
-#' @param lon_list
-#' @param forecast_time
-#' @param forecast_date
-#' @param model_name_raw
-#' @param num_cores
-#' @param output_directory
+#' @description Download a NOAA Climate (Coupled) Forecast System (CFS) gridded forecast for a
+#' rectangular region with specified latitude and longitude bounds.
+#'
+#' @param lat_list Vector or range of latitudes to be downloaded (see details).
+#' @param lon_list Vector or range of longitudes to be downloaded (see details).
+#' @param forecast_time The 'hour' of the requested forecast, one of "00", "06", "12", or "18", see
+#' details.  ((If omitted all times will be downloaded.))
+#' @param forecast_date The date, or coercible string, of the requested forecast. ((Defaults to the
+#' most recent date.))
+#' @param model_name_raw A string with the model name used as the root of the downloaded directory
+#' tree.
+#' @param num_cores DEPRECATED
+#' @param output_directory Path: directory where the forecast output and logs will be saved.
+#'
+#' @details
+#' @section Coordinates
+#' ((Copy from noaa_gefs_download_downscale))
 #'
 #' @return
 #' @export
 #'
 #' @examples
-noaa_cfs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date ,model_name_raw, output_directory, grid_name) {
+
+#JMR_NOTES:
+# - CFS is only run once a day so why is forecast_time needed?
+# - num_cores has been deprecated.
+# - Calling code expects forecast_time and forecast_date to accept NA. This looks OK for
+#forecast_time but will break with forecast_date. Fix and make NA default?
+# - Need to add checking of parameters.
+# - Add a default for model_name_raw?
+
+noaa_cfs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date, model_name_raw, output_directory, grid_name) {
 
 
   download_grid <- function(forecasted_date, cycle, location, directory, vars,working_directory){

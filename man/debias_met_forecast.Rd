@@ -2,7 +2,7 @@
 % Please edit documentation in R/debias_met_forecast.R
 \name{debias_met_forecast}
 \alias{debias_met_forecast}
-\title{Title}
+\title{Debias Meteorology for a NOAA GEFS Forecast}
 \usage{
 debias_met_forecast(
   input_file,
@@ -12,11 +12,19 @@ debias_met_forecast(
 )
 }
 \arguments{
-\item{overwrite}{}
+\item{input_file}{The path to a NOAA GEFS forecast netCDF file to modify.}
+
+\item{output_file}{The path and file name for the debiased output forecast.}
+
+\item{spatial_downscale_coeff}{A list or data frame containing debasing parameter values lists
+(see details).}
+
+\item{overwrite}{Logical stating whether to overwrite any existing output files.}
 }
 \value{
-
+None.
 }
 \description{
-Title
+Take a NOAA GEFS forecast (netCDF) file and adjust the meteorology for a systematic
+bias between the forecast grid and a specific location within that grid cell.
 }

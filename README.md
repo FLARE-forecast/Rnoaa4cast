@@ -1,4 +1,31 @@
-# noaaGEFSpoint
+# Rnoaa4cast
+
+The Rnoaa4cast is an R package that helps you to download and process NOAA weather forecasts for use
+in ecological forecasting.
+
+It can be used to:
+- Obtain NOAA Global Ensemble Forecast System (GEFS) for regions or point locations.
+- Obtain NOAA Climate (Coupled) Forecast System (CFS) forecasts.
+- Extract points from regional forecasts.
+- Temporally downscale forecasts to hourly timescales.
+- Spatially downscale (debias) gridded forecasts to more accurately match specific point locations.
+- Convert forecasts from their raw formats, that may span thousands of files, to compact netCDF
+versions.
+
+## Getting Started
+
+### Package Installation (from GitHub)
+```
+install.packages("devtools")
+devtools::install_github("FLARE-forecast/Rnoaa4cast")
+```
+
+### Download your First Forecast
+...
+
+
+<!--- The following is the original example but it won't work if you don't have the tidyverse
+installed and the noaa_gefs_download_downscale() function call is out of date.
 
 Install from GitHub
 ```devtools::install_github("rqthomas/noaaGEFSpoint")```
@@ -29,4 +56,4 @@ noaaGEFSpoint::noaa_gefs_download_downscale(site_list = neon_sites$site_id,
                              num_cores = 1,
                              overwrite = FALSE)
 ```
-
+--->

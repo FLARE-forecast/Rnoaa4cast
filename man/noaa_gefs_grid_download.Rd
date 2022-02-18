@@ -2,7 +2,7 @@
 % Please edit documentation in R/noaa_gefs_grid_download.R
 \name{noaa_gefs_grid_download}
 \alias{noaa_gefs_grid_download}
-\title{Download gridded forecast in the box bounded by the latitude and longitude list}
+\title{Download NOAA GEFS Gridded Forecast}
 \usage{
 noaa_gefs_grid_download(
   lat_list,
@@ -17,11 +17,35 @@ noaa_gefs_grid_download(
 )
 }
 \arguments{
-\item{output_directory}{}
+\item{lat_list}{Vector or range of latitudes to be downloaded (see details).}
+
+\item{lon_list}{Vector or range of longitudes to be downloaded (see details).}
+
+\item{forecast_time}{The 'hour' of the requested forecast, one of "00",
+"06", "12", or "18", see details.}
+
+\item{forecast_date}{The date, or coercible string, of the requested
+forecast.}
+
+\item{model_name_raw}{A string with the model name used as the root of the
+downloaded directory tree. (Add a default.)}
+
+\item{output_directory}{Path: directory where the forecast output and logs
+will be saved.}
+
+\item{grid_name}{A short grid name used in directory and file name generation.}
+
+\item{s3_mode}{Logical: save the forecast to a Amazon S3 bucket rather than locally.}
+
+\item{bucket}{If s3_mode = TRUE, the S3 bucket name to save to.}
+
+\item{num_cores}{DEPRECATED}
 }
 \value{
-
+None.
 }
 \description{
-Download gridded forecast in the box bounded by the latitude and longitude list
+Download a NOAA Global Ensemble Forecast System (GEFS) gridded
+forecast for a rectangular region with specified latitude and longitude
+bounds.
 }

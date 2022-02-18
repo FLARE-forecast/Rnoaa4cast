@@ -1,15 +1,22 @@
-#' @title Downscale NOAA GEFS frin 6hr to 1hr
+#' @title Temporally Downscale a NOAA GEFS Forecast
+#'
+#' @description Downscale a 6hr NOAA Global Ensemble Forecast System (GEFS) forecast (in netCDF
+#' form) to a finer time resolution.
+#'
+#' @param input_file Full path to The path to a NOAA GEFS 6hr forecast netCDF file to downscale.
+#' @param output_file Full path to 1hr file that will be generated.
+#' @param overwrite Logical stating whether to overwrite an existing output file.
+#' @param hr Time step in hours of temporal downscaling (default = 1).
+#'
 #' @return None
 #'
-#' @param input_file, full path to 6hr file
-#' @param output_file, full path to 1hr file that will be generated
-#' @param overwrite, logical stating to overwrite any existing output_file
-#' @param hr time step in hours of temporal downscaling (default = 1)
 #' @export
 #'
 #' @author Quinn Thomas
 #'
-#'
+
+#JMR_NOTES:
+#Only updated temporal_downscale() documentation.
 
 temporal_downscale <- function(input_file, output_file, overwrite = TRUE, hr = 1){
 

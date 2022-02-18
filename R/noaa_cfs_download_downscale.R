@@ -1,19 +1,64 @@
-##' @title Script to launch NOAA download and temporal downscaling
+##' @title Download NOAA CFS Forecasts
+##'
+##' @description Downloads a set of NOAA Climate (Coupled) Forecast System (CFS) forecasts for a set
+##' of point locations or spatial ranges, downscaling them in time if requested.
+##'
+##' @param site_list Vector of site codes, e.g. "NOAA", used in directory and file name generation.
+##' @param lat_list Vector or range of latitudes to be downloaded (see details).
+##' @param lon_list Vector or range of longitudes to be downloaded (see details).
+##' @param output_directory Path: directory where the model output will be saved.
+##' @param forecast_time The 'hour' of the requested forecast, one of "00", "06", "12", or "18" (see
+##' details). If omitted all times will be downloaded.
+##' @param forecast_date The date, or coercible string, of the requested forecast. ((Defaults to the
+#' most recent date.))
+##' @param downscale Logical specifying whether to downscale from 6-hr to 1-hr data.
+##' @param debias Logical specifying whether weather data should be adjusted
+##' for a bias verses the nearest forecast point.
+##' @param debias_coefficients If debias = TRUE, a data frame of debasing parameter value lists (see
+##' details).
+##' @param run_parallel Logical: whether to run on multiple cores.
+##' @param num_cores Integer: number of cores used if run_parallel = TRUE.
+##' @param method Character string indicating the download method, either "point" or "grid".
+##' @param overwrite Logical stating whether to overwrite any existing output files.
+##' @param grid_name Grid mode only: a short grid name used in directory and file name generation.
+##'
+##' @details
+##' @section Coordinates
+##' The coordinates will be interpreted differently depending on the download
+##' method. If a point download is requested lat_list and lon_list should
+##' provide a vectors of coordinates to be downloaded with the same length as
+##' site_list. If a grid download is requested lat_list and lon_list should at
+##' minimum provide a pair of latitude and longitude values defining a range (not
+##' corners) of a rectangular grid of points to be downloaded. Providing a list
+##' of more than two point locations will result in a extracted region that
+##' encompasses them all.
+##' Providing a single set of coordinates will work but will (likely) result in
+##' a 3x3 region surrounding the point requested. Only decimal coordinates, without cardinal
+##' directions, are currently accepted.
+##' @section Forecast Times
+##' NOAA CFS forecasts are made once daily. ...
+#Add frequency and duration!!!!!
+##' @section Weather Debiasing
+##' NOAA forecasts are made for a fixed grid. The meteorology at actual locations may differ
+##' systemically from their nearest forecast location. Debiasing allows adjust the forecast based
+##' on linear relationships between the forecast location and your site based on parameters you can
+##' determine from your local meteorology. See \code{\link{debias_met_forecast}} for how to pass
+##' debiasing parameters.
+##'
 ##' @return None
-## @param site_list, vector of site codes, used in directory and file name generation
-##' @param lat_list, vector of latitudes that correspond to site codes
-##' @param lon_list, vector of longitudes that correspond to site codes
-##' @param output_directory, directory where the model output will be save
-##' @param downscale, logical specifying whether to downscale from 6-hr to 1-hr
-##' @param run_parallel, logical whether to run on multiple cores
-##' @param num_cores, number of cores used if run_parallel == TRUE
-##' @param overwrite, logical stating to overwrite any existing output_file
-
+##'
 ##' @export
 ##'
 ##' @author Quinn Thomas
-##'
-##'
+
+#JMR_Notes:
+# - There is a large amount of repetition in the documentation of this and noaa_gefs_download_downscale.
+#The differences in paramters are the only obstacle to documenting them as a family.
+# - run_parallel is not actually used.
+# - Are the forecast_times relevant here? CFS is only generated once a day.
+# - method is not used!  Is this for interface compatibility with noaa_gefs_download_downscale()?
+# - Passing forecast_date = NA to noaa_cfs_grid_download() may be a problem.
+# - Review wording for debias parameter description.
 
 noaa_cfs_download_downscale <- function(site_list,
                                          lat_list,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/noaa_cfs_grid_download.R
 \name{noaa_cfs_grid_download}
 \alias{noaa_cfs_grid_download}
-\title{Download gridded forecast in the box bounded by the latitude and longitude list}
+\title{Download NOAA CFS Gridded Forecast}
 \usage{
 noaa_cfs_grid_download(
   lat_list,
@@ -15,11 +15,27 @@ noaa_cfs_grid_download(
 )
 }
 \arguments{
-\item{output_directory}{}
+\item{lat_list}{Vector or range of latitudes to be downloaded (see details).}
+
+\item{lon_list}{Vector or range of longitudes to be downloaded (see details).}
+
+\item{forecast_time}{The 'hour' of the requested forecast, one of "00", "06", "12", or "18", see
+details.  ((If omitted all times will be downloaded.))}
+
+\item{forecast_date}{The date, or coercible string, of the requested forecast. ((Defaults to the
+most recent date.))}
+
+\item{model_name_raw}{A string with the model name used as the root of the downloaded directory
+tree.}
+
+\item{output_directory}{Path: directory where the forecast output and logs will be saved.}
+
+\item{num_cores}{DEPRECATED}
 }
 \value{
 
 }
 \description{
-Download gridded forecast in the box bounded by the latitude and longitude list
+Download a NOAA Climate (Coupled) Forecast System (CFS) gridded forecast for a
+rectangular region with specified latitude and longitude bounds.
 }
