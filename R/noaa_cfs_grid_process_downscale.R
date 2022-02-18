@@ -22,6 +22,8 @@
 #' @param output_directory Path: directory where the model output will be saved.
 #' @param reprocess Logical: if true re-extract dates that were previously processed.
 #' @param grid_name  A short grid name used in directory and file name generation.
+#' @param s3_mode Logical: save the forecast to a Amazon S3 bucket rather than locally.
+#' @param bucket If s3_mode = TRUE, the S3 bucket name to save to.
 #'
 #' @return
 #' @export
@@ -35,31 +37,33 @@
 # - num_cores is not used.  Need to check upstream.
 
 noaa_cfs_grid_process_downscale <- function(lat_list,
-                                             lon_list,
-                                             site_list,
-                                             downscale,
-                                             debias = FALSE,
-                                             overwrite,
-                                             model_name,
-                                             model_name_ds,
-                                             model_name_ds_debias,
-                                             model_name_raw,
-                                             debias_coefficients = NULL,
-                                             num_cores = 1,
-                                             output_directory,
-                                             reprocess = FALSE,
-                                             grid_name){
+                                            lon_list,
+                                            site_list,
+                                            downscale,
+                                            debias = FALSE,
+                                            overwrite,
+                                            model_name,
+                                            model_name_ds,
+                                            model_name_ds_debias,
+                                            model_name_raw,
+                                            debias_coefficients = NULL,
+                                            num_cores = 1,
+                                            output_directory,
+                                            reprocess = FALSE,
+                                            grid_name,
+                                            s3_mode = FALSE,
+                                            bucket = NULL){
 
   extract_sites <- function(site_list, lat_list, lon_list, working_directory, grid_name){
 
     files_split <- stringr::str_split(list.files(working_directory),pattern = "[.]", simplify = TRUE)
 
     forecasts <- tibble::tibble(file_name = list.files(working_directory, full.names = TRUE),
-                        year = stringr::str_sub(files_split[,1], 5, 8),
-                        month = stringr::str_sub(files_split[,1], 9, 10),
-                        day = stringr::str_sub(files_split[,1], 11, 12),
-                        hour = stringr::str_sub(files_split[,1], 13, 14),
-                        forecast_timestep = files_split[,1]) %>%
+                                year = stringr::str_sub(files_split[,1], 5, 8),
+                                month = stringr::str_sub(files_split[,1], 9, 10),
+                                day = stringr::str_sub(files_split[,1], 11, 12),
+                                hour = stringr::str_sub(files_split[,1], 13, 14),
+                                forecast_timestep = files_split[,1]) %>%
       dplyr::filter(stringr::str_detect(file_name, grid_name)) %>%
       dplyr::mutate(time = lubridate::make_datetime(year = as.numeric(year), month = as.numeric(month), day = as.numeric(day), hour = as.numeric(hour),tz = "UTC")) %>%
       dplyr::arrange(time) %>%
@@ -163,8 +167,15 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
 
       message(paste0("Processing forecast time: ", curr_forecast_time))
 
-      raw_files <- list.files(file.path(model_name_raw_dir,forecast_date,cycle))
-      raw_files <- raw_files[stringr::str_detect(basename(raw_files), grid_name)]
+      if(s3_mode){
+        s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name_raw, forecast_date, cycle), max = Inf)
+        s3_list <- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+        empty <- grepl("/$", s3_list)
+        s3_list <- s3_list[!empty]
+        raw_files <- s3_list
+      }else{
+        raw_files <- list.files(file.path(output_directory, model_name_raw, forecast_date, cycle))
+      }
       files_present <- length(raw_files)
 
       all_downloaded <- FALSE
@@ -175,7 +186,17 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
 
       missing_files <- FALSE
       for(site_index in 1:length(site_list)){
-        num_files <- length(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle)))
+        if(s3_mode){
+          s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name, site_list[site_index], forecast_date,cycle), max = Inf)
+          s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+          empty <- grepl("/$", s3_list)
+          s3_list <- s3_list[!empty]
+          existing_ncfiles <- s3_list
+          num_files <- length(existing_ncfiles)
+        }else{
+          num_files <- length(list.files(file.path(output_directory, model_name, site_list[site_index], forecast_date,cycle)))
+
+        }
         if(num_files != 1){
           missing_files <- TRUE
         }
@@ -189,6 +210,11 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
 
         #Remove existing files and overwrite
         unlink(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle)))
+        if(s3_mode){
+          for(k in 1:length(raw_files)){
+            aws.s3::save_object(object = raw_files[k], bucket = bucket, file = file.path(output_directory, raw_files[k]))
+          }
+        }
 
         output <- extract_sites(site_list, lat_list, lon_list, working_directory = file.path(model_name_raw_dir,forecast_date,cycle), grid_name)
 
@@ -205,6 +231,19 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
 
           model_site_date_hour_dir <- file.path(model_dir, site_list[site_index], forecast_date,cycle)
 
+          if(s3_mode){
+            s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name, site_list[site_index], forecast_date,cycle), max = Inf)
+            s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+            empty <- grepl("/$", s3_list)
+            s3_list <- s3_list[!empty]
+            existing_ncfiles <- s3_list
+            if(length(existing_ncfiles) > 0){
+              for(s3_file_index in 1:length(existing_ncfiles)){
+                aws.s3::delete_object(object = existing_ncfiles[s3_file_index], bucket = bucket)
+              }
+            }
+          }
+
           if(!dir.exists(model_site_date_hour_dir)){
             dir.create(model_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
           }else{
@@ -218,6 +257,18 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
             }else{
               unlink(list.files(modelds_site_date_hour_dir, full.names = TRUE))
             }
+            if(s3_mode){
+              s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name_ds, site_list[site_index], forecast_date,cycle), max = Inf)
+              s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+              empty <- grepl("/$", s3_list)
+              s3_list <- s3_list[!empty]
+              existing_ncfiles <- s3_list
+              if(length(existing_ncfiles) > 0){
+                for(s3_file_index in 1:length(existing_ncfiles)){
+                  aws.s3::delete_object(object = existing_ncfiles[s3_file_index], bucket = bucket)
+                }
+              }
+            }
           }
 
           if(debias){
@@ -226,6 +277,18 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
               dir.create(modelds_debias_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
             }else{
               unlink(list.files(modelds_debias_site_date_hour_dir, full.names = TRUE))
+            }
+            if(s3_mode){
+              s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name_ds_debias, site_list[site_index], forecast_date,cycle), max = Inf)
+              s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
+              empty <- grepl("/$", s3_list)
+              s3_list <- s3_list[!empty]
+              existing_ncfiles <- s3_list
+              if(length(existing_ncfiles) > 0){
+                for(s3_file_index in 1:length(existing_ncfiles)){
+                  aws.s3::delete_object(object = existing_ncfiles[s3_file_index], bucket = bucket)
+                }
+              }
             }
           }
 
@@ -271,8 +334,8 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
           noaa_data$air_temperature$value <- noaa_data$air_temperature$value + 273.15
 
           relative_humidity[which(!is.na(noaa_data$specific_humidity$value))] <- Rnoaa4cast:::qair2rh(qair = noaa_data$specific_humidity$value[which(!is.na(noaa_data$specific_humidity$value))],
-                                                                                         T = noaa_data$air_temperature$value[which(!is.na(noaa_data$specific_humidity$value))],
-                                                                                         press = noaa_data$air_pressure$value[which(!is.na(noaa_data$specific_humidity$value))])
+                                                                                                      T = noaa_data$air_temperature$value[which(!is.na(noaa_data$specific_humidity$value))],
+                                                                                                      press = noaa_data$air_pressure$value[which(!is.na(noaa_data$specific_humidity$value))])
 
 
           #Calculate wind speed from east and north components
@@ -334,6 +397,38 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
 
               Rnoaa4cast::debias_met_forecast(input_file = output_file, output_file = fname_ds, spatial_downscale_coeff, overwrite = TRUE)
 
+            }
+          }
+          if(s3_mode){
+            unlink(file.path(output_directory, model_name_raw, forecast_date, cycle), recursive = TRUE)
+
+            file_6r <- file.path(model_site_date_hour_dir,fname_6r)
+            success_transfer <- aws.s3::put_object(file = file.path(output_directory, file_6r),
+                                                   object = file_6r,
+                                                   bucket = bucket)
+            if(success_transfer){
+              unlink(file.path(output_directory, file_6r), force = TRUE)
+            }
+
+            if(downscale){
+              file_6r_ds <- file.path(modelds_site_date_hour_dir, fname_6r_ds)
+              success_transfer <- aws.s3::put_object(file = file.path(output_directory, file_6r_ds),
+                                                     object = file_6r_ds,
+                                                     bucket = bucket)
+              if(success_transfer){
+                unlink(file.path(output_directory, file_6r_ds), force = TRUE)
+              }
+
+            }
+
+            if(debias){
+              file_6r_ds_debais <- file.path(modelds_debias_site_date_hour_dir, fname_6r_ds_debias)
+              success_transfer <- aws.s3::put_object(file = file.path(output_directory, file_6r_ds_debais),
+                                                     object = file_6r_ds_debais,
+                                                     bucket = bucket)
+              if(success_transfer){
+                unlink(file.path(output_directory, file_6r_ds_debais), force = TRUE)
+              }
             }
           }
         }
