@@ -11,7 +11,9 @@ noaa_cfs_grid_download(
   forecast_date,
   model_name_raw,
   output_directory,
-  grid_name
+  grid_name,
+  s3_mode = FALSE,
+  bucket = NULL
 )
 }
 \arguments{
@@ -30,7 +32,11 @@ tree.}
 
 \item{output_directory}{Path: directory where the forecast output and logs will be saved.}
 
-\item{num_cores}{DEPRECATED}
+\item{grid_name}{A short grid name used in directory and file name generation.}
+
+\item{s3_mode}{Logical: save the forecast to a Amazon S3 bucket rather than locally.}
+
+\item{bucket}{If s3_mode = TRUE, the S3 bucket name to save to.}
 }
 \value{
 
