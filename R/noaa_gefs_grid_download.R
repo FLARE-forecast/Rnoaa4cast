@@ -126,10 +126,7 @@ noaa_gefs_grid_download <- function(lat_list,
 
           model_date_hour_dir <- file.path(model_name_raw,forecasted_date,cycle)
           full_dir <- file.path(output_directory, model_date_hour_dir)
-          if(!dir.exists(full_dir)){
-            dir.create(full_dir, recursive=TRUE, showWarnings = FALSE)
-          }
-
+          dir.create(file.path(output_directory, model_date_hour_dir), recursive=TRUE, showWarnings = FALSE)
 
           if(s3_mode){
             s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = model_date_hour_dir, max = Inf)
@@ -211,7 +208,7 @@ noaa_gefs_grid_download <- function(lat_list,
                                     },
                                     finally = NULL)
 
-                    download_check <- Rnoaa4cast:::check_grib_file(file = destfile, hour = curr_hours[hr])
+                    download_check <- suppressWarnings(Rnoaa4cast:::check_grib_file(file = destfile, hour = curr_hours[hr]))
                     if(download_check == FALSE){
                       unlink(destfile, force = TRUE)
                     }else{
