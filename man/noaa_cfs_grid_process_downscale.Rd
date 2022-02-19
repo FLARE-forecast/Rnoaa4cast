@@ -19,7 +19,9 @@ noaa_cfs_grid_process_downscale(
   num_cores = 1,
   output_directory,
   reprocess = FALSE,
-  grid_name
+  grid_name,
+  s3_mode = FALSE,
+  bucket = NULL
 )
 }
 \arguments{
@@ -53,6 +55,10 @@ used in directory and file name generation.}
 \item{reprocess}{Logical: if true re-extract dates that were previously processed.}
 
 \item{grid_name}{A short grid name used in directory and file name generation.}
+
+\item{s3_mode}{Logical: save the forecast to a Amazon S3 bucket rather than locally.}
+
+\item{bucket}{If s3_mode = TRUE, the S3 bucket name to save to.}
 }
 \value{
 
