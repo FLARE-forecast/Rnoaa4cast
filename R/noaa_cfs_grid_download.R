@@ -95,10 +95,8 @@ noaa_cfs_grid_download <- function(lat_list,
 
           if(cycle < 10) cycle <- paste0("0",cycle)
 
-          model_date_hour_dir <- file.path(model_dir,forecasted_date,cycle)
-          if(!dir.exists(model_date_hour_dir)){
-            dir.create(model_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
-          }
+          model_date_hour_dir <- file.path(model_name_raw,forecasted_date,cycle)
+          dir.create(file.path(output_directory, model_date_hour_dir), recursive=TRUE, showWarnings = FALSE)
 
           if(s3_mode){
             s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = model_date_hour_dir, max = Inf)
@@ -158,11 +156,13 @@ noaa_cfs_grid_download <- function(lat_list,
 
                 if((ii == 1 & jj >= start_index) | (ii > 1 & ii < length(date_vector)) | (ii == length(date_vector) & jj <= end_index)){
 
-                  file_name <- paste0("flxf",curr_date, forecast_hours[jj],".01.",start_date, cycle,".grb2")
+                  noaa_file_name <- paste0("flxf",curr_date, forecast_hours[jj],".01.",start_date, cycle,".grb2")
+
+                  file_name <- paste0(noaa_file_name,".",grid_name,".grib")
 
                   #flxf2021072600.01.2021072600.grb2
 
-                  destfile <- paste0(working_directory,"/", file_name,".",grid_name,".grib")
+                  destfile <- file.path(output_directory, model_date_hour_dir, file_name)
 
                   download_file <- FALSE
                   if(!s3_mode){
@@ -192,7 +192,7 @@ noaa_cfs_grid_download <- function(lat_list,
                                       },
                                       finally = NULL)
 
-                      download_check <- Rnoaa4cast:::check_grib_file(file = destfile, hour = curr_hours[hr])
+                      download_check <- suppressWarnings(Rnoaa4cast:::check_grib_file(file = destfile, hour = forecast_hours[jj]))
                       if(download_check == FALSE){
                         unlink(destfile, force = TRUE)
                       }else{
