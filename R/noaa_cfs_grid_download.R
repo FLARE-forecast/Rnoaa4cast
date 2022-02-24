@@ -43,12 +43,14 @@ noaa_cfs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_d
     start_date <- paste0(curr_year,curr_month,curr_day)
     directory <- paste0("&dir=%2Fcfs.",start_date,"%2F",cycle,"%2F6hrly_grib_01")
 
-    date_vector <- seq(forecasted_date, forecasted_date + lubridate::days(217), "1 day")
+    #For some reason NOAA grib filter only shows 6 months from the first day of the current month
+    end_date <- lubridate::as_date(paste0(lubridate::year(forecasted_date),"01-01")) + months(lubridate::month(forecasted_date)) + months(6)
+    date_vector <- seq(forecasted_date, end_date, "1 day")
     forecast_hours <- c("00", "06", "12", "18")
 
     if(cycle == "00"){
       start_index = 1
-      end_index = 4
+      end_index = 1
     }
     if(cycle == "06"){
       start_index = 2
@@ -56,11 +58,11 @@ noaa_cfs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_d
     }
     if(cycle == "12"){
       start_index = 3
-      end_index = 2
+      end_index = 1
     }
     if(cycle == "18"){
       start_index = 4
-      end_index = 3
+      end_index = 1
     }
 
 
@@ -76,7 +78,7 @@ noaa_cfs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_d
 
       for(jj in 1:length(forecast_hours)){
 
-        if((ii == 1 & jj >= start_index) | (ii > 1 & ii < length(date_vector)) | (ii == length(date_vector) & jj <= end_index)){
+        if((ii == 1 & jj >= start_index) | (ii > 1 & ii < length(date_vector)) | (ii == length(date_vector) & jj == end_index)){
 
           file_name <- paste0("flxf",curr_date, forecast_hours[jj],".01.",start_date, cycle,".grb2")
 
@@ -111,7 +113,7 @@ noaa_cfs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_d
                               },
                               finally = NULL)
 
-              if(is.na(out) | file.info(destfile)$size == 0){
+              if(is.na(out) | file.info(destfile)$size == 0 | !file.exists(destfile)){
                 download_failed <- TRUE
               }else{
 
