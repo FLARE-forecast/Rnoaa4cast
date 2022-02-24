@@ -31,10 +31,10 @@
 # - Need to add checking of parameters.
 # - Add a default for model_name_raw?
 
-noaa_cfs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date, model_name_raw, output_directory, grid_name) {
+noaa_cfs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_date, model_name_raw, output_directory, grid_name,s3_mode,bucket) {
 
 
-  download_grid <- function(forecasted_date, cycle, location, directory, vars,working_directory, s3_list, noaa_path){
+  download_grid <- function(forecasted_date, cycle, location, directory, vars,working_directory, s3_list, noaa_path, s3_mode,bucket){
     curr_year <- lubridate::year(forecasted_date)
     curr_month <- lubridate::month(forecasted_date)
     if(curr_month < 10) curr_month <- paste0("0",curr_month)
@@ -231,7 +231,7 @@ noaa_cfs_grid_download <- function(lat_list, lon_list, forecast_time, forecast_d
 
             print(paste("Downloading", forecasted_date, cycle))
 
-            download_grid(forecasted_date = forecasted_date, cycle, location, directory, vars,working_directory = model_date_hour_dir, s3_list = s3_list, noaa_path = noaa_path)
+            download_grid(forecasted_date = forecasted_date, cycle, location, directory, vars,working_directory = model_date_hour_dir, s3_list = s3_list, noaa_path = noaa_path, s3_mode = s3_mode,bucket = bucket)
           }else{
             print(paste("Existing", forecasted_date, cycle))
           }
