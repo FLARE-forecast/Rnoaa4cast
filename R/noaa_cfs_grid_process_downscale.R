@@ -208,7 +208,7 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
       if(all_downloaded & missing_files){
 
         #Remove existing files and overwrite
-        unlink(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle)))
+        #unlink(list.files(file.path(model_dir, site_list[site_index], forecast_date,cycle)))
         if(s3_mode){
           for(k in 1:length(raw_files)){
             aws.s3::save_object(object = raw_files[k], bucket = bucket, file = file.path(output_directory, raw_files[k]))
@@ -228,7 +228,7 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
             lon_east <- lon_list[site_index]
           }
 
-          model_site_date_hour_dir <- file.path(model_dir, site_list[site_index], forecast_date,cycle)
+          model_site_date_hour_dir <- file.path(model_name, site_list[site_index], forecast_date,cycle)
 
           if(s3_mode){
             s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = model_site_date_hour_dir, max = Inf)
