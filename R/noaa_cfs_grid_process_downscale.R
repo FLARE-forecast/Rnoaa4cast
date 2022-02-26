@@ -145,7 +145,6 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
                       "ugrd10m", "vgrd10m")
 
 
-  model_dir <- file.path(output_directory, model_name)
   model_name_raw_dir <- file.path(output_directory, model_name_raw)
 
   curr_time <- lubridate::with_tz(Sys.time(), tzone = "UTC")
@@ -216,7 +215,7 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
           }
         }
 
-        output <- extract_sites(site_list, lat_list, lon_list, working_directory = file.path(model_name_raw_dir,forecast_date,cycle), grid_name)
+        output <- extract_sites(site_list, lat_list, lon_list, working_directory = file.path(output_directory,model_name_raw,forecast_date,cycle), grid_name)
 
         for(site_index in 1:length(site_list)){
 
@@ -232,7 +231,7 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
           model_site_date_hour_dir <- file.path(model_dir, site_list[site_index], forecast_date,cycle)
 
           if(s3_mode){
-            s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name, site_list[site_index], forecast_date,cycle), max = Inf)
+            s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = model_site_date_hour_dir, max = Inf)
             s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
             empty <- grepl("/$", s3_list)
             s3_list <- s3_list[!empty]
@@ -245,20 +244,20 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
           }
 
           if(!dir.exists(model_site_date_hour_dir)){
-            dir.create(model_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
+            dir.create(file.path(output_directory, model_site_date_hour_dir), recursive=TRUE, showWarnings = FALSE)
           }else{
-            unlink(list.files(model_site_date_hour_dir, full.names = TRUE))
+            unlink(list.files(file.path(output_directory, model_site_date_hour_dir), full.names = TRUE))
           }
 
           if(downscale){
-            modelds_site_date_hour_dir <- file.path(output_directory,model_name_ds,site_list[site_index], forecast_date,cycle)
-            if(!dir.exists(modelds_site_date_hour_dir)){
-              dir.create(modelds_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
+            modelds_site_date_hour_dir <- file.path(model_name_ds,site_list[site_index], forecast_date,cycle)
+            if(!dir.exists(file.path(output_directory, modelds_site_date_hour_dir))){
+              dir.create(file.path(output_directory, modelds_site_date_hour_dir), recursive=TRUE, showWarnings = FALSE)
             }else{
-              unlink(list.files(modelds_site_date_hour_dir, full.names = TRUE))
+              unlink(list.files(file.path(output_directory, modelds_site_date_hour_dir), full.names = TRUE))
             }
             if(s3_mode){
-              s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name_ds, site_list[site_index], forecast_date,cycle), max = Inf)
+              s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = modelds_site_date_hour_dir, max = Inf)
               s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
               empty <- grepl("/$", s3_list)
               s3_list <- s3_list[!empty]
@@ -272,14 +271,14 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
           }
 
           if(debias){
-            modelds_debias_site_date_hour_dir <- file.path(output_directory,model_name_ds_debias,site_list[site_index], forecast_date,cycle)
-            if(!dir.exists(modelds_debias_site_date_hour_dir)){
-              dir.create(modelds_debias_site_date_hour_dir, recursive=TRUE, showWarnings = FALSE)
+            modelds_debias_site_date_hour_dir <- file.path(model_name_ds_debias,site_list[site_index], forecast_date,cycle)
+            if(!dir.exists(file.path(output_directory, modelds_debias_site_date_hour_dir))){
+              dir.create(file.path(output_directory, modelds_debias_site_date_hour_dir), recursive=TRUE, showWarnings = FALSE)
             }else{
-              unlink(list.files(modelds_debias_site_date_hour_dir, full.names = TRUE))
+              unlink(list.files(file.path(output_directory, modelds_debias_site_date_hour_dir), full.names = TRUE))
             }
             if(s3_mode){
-              s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = file.path(model_name_ds_debias, site_list[site_index], forecast_date,cycle), max = Inf)
+              s3_objects <- aws.s3::get_bucket(bucket = bucket, prefix = modelds_debias_site_date_hour_dir, max = Inf)
               s3_list<- vapply(s3_objects, `[[`, "", "Key", USE.NAMES = FALSE)
               empty <- grepl("/$", s3_list)
               s3_list <- s3_list[!empty]
@@ -363,24 +362,25 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
           start_date <- forecast_noaa %>%
             dplyr::summarise(min_time = min(time))
 
-          identifier <- paste(model_name, site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
+          identifier <- paste(basename(model_name), site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
                               format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
 
-          fname <- paste0(identifier,".nc")
-          output_file <- file.path(model_site_date_hour_dir,fname)
+          fname_6hr <- file.path(model_site_date_hour_dir,paste0(identifier,".nc"))
 
           #Write netCDF
-          Rnoaa4cast::write_noaa_gefs_netcdf(df = forecast_noaa,ens = NA, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = output_file, overwrite = TRUE)
+          Rnoaa4cast::write_noaa_gefs_netcdf(df = forecast_noaa,ens = NA, lat = lat_list[site_index], lon = lon_east, cf_units = cf_var_units1, output_file = file.path(output_directory, fname_6hr), overwrite = TRUE)
 
           if(downscale){
 
-            identifier_ds <- paste(model_name_ds, site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
+            identifier_ds <- paste(basename(model_name_ds), site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
                                    format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
 
-            fname_ds <- file.path(modelds_site_date_hour_dir, paste0(identifier_ds,".nc"))
+            fname_1hr_ds <- file.path(modelds_site_date_hour_dir, paste0(identifier_ds,".nc"))
 
             #Run downscaling
-            Rnoaa4cast::temporal_downscale(input_file = output_file, output_file = fname_ds, overwrite = TRUE, hr = 1)
+            Rnoaa4cast::temporal_downscale(input_file = file.path(output_directory, fname_6hr),
+                                           output_file = file.path(output_directory, fname_1hr_ds),
+                                           overwrite = TRUE, hr = 1)
 
             if(debias){
 
@@ -388,46 +388,46 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
               identifier_ds_debias <- paste(model_name_ds_debias, site_list[site_index], format(start_date$min_time, "%Y-%m-%dT%H"),
                                             format(end_date$max_time, "%Y-%m-%dT%H"), sep="_")
 
-              fname_ds <- file.path(modelds_debias_site_date_hour_dir, paste0(identifier_ds_debias,".nc"))
+              fname_1hr_ds_debais <- file.path(modelds_debias_site_date_hour_dir, paste0(identifier_ds_debias,".nc"))
 
               spatial_downscale_coeff <- list(AirTemp = c(debias_coefficients[site_index]$temp_intercept, debias_coefficients[site_index]$temp_slope),
                                               ShortWave = c(debias_coefficients[site_index]$sw_intercept, debias_coefficients[site_index]$sw_slope),
                                               LongWave = c(debias_ccoefficients[site_index]$lw_intercept, debias_coefficients[site_index]$lw_slope),
                                               WindSpeed = c(debias_coefficients[site_index]$wind_intercept, debias_coefficients[site_index]$wind_slope))
 
-              Rnoaa4cast::debias_met_forecast(input_file = output_file, output_file = fname_ds, spatial_downscale_coeff, overwrite = TRUE)
+              Rnoaa4cast::debias_met_forecast(input_file = file.path(output_directory, fname_1hr_ds),
+                                              output_file = file.path(output_directory, fname_1hr_ds_debais),
+                                              spatial_downscale_coeff,
+                                              overwrite = TRUE)
 
             }
           }
           if(s3_mode){
-            unlink(file.path(output_directory, model_name_raw, forecast_date, cycle), recursive = TRUE)
 
-            file_6r <- file.path(model_site_date_hour_dir,fname_6r)
-            success_transfer <- aws.s3::put_object(file = file.path(output_directory, file_6r),
-                                                   object = file_6r,
+            unlink(file.path(output_directory, model_name_raw, forecast_date, cycle), recursive = TRUE)
+            success_transfer <- aws.s3::put_object(file = file.path(output_directory,fname_6hr),
+                                                   object = fname_6hr,
                                                    bucket = bucket)
             if(success_transfer){
-              unlink(file.path(output_directory, file_6r), force = TRUE)
+              unlink(file.path(output_directory,fname_6hr), force = TRUE)
             }
 
             if(downscale){
-              file_6r_ds <- file.path(modelds_site_date_hour_dir, fname_6r_ds)
-              success_transfer <- aws.s3::put_object(file = file.path(output_directory, file_6r_ds),
-                                                     object = file_6r_ds,
+              success_transfer <- aws.s3::put_object(file = file.path(output_directory, fname_1hr_ds),
+                                                     object = fname_1hr_ds,
                                                      bucket = bucket)
               if(success_transfer){
-                unlink(file.path(output_directory, file_6r_ds), force = TRUE)
+                unlink(file.path(output_directory, fname_1hr_ds), force = TRUE)
               }
 
             }
 
             if(debias){
-              file_6r_ds_debais <- file.path(modelds_debias_site_date_hour_dir, fname_6r_ds_debias)
-              success_transfer <- aws.s3::put_object(file = file.path(output_directory, file_6r_ds_debais),
-                                                     object = file_6r_ds_debais,
+              success_transfer <- aws.s3::put_object(file = file.path(output_directory, fname_1hr_ds_debais),
+                                                     object = fname_1hr_ds_debais,
                                                      bucket = bucket)
               if(success_transfer){
-                unlink(file.path(output_directory, file_6r_ds_debais), force = TRUE)
+                unlink(file.path(output_directory, fname_1hr_ds_debais), force = TRUE)
               }
             }
           }
