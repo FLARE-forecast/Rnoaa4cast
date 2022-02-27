@@ -20,7 +20,8 @@
 #' @param debias_coefficients Data frame containing debasing parameter values.
 #' @param num_cores DEPRECATED?????
 #' @param output_directory Path: directory where the model output will be saved.
-#' @param reprocess Logical: if true re-extract dates that were previously processed.
+#' @param reprocess_all Logical: if true re-extract dates that were previously processed.
+#' @param process_dates date vector (YYYY-MM-DD) of dates to process.  If NULL then processes most recent seven days
 #' @param grid_name  A short grid name used in directory and file name generation.
 #' @param s3_mode Logical: save the forecast to a Amazon S3 bucket rather than locally.
 #' @param bucket If s3_mode = TRUE, the S3 bucket name to save to.
@@ -49,7 +50,8 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
                                             debias_coefficients = NULL,
                                             num_cores = 1,
                                             output_directory,
-                                            reprocess = FALSE,
+                                            reprocess_all = FALSE,
+                                            process_dates = NULL,
                                             grid_name,
                                             s3_mode = FALSE,
                                             bucket = NULL){
@@ -151,7 +153,11 @@ noaa_cfs_grid_process_downscale <- function(lat_list,
   curr_date <- lubridate::as_date(curr_time)
   potential_dates <- seq(curr_date - lubridate::days(6), curr_date, by = "1 day")
 
-  if(reprocess){
+  if(!is.null(process_dates)){
+  potential_dates <- process_dates
+  }
+
+  if(reprocess_all){
     potential_dates <- lubridate::as_date(list.dirs(model_name_raw_dir, recursive = FALSE, full.names = FALSE))
   }
 
