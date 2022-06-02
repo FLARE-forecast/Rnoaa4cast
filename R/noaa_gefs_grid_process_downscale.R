@@ -218,8 +218,12 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
         empty <- grepl("/$", s3_list)
         s3_list <- s3_list[!empty]
         raw_files <- s3_list
+        raw_files <- raw_files[which(stringr::str_detect(raw_files, grid_name))]
+
       }else{
         raw_files <- list.files(file.path(output_directory, model_name_raw, forecast_date, cycle))
+        raw_files <- raw_files[which(stringr::str_detect(raw_files, grid_name))]
+
       }
 
       hours_present <- as.numeric(stringr::str_sub(basename(raw_files), start = 25, end = 27))
