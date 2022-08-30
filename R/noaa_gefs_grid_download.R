@@ -78,7 +78,7 @@ noaa_gefs_grid_download <- function(lat_list,
     }
   }
 
-  last_cycle_page <- readLines(paste0(curl::curl('https://nomads.ncep.noaa.gov/pub/data/nccf/com/gens/prod/gefs.', dplyr::last(potential_dates))))
+  last_cycle_page <- readLines(curl::curl(paste0('https://nomads.ncep.noaa.gov/pub/data/nccf/com/gens/prod/gefs.', dplyr::last(potential_dates))))
 
   potential_cycle <- NULL
   for(i in 1:length(last_cycle_page)){
