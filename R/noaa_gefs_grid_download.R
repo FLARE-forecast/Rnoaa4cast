@@ -64,9 +64,11 @@ noaa_gefs_grid_download <- function(lat_list,
   curr_time <- lubridate::with_tz(Sys.time(), tzone = "UTC")
   curr_date <- lubridate::as_date(curr_time)
   #potential_dates <- seq(curr_date - lubridate::days(6), curr_date, by = "1 day")
-
+  
+  handle <- curl::new_handle()
+  curl::handle_setopt(handle, http_version = 2) # Force using HTTP 1.1
   noaa_page <- readLines(curl::curl('https://nomads.ncep.noaa.gov/pub/data/nccf/com/gens/prod/'))
-
+  
   potential_dates <- NULL
   for(i in 1:length(noaa_page)){
     if(stringr::str_detect(noaa_page[i], ">gefs.")){
