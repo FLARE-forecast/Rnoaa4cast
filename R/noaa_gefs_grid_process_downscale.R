@@ -281,7 +281,7 @@ noaa_gefs_grid_process_downscale <- function(lat_list,
         missing_files[] <- TRUE
       }
 
-      if(all_downloaded & missing_files){
+      if(all_downloaded & any(missing_files)){
 
         message(paste0("Processing forecast time: ", curr_forecast_time))
 
